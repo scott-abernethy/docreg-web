@@ -1,0 +1,55 @@
+== portal design ==
+
+document:
+ number
+ version
+ filename
+ project
+ title
+ number
+ author
+ date
+ comment
+ server?
+
+== server design ==
+
+docreg summary contains (NOT NEEDED BY PORTAL)
+ number
+ version
+ filename
+ project
+ user comment
+ access rights (unused)
+ author
+ date
+ authoritative server
+ client pc ip
+
+document log file contains lines of
+ filename
+ project 
+ user comment
+ access rights (unused)
+ author 
+ date
+ server 
+ client pc ip
+ client pc name
+ client pc username
+ client software version
+ file crc
+
+edit log file contains
+ filename
+ author
+ date editing started
+
+
+reuse docreg s[u]x client-server implementation?
+favorites / bookmarks
+subscriptions
+recent changes
+single sign on
+
+how to do editting? cookies for storing locations.

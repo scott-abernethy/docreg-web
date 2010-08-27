@@ -1,5 +1,4 @@
-package code {
-package snippet {
+package vvv.docreg.snippet
 
 import org.specs._
 import org.specs.runner.JUnit3
@@ -40,7 +39,4 @@ object HelloWorldTestSpecs extends Specification {
       str.indexOf("Hello at") must be >= 0
     }
   }
-}
-
-}
 }

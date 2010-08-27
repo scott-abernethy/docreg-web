@@ -1,5 +1,4 @@
-package code {
-package model {
+package vvv.docreg.model
 
 import _root_.net.liftweb.mapper._
 import _root_.net.liftweb.util._
@@ -32,7 +31,4 @@ class User extends MegaProtoUser[User] {
     override def textareaCols = 50
     override def displayName = "Personal Essay"
   }
-}
-
-}
 }

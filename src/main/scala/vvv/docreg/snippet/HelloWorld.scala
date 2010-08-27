@@ -1,11 +1,10 @@
-package code {
-package snippet {
+package vvv.docreg.snippet
 
 import _root_.scala.xml.{NodeSeq, Text}
 import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
 import _root_.java.util.Date
-import code.lib._
+import vvv.docreg.lib._
 import Helpers._
 
 class HelloWorld {
@@ -19,7 +18,4 @@ class HelloWorld {
 
    def howdy(in: NodeSeq): NodeSeq = Helpers.bind("b", in, "time" -> date.toString)
    */
-}
-
-}
 }
