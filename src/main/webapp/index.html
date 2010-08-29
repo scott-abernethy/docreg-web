@@ -1,4 +1,15 @@
 <lift:surround with="default" at="content">
-  Welcome to your Lift application
+  <lift:comet type="Documents">
+    <table>
+      <docs:doc>
+        <tr>
+          <td><docs:name/></td>
+          <td><docs:project/></td>
+          <td><docs:title/></td>
+          <td><docs:author/></td>
+          <td><docs:dateRevised/></td>
+        </tr>
+      </docs:doc>
+    </table>
+  </lift:comet>
 </lift:surround>
-

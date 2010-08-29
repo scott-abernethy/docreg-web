@@ -10,6 +10,7 @@ import Helpers._
 import _root_.net.liftweb.mapper.{DB, ConnectionManager, Schemifier, DefaultConnectionIdentifier, StandardDBVendor}
 import _root_.java.sql.{Connection, DriverManager}
 import _root_.vvv.docreg.model._
+import _root_.vvv.docreg.backend._
 
 
 /**
@@ -31,36 +32,25 @@ class Boot {
     }
 
     // where to search snippet
-    LiftRules.addToPackages("code")
-    Schemifier.schemify(true, Schemifier.infoF _, User)
+    LiftRules.addToPackages("vvv.docreg")
+    Schemifier.schemify(true, Schemifier.infoF _, User, Project, Document, Revision)
 
     // Build SiteMap
     val entries = Menu(Loc("Home", List("index"), "Home")) ::
-    Menu(Loc("Static", Link(List("static"), true, "/static/index"), 
-	     "Static Content")) ::
     User.sitemap
 
     LiftRules.statelessDispatchTable.append(MyCSSMorpher)
 
     LiftRules.setSiteMap(SiteMap(entries:_*))
 
-    /*
-     * Show the spinny image when an Ajax call starts
-     */
-    LiftRules.ajaxStart =
-      Full(() => LiftRules.jsArtifacts.show("ajax-loader").cmd)
-
-    /*
-     * Make the spinny image go away when it ends
-     */
-    LiftRules.ajaxEnd =
-      Full(() => LiftRules.jsArtifacts.hide("ajax-loader").cmd)
-
     LiftRules.early.append(makeUtf8)
 
     LiftRules.loggedInTest = Full(() => User.loggedIn_?)
 
     S.addAround(DB.buildLoanWrapper)
+
+    val backend = new SimulatedBackend
+    backend start
   }
 
   /**
