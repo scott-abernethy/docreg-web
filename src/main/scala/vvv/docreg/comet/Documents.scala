@@ -1,41 +1,38 @@
 package vvv.docreg.comet
 
 import vvv.docreg.model._
+import vvv.docreg.backend._
 import scala.xml.NodeSeq
 import net.liftweb._
 import http._
 import actor._
 import common._
 
-object DocumentsServer extends LiftActor with ListenerManager {
+class Documents extends CometActor with CometListener {
   private var documents: List[Document] = Document.findAll
 
-  def createUpdate = documents
+  def registerWith = DocumentServer 
 
-  override def lowPriority = {
-    case d: Document => 
-      documents ::= d
-      updateListeners
-  }
-}
-
-class Documents extends CometActor with CometListener {
   override def defaultPrefix = Full("docs")
-  private var documents: List[Document] = Nil
-
-  def registerWith = DocumentsServer
 
   override def lowPriority = {
-    case d: List[Document] => 
-      documents = d
+    case DocumentAdded(document) =>
+    case DocumentRevised(document) =>
+    case DocumentNotice(document) =>
+      //documents = d
       // use partialUpdate instead of reRender, as much more efficient.
-      reRender(false)
+      //reRender(false)
+    case _ =>
   }
+
+  // load all, does it meet filter? show all.
+  // update, does it meet filter? insert.
 
   def render = bind("docs", "doc" -> bindDocuments _)
 
   private def bindDocuments(xml: NodeSeq): NodeSeq =
-    documents.flatMap(d => bind("docs", xml, 
+documents.flatMap(d => bind("docs", xml, 
+      AttrBindParam("name_attr", d.name.is, "id"),
       "name" -> d.name, 
       "project" -> d.projectName, 
       "title" -> d.title, 
