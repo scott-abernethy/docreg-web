@@ -49,8 +49,11 @@ class Boot {
 
     S.addAround(DB.buildLoanWrapper)
 
-    val backend = new SimulatedBackend
-    backend start
+    DocumentServer start
+
+    val backend = new Backend
+    backend.start
+    backend ! Connect()
   }
 
   /**

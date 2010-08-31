@@ -11,12 +11,16 @@ class Document extends LongKeyedMapper[Document] with IdPK {
   object project extends MappedLongForeignKey(this, Project)
   object title extends MappedString(this, 200)
   def revisions = Revision.forDocument(this)
-  def latest = revisions head
-  def author = latest author
-  def dateRevised = latest date
+  def latest = if (revisions nonEmpty) revisions head else EmptyRevision
+  def author = latest author 
+  def dateRevised = latest date 
   def projectName = project.obj.map(_.name.is) openOr "?"
 }
 
 object Document extends Document with LongKeyedMetaMapper[Document] {
   override def fieldOrder = List(name, project, title)
+  def forName(name: String) = {
+    val xs = findAll(By(Document.name, name))
+    if (xs isEmpty) null else xs head
+  }
 }

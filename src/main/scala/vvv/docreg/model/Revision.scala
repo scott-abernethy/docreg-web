@@ -29,3 +29,13 @@ object Revision extends Revision with LongKeyedMetaMapper[Revision] {
     Revision.findAll(By(Revision.document, document.id))
   }
 }
+
+object EmptyRevision extends Revision {
+  def EmptyRevision {
+    version(0)
+    date(new java.util.Date(0))
+    author("-")
+    filename("")
+    comment("")
+  }
+}
