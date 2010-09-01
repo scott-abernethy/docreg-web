@@ -10,7 +10,7 @@ import net.liftweb.common._
 import org.specs.matcher._
 import org.specs.specification._
 import Helpers._
-import lib._
+import vvv.docreg.lib._
 
 
 class HelloWorldTestSpecsAsTest extends JUnit3(HelloWorldTestSpecs)

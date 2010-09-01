@@ -1,14 +1,15 @@
 package bootstrap.liftweb
 
-import _root_.net.liftweb.util._
-import _root_.net.liftweb.common._
-import _root_.net.liftweb.http._
-import _root_.net.liftweb.http.provider._
-import _root_.net.liftweb.sitemap._
-import _root_.net.liftweb.sitemap.Loc._
+import net.liftweb._
+import util._
 import Helpers._
-import _root_.net.liftweb.mapper.{DB, ConnectionManager, Schemifier, DefaultConnectionIdentifier, StandardDBVendor}
-import _root_.java.sql.{Connection, DriverManager}
+
+import common._
+import http._
+import sitemap._
+import Loc._
+import mapper._
+
 import _root_.vvv.docreg.model._
 import _root_.vvv.docreg.backend._
 
@@ -31,22 +32,32 @@ class Boot {
       DB.defineConnectionManager(DefaultConnectionIdentifier, vendor)
     }
 
-    // where to search snippet
-    LiftRules.addToPackages("vvv.docreg")
+    // Use Lift's Mapper ORM to populate the database
+    // you don't need to use Mapper to use Lift... use
+    // any ORM you want
     Schemifier.schemify(true, Schemifier.infoF _, User, Project, Document, Revision)
 
+    // where to search snippet
+    LiftRules.addToPackages("vvv.docreg")
+
     // Build SiteMap
-    val entries = Menu(Loc("Home", List("index"), "Home")) ::
+    val entries = List(
+      Menu.i("Home") / "index", // the simple way to declare a menu
+      Nil) :::
+    // the User management menu items
     User.sitemap
 
-    LiftRules.statelessDispatchTable.append(MyCSSMorpher)
+    // set the sitemap.  Note if you don't want access control for
+    // each page, just comment this line out.
+    //LiftRules.setSiteMap(SiteMap(entries:_*))
 
-    LiftRules.setSiteMap(SiteMap(entries:_*))
+    // Force the request to be UTF-8
+    LiftRules.early.append(_.setCharacterEncoding("UTF-8"))
 
-    LiftRules.early.append(makeUtf8)
-
+    // What is the function to test if a user is logged in?
     LiftRules.loggedInTest = Full(() => User.loggedIn_?)
 
+    // Make a transaction span the whole HTTP request
     S.addAround(DB.buildLoanWrapper)
 
     DocumentServer start
@@ -55,34 +66,4 @@ class Boot {
     backend.start
     backend ! Connect()
   }
-
-  /**
-   * Force the request to be UTF-8
-   */
-  private def makeUtf8(req: HTTPRequest) {
-    req.setCharacterEncoding("UTF-8")
-  }
-}
-
-import net.liftweb.http.rest._
-
-object MyCSSMorpher extends RestHelper {
-  serve {
-    case r @ Req("dynocss" :: file :: _, "css", GetRequest) =>
-      for {
-        convertFunc <- findConvertFunc(r)
-        fileContents <- readFile(file+".css")
-        converted <- convertFunc(fileContents)
-      } yield CSSResponse(converted)
-  }
-
-  // based on the browser detected, return a function 
-  // that will convert HTML5 css into CSS for that browser
-  def findConvertFunc(req: Req): Box[String => Box[String]] =
-    Empty
-
-  // load the file from the specific location...
-  // are you going put the CSS templates in
-  // resources, etc.
-  def readFile(name: String): Box[String] = Empty
 }
