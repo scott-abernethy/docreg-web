@@ -31,7 +31,7 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
 object Revision extends Revision with LongKeyedMetaMapper[Revision] {
   override def fieldOrder = List(version, filename, author, date, comment)
   def forDocument(document: Document): List[Revision] = {
-    Revision.findAll(By(Revision.document, document.id))
+    Revision.findAll(By(Revision.document, document.id), OrderBy(Revision.version, Descending))
   }
   def forDocument(document: Document, version: Long): Revision = {
     val rs = Revision.findAll(By(Revision.document, document.id), By(Revision.version, version))

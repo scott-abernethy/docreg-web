@@ -71,10 +71,13 @@ class Backend extends Actor {
   }
   
   private def updateDocument(document: Document, d: Doc) {
-    if (document.hasRevision(d.getVersion.toLong, d.getDate)) {
-      println(document.name + " document update, only needs reconcile")
+    // todo check project from latest revision !!!!!
+    //println(document.name + " check latest " + document.latest + " against " + d.getVersion.toLong)
+    if (document.latest_?(d.getVersion.toLong)) {
+      //println(document.name + " document update, only needs reconcile")
       Reconciler ! PriorityReconcile(document)
     } else {
+      println(document.name + " new revisions detected")
       updateRevisions(document)
     }
     

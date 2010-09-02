@@ -13,11 +13,11 @@ class Document extends LongKeyedMapper[Document] with IdPK {
   object editor extends MappedString(this, 100) 
   def revisions = Revision.forDocument(this)
   def revision(version: Long) = Revision.forDocument(this, version)
-  def hasRevision(version: Long, date: java.util.Date): Boolean = {
-    val r = revision(version)
-    r != null && r.date.is == date
-  }
   def latest = if (revisions nonEmpty) revisions head else EmptyRevision
+  def latest_?(version: Long): Boolean = {
+    val r = latest
+    r != null && r.version.is == version
+  }
   def author = latest author 
   def dateRevised = latest date 
   def projectName = project.obj.map(_.name.is) openOr "?"
