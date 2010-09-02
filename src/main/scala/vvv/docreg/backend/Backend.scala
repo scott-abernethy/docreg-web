@@ -13,19 +13,19 @@ import _root_.net.liftweb.common._
 case class Connect()
 
 class Backend extends Actor {
+  var agent: Agent = _
   def act() {
     loop {
       react {
         case Connect() => 
           val server = "shelob.GNET.global.vpn"
-          val agent = new Agent("0.1", server, "docreg-web")
+          agent = new Agent("0.1", server, "docreg-web")
           val library = new FileList(server, agent)
           library.addUpdateListener(new UpdateListener() {
             def updated(ds: java.util.List[Doc]) = ds.foreach(Backend.this ! _)
             def updated(d: Doc) = Backend.this ! d 
           })
         case d: Doc => 
-          
           val document = Document.forName(d.getKey)
           if (document == null) {
             createDocument(d)
@@ -50,24 +50,69 @@ class Backend extends Actor {
   }
 
   private def createDocument(d: Doc) {
-    val document = Document.create
-    document.name(d.getKey)
-    document.project(projectWithName(d.getProject))
-    document.title(d.getTitle)
-    document.save
+    try {
+      val document = Document.create
+      assignDocument(document, d)
+      document.save
 
-    val r1 = Revision.create
-    r1.document(document)
-    r1.version(1)
-    r1.filename(d.getDocument)
-    r1.author(d.getAuthor)
-    r1.date(new java.util.Date)
-    r1.comment(d.getDescription)
-    r1.save
+      agent.loadRevisions(d).foreach{createRevision(document, _)}
 
-    DocumentServer ! DocumentAdded(document)
+      DocumentServer ! DocumentAdded(document)
+    } catch {
+      case e: java.lang.NullPointerException => println("Exception " + e + " with " + d.getKey)
+    }
+  }
+
+  private def createRevision(document: Document, r: Rev) {
+    val revision = Revision.create
+    revision.document(document)
+    assignRevision(revision, r)
+    revision.save
   }
   
   private def updateDocument(document: Document, d: Doc) {
+    if (document.hasRevision(d.getVersion.toLong, d.getDate)) {
+      println(document.name + " document update, only needs reconcile")
+      Reconciler ! PriorityReconcile(document)
+    } else {
+      updateRevisions(document)
+    }
+    
+    assignDocument(document, d)
+    if (document.dirty_?) { 
+      document.save
+      DocumentServer ! DocumentChanged(document)
+    }
+  }
+
+  private def assignDocument(document: Document, d: Doc) {
+    document.name(d.getKey)
+    document.project(projectWithName(d.getProject))
+    document.title(d.getTitle)
+    document.editor(d.getEditor)
+  }
+
+  private def assignRevision(revision: Revision, r: Rev) {
+    revision.version(r.getVersion)
+    revision.filename(r.getFilename)
+    revision.author(r.getAuthor)
+    revision.date(r.getDate)
+    revision.comment(r.getComment)
+  }
+
+  private def updateRevisions(document: Document) {
+    agent.loadRevisions(document.name).foreach { r =>
+      val revision = document.revision(r.getVersion)
+      if (revision == null) {
+        createRevision(document, r)
+        DocumentServer ! DocumentRevised(document)
+      } else {
+        assignRevision(revision, r)
+        if (revision.dirty_?) {
+          revision.save
+          DocumentServer ! DocumentChanged(document)
+        }
+      }
+    }
   }
 }

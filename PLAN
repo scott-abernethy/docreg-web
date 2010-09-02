@@ -1,3 +1,11 @@
+== TODO ==
+
+Passing Documents around all the time, but are they up to date when received?
+Verify assumptions in docreg.txt and XXXX.log, while parsing.
+Reconsile slowly over time
+Don't download log based on modification timestamp
+Ensure we register for sequence updates before we start requesting docreg.txt
+
 == ROLLOUT ==
 
 Document list

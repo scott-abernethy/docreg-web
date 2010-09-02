@@ -10,7 +10,13 @@ class Document extends LongKeyedMapper[Document] with IdPK {
   object name extends MappedString(this, 20) // unique
   object project extends MappedLongForeignKey(this, Project)
   object title extends MappedString(this, 200)
+  object editor extends MappedString(this, 100) 
   def revisions = Revision.forDocument(this)
+  def revision(version: Long) = Revision.forDocument(this, version)
+  def hasRevision(version: Long, date: java.util.Date): Boolean = {
+    val r = revision(version)
+    r != null && r.date.is == date
+  }
   def latest = if (revisions nonEmpty) revisions head else EmptyRevision
   def author = latest author 
   def dateRevised = latest date 
