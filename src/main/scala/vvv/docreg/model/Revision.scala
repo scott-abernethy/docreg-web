@@ -26,6 +26,7 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
     }
   }
   //object server extends MappedLong(this)
+  def when: String = "?"
 }
 
 object Revision extends Revision with LongKeyedMetaMapper[Revision] {

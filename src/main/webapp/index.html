@@ -1,4 +1,17 @@
 <lift:surround with="default" at="content">
+  <lift:comet type="Log">
+    <table id="log">
+      <log:item>
+        <tr doc:id_attr="">
+          <td><doc:project/></td>
+          <td><doc:name_link/></td>
+          <td><doc:title/></td>
+          <td><doc:author/></td>
+          <td class="nowrap"><doc:date/></td>
+        </tr>
+      </log:item>
+    </table>
+  </lift:comet>
   <lift:comet type="Documents">
     <table>
       <docs:doc>
