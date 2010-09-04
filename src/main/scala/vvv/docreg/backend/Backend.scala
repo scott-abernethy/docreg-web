@@ -63,11 +63,12 @@ class Backend extends Actor {
     }
   }
 
-  private def createRevision(document: Document, r: Rev) {
+  private def createRevision(document: Document, r: Rev): Revision = {
     val revision = Revision.create
     revision.document(document)
     assignRevision(revision, r)
     revision.save
+    revision
   }
   
   private def updateDocument(document: Document, d: Doc) {
@@ -107,8 +108,8 @@ class Backend extends Actor {
     agent.loadRevisions(document.name).foreach { r =>
       val revision = document.revision(r.getVersion)
       if (revision == null) {
-        createRevision(document, r)
-        DocumentServer ! DocumentRevised(document)
+        val latest = createRevision(document, r)
+        DocumentServer ! DocumentRevised(document, latest)
       } else {
         assignRevision(revision, r)
         if (revision.dirty_?) {

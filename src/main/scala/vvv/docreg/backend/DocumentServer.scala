@@ -11,7 +11,7 @@ case class Subscribe(subscriber: DocumentSubscriber)
 case class Subscribed()
 case class Unsubscribe(subscriber: DocumentSubscriber)
 case class DocumentAdded(document: Document)
-case class DocumentRevised(document: Document)
+case class DocumentRevised(document: Document, latest: Revision)
 case class DocumentChanged(document: Document)
 
 trait DocumentSubscriber extends CometActor {
@@ -30,7 +30,7 @@ object DocumentServer extends Actor {
         case a @ DocumentAdded(d) =>
           println(d.name + " added")
           distribute(a)
-        case r @ DocumentRevised(d) => 
+        case r @ DocumentRevised(d, _) => 
           println(d.name + " revised")
           distribute(r)
         case c @ DocumentChanged(d) => 

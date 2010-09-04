@@ -34,8 +34,8 @@ class Log extends DocumentSubscriber {
       reRender(true)
     case DocumentAdded(document) =>
       partialUpdate(PrependHtml("log", bindRevision(revisionPart, document.latest)))
-    case DocumentRevised(document) =>
-      partialUpdate(PrependHtml("log", bindRevision(revisionPart, document.latest)))
+    case DocumentRevised(document, latest) =>
+      partialUpdate(PrependHtml("log", bindRevision(revisionPart, latest)))
     case DocumentChanged(document) =>
       //partialUpdate(PrependHtml("log", bindRevision(revisionPart, document.latest)))
     case _ =>

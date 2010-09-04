@@ -35,7 +35,7 @@ class Documents extends DocumentSubscriber {
       documents = Document.findAll(MaxRows(20))
       //documents ::= document
       reRender(true)
-    case DocumentRevised(document) =>
+    case DocumentRevised(document, latest) =>
       // use partialUpdate instead of reRender, as much more efficient.
       partialUpdate(Replace(document.name, bindDocument(documentPart, document)))
     case DocumentChanged(document) =>
