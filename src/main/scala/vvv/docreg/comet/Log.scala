@@ -50,7 +50,7 @@ class Log extends DocumentSubscriber {
     val d: Document = r.document.obj openOr null
     bind("doc", xml, 
       AttrBindParam("id_attr", r.id.is.toString, "id"),
-      "name_link" -> <a href={r.filename}>{d.name}</a>,
+      "key_link" -> <a href={r.link}>{d.key}</a>,
       "project" -> d.projectName, 
       "title" -> d.title, 
       "author" -> r.author,

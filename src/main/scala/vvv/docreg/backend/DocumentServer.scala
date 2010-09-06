@@ -28,13 +28,13 @@ object DocumentServer extends Actor {
         case Unsubscribe(subscriber) =>
           subscribers -= subscriber
         case a @ DocumentAdded(d) =>
-          println(d.name + " added")
+          println(d.key + " added")
           distribute(a)
         case r @ DocumentRevised(d, _) => 
-          println(d.name + " revised")
+          println(d.key + " revised")
           distribute(r)
         case c @ DocumentChanged(d) => 
-          println(d.name + " changed")
+          println(d.key + " changed")
           distribute(c)
         case _ =>
       }

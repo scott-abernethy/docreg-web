@@ -26,7 +26,7 @@ class Backend extends Actor {
             def updated(d: Doc) = Backend.this ! d 
           })
         case d: Doc => 
-          val document = Document.forName(d.getKey)
+          val document = Document.forKey(d.getKey)
           if (document == null) {
             createDocument(d)
           } else {
@@ -73,12 +73,12 @@ class Backend extends Actor {
   
   private def updateDocument(document: Document, d: Doc) {
     // todo check project from latest revision !!!!!
-    //println(document.name + " check latest " + document.latest + " against " + d.getVersion.toLong)
+    //println(document.key + " check latest " + document.latest + " against " + d.getVersion.toLong)
     if (document.latest_?(d.getVersion.toLong)) {
-      //println(document.name + " document update, only needs reconcile")
+      //println(document.key + " document update, only needs reconcile")
       Reconciler ! PriorityReconcile(document)
     } else {
-      println(document.name + " new revisions detected")
+      println(document.key + " new revisions detected")
       updateRevisions(document)
     }
     
@@ -90,7 +90,7 @@ class Backend extends Actor {
   }
 
   private def assignDocument(document: Document, d: Doc) {
-    document.name(d.getKey)
+    document.key(d.getKey)
     document.project(projectWithName(d.getProject))
     document.title(d.getTitle)
     document.editor(d.getEditor)
@@ -105,7 +105,7 @@ class Backend extends Actor {
   }
 
   private def updateRevisions(document: Document) {
-    agent.loadRevisions(document.name).foreach { r =>
+    agent.loadRevisions(document.key).foreach { r =>
       val revision = document.revision(r.getVersion)
       if (revision == null) {
         val latest = createRevision(document, r)

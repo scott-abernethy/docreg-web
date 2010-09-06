@@ -12,6 +12,7 @@ import mapper._
 
 import _root_.vvv.docreg.model._
 import _root_.vvv.docreg.backend._
+import _root_.vvv.docreg.util._
 
 
 /**
@@ -59,6 +60,13 @@ class Boot {
 
     // Make a transaction span the whole HTTP request
     S.addAround(DB.buildLoanWrapper)
+
+    LiftRules.dispatch.append {
+      case Req("document" :: key :: Nil, _, GetRequest) => 
+        () => Download.download(key)
+      case Req("document" :: key :: version :: Nil, _, GetRequest) => 
+        () => Download.download(key, version)
+    }
 
     DocumentServer start
 

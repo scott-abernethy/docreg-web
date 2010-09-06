@@ -37,9 +37,9 @@ class Documents extends DocumentSubscriber {
       reRender(true)
     case DocumentRevised(document, latest) =>
       // use partialUpdate instead of reRender, as much more efficient.
-      partialUpdate(Replace(document.name, bindDocument(documentPart, document)))
+      partialUpdate(Replace(document.key, bindDocument(documentPart, document)))
     case DocumentChanged(document) =>
-      partialUpdate(Replace(document.name, bindDocument(documentPart, document)))
+      partialUpdate(Replace(document.key, bindDocument(documentPart, document)))
     case _ =>
   }
 
@@ -53,9 +53,9 @@ class Documents extends DocumentSubscriber {
 
   private def bindDocument(xml: NodeSeq, d: Document): NodeSeq =
     bind("docs", xml, 
-      AttrBindParam("name_attr", d.name.is, "id"),
-      "name" -> d.name, 
-      "name_link" -> <a href={d.latest.filename}>{d.name}</a>,
+      AttrBindParam("id_attr", d.key.is, "id"),
+      "key" -> d.key, 
+      "key_link" -> <a href={d.latest.filename}>{d.key}</a>,
       "project" -> d.projectName, 
       "title" -> d.title, 
       "author" -> d.author,

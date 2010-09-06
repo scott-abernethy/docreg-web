@@ -7,7 +7,7 @@ import _root_.net.liftweb.common._
 class Document extends LongKeyedMapper[Document] with IdPK {
   def getSingleton = Document
 
-  object name extends MappedString(this, 20) // unique
+  object key extends MappedString(this, 20) // unique
   object project extends MappedLongForeignKey(this, Project)
   object title extends MappedString(this, 200)
   object editor extends MappedString(this, 100) 
@@ -24,9 +24,9 @@ class Document extends LongKeyedMapper[Document] with IdPK {
 }
 
 object Document extends Document with LongKeyedMetaMapper[Document] {
-  override def fieldOrder = List(name, project, title)
-  def forName(name: String) = {
-    val xs = findAll(By(Document.name, name))
+  override def fieldOrder = List(key, project, title)
+  def forKey(key: String) = {
+    val xs = findAll(By(Document.key, key))
     if (xs isEmpty) null else xs head
   }
   def search(request: String): List[Document] = {
