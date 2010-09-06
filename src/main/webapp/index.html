@@ -1,4 +1,11 @@
 <lift:surround with="default" at="content">
+  <lift:snippet type="Search:go">
+    <search:form type="post">
+      <search:text/><search:submit/>
+    </search:form>
+    <search:results/>
+  </lift:snippet>
+  <h2>Recent Activity</h2>
   <lift:comet type="Log">
     <table id="log">
       <log:item>
@@ -10,20 +17,6 @@
           <td class="nowrap"><doc:date/></td>
         </tr>
       </log:item>
-    </table>
-  </lift:comet>
-  <lift:comet type="Documents">
-    <table>
-      <docs:doc>
-        <tr docs:name_attr="">
-          <td><docs:project/></td>
-          <td><docs:name_link/></td>
-          <td><docs:title/></td>
-          <td><docs:author/></td>
-          <td class="nowrap"><docs:dateRevised/></td>
-          <td><docs:editor/></td>
-        </tr>
-      </docs:doc>
     </table>
   </lift:comet>
 </lift:surround>

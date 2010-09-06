@@ -29,4 +29,7 @@ object Document extends Document with LongKeyedMetaMapper[Document] {
     val xs = findAll(By(Document.name, name))
     if (xs isEmpty) null else xs head
   }
+  def search(request: String): List[Document] = {
+    findAll(Like(Document.title, "%" + request + "%"), MaxRows(100))
+  }
 }
