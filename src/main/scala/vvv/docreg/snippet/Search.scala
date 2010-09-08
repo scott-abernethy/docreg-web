@@ -31,12 +31,20 @@ class Search extends Logger {
   def processSearch(): JsCmd = {
     val ds = Document.search(search.is) 
     info("Search for '" + search.is + "' resulted in " + ds.size + " documents") 
-  val x = ds.flatMap(d => bind("result", 
-      <ul>
-        <li><result:title /></li>
-      </ul>, 
+  val x = ds.flatMap(d => bind("doc", 
+        <tr doc:id_attr="">
+          <td><doc:project/></td>
+          <td><doc:key_link/></td>
+          <td><doc:title/></td>
+          <td><doc:author/></td>
+          <td class="nowrap"><doc:date/></td>
+        </tr>,
+      "project" -> d.projectName,
+      "author" -> d.latest.author,
+      "key_link" -> <a href={d.latest.link}>{d.key}</a>,
+      "date" -> d.latest.date,
       "title" -> d.title))
 
-    SetHtml("results", x)
+    SetHtml("results", <table>{x}</table>)
   }
 }
