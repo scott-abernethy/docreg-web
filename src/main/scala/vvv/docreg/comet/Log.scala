@@ -33,12 +33,21 @@ class Log extends DocumentSubscriber {
       revisions = Revision.findAll(OrderBy(Revision.date, Descending), MaxRows(20))
       reRender(true)
     case DocumentAdded(document) =>
-      partialUpdate(PrependHtml("log", bindRevision(revisionPart, document.latest)))
+      add(document.latest)
     case DocumentRevised(document, latest) =>
-      partialUpdate(PrependHtml("log", bindRevision(revisionPart, latest)))
+      add(latest)
     case DocumentChanged(document) =>
-      //partialUpdate(PrependHtml("log", bindRevision(revisionPart, document.latest)))
+      val update = for (
+        r <- revisions
+        if r.document == document
+      ) yield Replace(r.id.is.toString, bindRevision(revisionPart, r))
+      partialUpdate(update)
     case _ =>
+  }
+
+  private def add(r: Revision) = {
+    revisions = r :: revisions.dropRight(1)
+    partialUpdate(PrependHtml("log", bindRevision(revisionPart, r)))
   }
 
   def render = bind("log", "item" -> bindRevisions _)
