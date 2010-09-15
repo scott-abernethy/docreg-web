@@ -2,7 +2,7 @@ package vvv.docreg.comet
 
 import vvv.docreg.model._
 import vvv.docreg.backend._
-import scala.xml.NodeSeq
+import scala.xml.{NodeSeq,Text}
 import net.liftweb._
 import http._
 import actor._
@@ -46,8 +46,9 @@ class Log extends DocumentSubscriber {
   }
 
   private def add(r: Revision) = {
+    val remove = revisions.last
     revisions = r :: revisions.dropRight(1)
-    partialUpdate(PrependHtml("log", bindRevision(revisionPart, r)))
+    partialUpdate(PrependHtml("log", bindRevision(revisionPart, r)) & Replace(remove.id.is.toString, Text("")))
   }
 
   def render = bind("log", "item" -> bindRevisions _)

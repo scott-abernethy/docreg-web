@@ -6,12 +6,12 @@ import util._
 import common._
 import Helpers._
 import http._
-import scala.xml._
+import scala.xml.{NodeSeq, Text}
 
 class DocumentView {
   var key = S.param("key") openOr ""
 
-  var document: vvv.docreg.model.Document = try {
+  var document: Document = try {
     Document.forKey(key)
   } catch {
     case e:NumberFormatException => null 
