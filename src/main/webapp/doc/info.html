@@ -1,0 +1,21 @@
+<lift:surround with="default" at="content">
+  <lift:snippet type="DocumentView:view">
+    <h3><doc:title/></h3>
+    <table>
+      <tr>
+        <th>Version</th>
+        <th>Author</th>
+        <th>Date</th>
+        <th>Comment</th>
+      </tr>
+      <doc:revision>
+        <tr>
+          <td class="nowrap"><rev:link/></td>
+          <td class="nowrap"><rev:author/></td>
+          <td class="nowrap"><rev:date/></td>
+          <td class="quiet"><rev:comment/></td>
+        </tr>
+      </doc:revision>
+    </table>
+  </lift:snippet>
+</lift:surround>
