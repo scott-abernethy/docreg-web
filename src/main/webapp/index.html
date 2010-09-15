@@ -7,25 +7,27 @@
       <search:results/>
     </lift:snippet>
   </div>
-  <hr/>
-  <div class="span-8 colborder">
-    <h3>Recent Activity</h3>
-    <lift:comet type="Log">
-      <ol id="log">
-        <log:item>
-          <li doc:id_attr="">
-            <div class="span-6"><h6><doc:title/></h6></div>
-            <div class="span-1 last"><doc:link/></div>
-            <div class="span-8">
-              <p><doc:author/> at <doc:date/> in <doc:project/></p>
-              <p class="quiet"><doc:comment/></p>
-            </div>
-          </li>
-        </log:item>
-      </ol>
-    </lift:comet>
-  </div>
-  <div class="span-8 last">
-    <h3>Favourites</h3>
+  <div id="dashboard">
+    <hr/>
+    <div class="span-8 colborder">
+      <h3>Recent Activity</h3>
+      <lift:comet type="Log">
+        <ol id="log">
+          <log:item>
+            <li doc:id_attr="">
+              <div class="span-6"><h6><doc:title/></h6></div>
+              <div class="span-1 last"><doc:link/></div>
+              <div class="span-8">
+                <p><doc:author/> at <doc:date/> in <doc:project/></p>
+                <p class="quiet"><doc:comment/></p>
+              </div>
+            </li>
+          </log:item>
+        </ol>
+      </lift:comet>
+    </div>
+    <div class="span-8 last">
+      <h3>Favourites</h3>
+    </div>
   </div>
 </lift:surround>
