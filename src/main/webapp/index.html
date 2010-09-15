@@ -1,22 +1,31 @@
 <lift:surround with="default" at="content">
-  <lift:snippet type="Search:go">
-    <search:form type="post">
-      <search:text/><search:submit/>
-    </search:form>
-    <search:results/>
-  </lift:snippet>
-  <h2>Recent Activity</h2>
-  <lift:comet type="Log">
-    <table id="log">
-      <log:item>
-        <tr doc:id_attr="">
-          <td><doc:project/></td>
-          <td><doc:key_link/></td>
-          <td><doc:title/></td>
-          <td><doc:author/></td>
-          <td class="nowrap"><doc:date/></td>
-        </tr>
-      </log:item>
-    </table>
-  </lift:comet>
+  <div class="span-17">
+    <lift:snippet type="Search:go">
+      <search:form type="post">
+        <search:text/><search:submit/>
+      </search:form>
+      <search:results/>
+    </lift:snippet>
+  </div>
+  <hr/>
+  <div class="span-8 colborder">
+    <h3>Recent Activity</h3>
+    <lift:comet type="Log">
+      <ol id="log">
+        <log:item>
+          <li doc:id_attr="">
+            <div class="span-6"><h6><doc:title/></h6></div>
+            <div class="span-1 last"><doc:link/></div>
+            <div class="span-8">
+              <p><doc:author/> at <doc:date/> in <doc:project/></p>
+              <p class="quiet"><doc:comment/></p>
+            </div>
+          </li>
+        </log:item>
+      </ol>
+    </lift:comet>
+  </div>
+  <div class="span-8 last">
+    <h3>Favourites</h3>
+  </div>
 </lift:surround>

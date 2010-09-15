@@ -1,3 +1,7 @@
 .nowrap {
   white-space: nowrap;
 }
+#log {
+  margin: 0;
+  list-style: none;
+}
