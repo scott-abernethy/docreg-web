@@ -21,6 +21,7 @@ class Document extends LongKeyedMapper[Document] with IdPK {
   def author = latest author 
   def dateRevised = latest date 
   def projectName = project.obj.map(_.name.is) openOr "?"
+  def infoLink: String = "/doc/" + key.is + "/info"
 }
 
 object Document extends Document with LongKeyedMetaMapper[Document] {
