@@ -31,6 +31,7 @@ object Document extends Document with LongKeyedMetaMapper[Document] {
     if (xs isEmpty) null else xs head
   }
   def search(request: String): List[Document] = {
-    findAll(Like(Document.title, "%" + request + "%"), MaxRows(100))
+    findAll(Like(Document.title, "%" + request + "%"), OrderBy(Document.id, Descending), MaxRows(100)) :::
+    findAll(Like(Document.key, "%" + request), OrderBy(Document.id, Descending), MaxRows(10))
   }
 }
