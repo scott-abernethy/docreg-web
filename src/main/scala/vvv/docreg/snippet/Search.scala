@@ -36,19 +36,31 @@ class Search extends Logger {
       info("Search for '" + search.is + "' resulted in " + ds.size + " documents") 
     val x = ds.flatMap(d => bind("doc", 
           <tr doc:id_attr="">
-            <td><doc:project/></td>
-            <td><doc:key_link/></td>
+            <td class="nowrap"><doc:project/></td>
+            <td class="nowrap"><doc:key_link/></td>
             <td><doc:title/></td>
-            <td><doc:author/></td>
+            <td class="nowrap"><doc:author/></td>
             <td class="nowrap"><doc:date/></td>
           </tr>,
         "project" -> d.projectName,
         "author" -> d.latest.author,
         "key_link" -> <a href={d.latest.link}>{d.key}</a>,
         "date" -> d.latest.date,
-        "title" -> d.title))
+        "title" -> <a href={d.infoLink}>{d.title}</a>))
 
-      SetHtml("results", <table>{x}</table>) & Show("results", 0) & Hide("dashboard", 0)
+      val table = 
+        <table>
+          <tr>
+            <th>Project</th>
+            <th>Doc</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Date</th>
+          </tr>
+          {x}
+        </table>
+
+      SetHtml("results", table) & Show("results", 0) & Hide("dashboard", 0)
     }
   }
 }

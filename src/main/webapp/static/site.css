@@ -1,3 +1,14 @@
+a {
+  color: #369;
+  text-decoration: none;
+}
+a:visited {
+  color: #369;
+}
+a:hover {
+  color: #fff;
+  background-color: #369;
+}
 .nowrap {
   white-space: nowrap;
 }
