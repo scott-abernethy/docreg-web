@@ -18,9 +18,8 @@ class Backend extends Actor {
     loop {
       react {
         case Connect() => 
-          val server = "shelob.GNET.global.vpn"
-          agent = new Agent("0.1", server, "docreg-web")
-          val library = new FileList(server, agent)
+          agent = new Agent("0.1", Backend.server, "docreg-web")
+          val library = new FileList(Backend.server, agent)
           library.addUpdateListener(new UpdateListener() {
             def updated(ds: java.util.List[Doc]) = ds.foreach(Backend.this ! _)
             def updated(d: Doc) = Backend.this ! d 
@@ -119,4 +118,8 @@ class Backend extends Actor {
       }
     }
   }
+}
+
+object Backend {
+  val server: String = Props.get("backend.server") openOr "shelob" // shelob.gnet.global.vpn?
 }
