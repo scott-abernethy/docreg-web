@@ -1,5 +1,15 @@
+== 0.2 TODO ==
+
+Sort search by most recent changes as default
+Project filter
+Reconciliation, slowly over time
+Use lift actors instead of scala actors, and set priorities correctly?
+Twitter like look?
+
 == 0.1 TODO ==
 
+/Document list
+/Search
 /Search for doc key
 /Pretty search results.
 /Clear download versus info links.
@@ -7,21 +17,18 @@
 
 == TODO ==
 
+Convert to pdf on the fly?
 No js?
 ---RESYNC IN PROGRESS---
 Get the lingo consitent, revision / version; key / nameetc.
 Check project from latest revision !!!!!
 Passing Documents around all the time, but are they up to date when received?
 Verify assumptions in docreg.txt and XXXX.log, while parsing.
-Reconsile slowly over time
 Don't download log based on modification timestamp
-Ensure we register for sequence updates before we start requesting docreg.txt
+Highlight search keywords in results?
 
 == ROLLOUT ==
 
-Document list
-Search
-Project filter
 Add new document
 Edit
 Subscriptions
