@@ -5,10 +5,16 @@
 /Clear download versus info links.
 /Note in favourites for coming soon.
 
+== 0.1.1 TODO ==
+
+---RESYNC IN PROGRESS--- title, comment, author, etc
+Download on ie broken. (because shelob.gnet.global.vpn can't be resolved, try shelob.hstx.global.vpn?)
+Search is broken in some browsers (seen on firefox for brent, chrome for rowan).
+What is limiting clean startup speed when on mysql db? Try postgresql or other? Am I not creating innodb?
+
 == TODO ==
 
 No js?
----RESYNC IN PROGRESS---
 Get the lingo consitent, revision / version; key / nameetc.
 Check project from latest revision !!!!!
 Passing Documents around all the time, but are they up to date when received?
