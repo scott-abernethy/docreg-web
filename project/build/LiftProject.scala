@@ -18,4 +18,8 @@ class LiftProject(info: ProjectInfo) extends DefaultWebProject(info) {
     "com.h2database" % "h2" % "1.2.138",
     "mysql" % "mysql-connector-java" % "5.1.9"
   ) ++ super.libraryDependencies
+
+  override def jettyPort = 9333
+
+  override def extraWebappFiles: PathFinder = "project" / "build.properties"
 }

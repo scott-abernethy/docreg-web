@@ -5,6 +5,7 @@ import scala.actors._
 import scala.actors.Actor._
 import scala.collection.JavaConversions._
 import vvv.docreg.model._
+import vvv.docreg.util._
 
 import _root_.net.liftweb.mapper._
 import _root_.net.liftweb.util._
@@ -20,7 +21,7 @@ class Backend extends Actor {
     loop {
       react {
         case Connect() => 
-          agent = new Agent("0.1", Backend.server, "docreg-web")
+          agent = new Agent(ProjectProps.get("project.version") openOr "0.0", Backend.server, ProjectProps.get("project.name") openOr "drw")
           val library = new FileList(Backend.server, agent)
           library.addUpdateListener(new UpdateListener() {
             def updated(ds: java.util.List[Doc]) = ds.foreach(Backend.this ! _)
