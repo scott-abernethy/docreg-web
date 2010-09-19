@@ -4,13 +4,13 @@ import scala.actors._
 import scala.actors.Actor._
 import vvv.docreg.model._
 
-case class PriorityReconcile(document: Document)
+case class PriorityReconcile(d: Document)
 
-object Reconciler extends Actor {
+class Reconciler(private val backend: Backend) extends Actor {
   def act() {
     loop {
       react {
-        case PriorityReconcile(d) =>
+        case PriorityReconcile(d) => backend ! Reload(d)
         case _ =>
       }
     }

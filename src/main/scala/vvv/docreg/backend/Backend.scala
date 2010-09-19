@@ -11,8 +11,10 @@ import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
 
 case class Connect()
+case class Reload(d: Document)
 
 class Backend extends Actor {
+  val reconciler = new Reconciler(this)
   var agent: Agent = _
   def act() {
     loop {
@@ -31,6 +33,9 @@ class Backend extends Actor {
           } else {
             updateDocument(document, d)
           }
+        case Reload(d) =>
+          updateRevisions(d)
+        case _ => 
       }
     }
   }
@@ -71,13 +76,9 @@ class Backend extends Actor {
   }
   
   private def updateDocument(document: Document, d: Doc) {
-    // todo check project from latest revision !!!!!
-    //println(document.key + " check latest " + document.latest + " against " + d.getVersion.toLong)
     if (document.latest_?(d.getVersion.toLong)) {
-      //println(document.key + " document update, only needs reconcile")
-      Reconciler ! PriorityReconcile(document)
+      reconciler ! PriorityReconcile(document)
     } else {
-      println(document.key + " new revisions detected")
       updateRevisions(document)
     }
     
