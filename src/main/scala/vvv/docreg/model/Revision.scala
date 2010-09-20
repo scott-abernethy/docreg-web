@@ -17,7 +17,7 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
   object filename extends MappedString(this, 200)
   object author extends MappedString(this, 100)
   object date extends MappedDateTime(this) {
-    final val dateFormat = new SimpleDateFormat("HH:mm, dd/MMM/yyyy")
+    final val dateFormat = new SimpleDateFormat("hh:mm  dd-MMM-yyyy")
     dateFormat.setTimeZone(TimeZone.getDefault)
     override def asHtml = Text(if (is != null) dateFormat format is else "?")
   }

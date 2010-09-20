@@ -5,14 +5,24 @@
 /Clear download versus info links.
 /Note in favourites for coming soon.
 
-== 0.1.1 TODO ==
+=== 0.1.1 TODO ===
 
 /Check project from latest revision.
 /Product version in Backend and template
 /---RESYNC IN PROGRESS--- title, comment, author, etc
 /Download on ie broken. (because shelob.gnet.global.vpn can't be resolved, try shelob.hstx.global.vpn?)
 /Search is broken in some browsers (seen on firefox for brent, chrome for rowan).
-What is limiting clean startup speed when on mysql db? Try postgresql or other? Am I not creating innodb?
+
+=== 0.1.2 TODO ===
+
+/Add document number to info page (and project, and editor)
+/Fix deprecated methods.
+/Date and time in local timezone!
+
+Avait colours?
+No recent activity initially, for Rowan and Rich on occassion (chrome). Add loading thingy?
+Ajax indication.
+What is limiting clean startup speed when on mysql db? Try postgresql or other? Am I not creating innodb? Single thread doing both loading of log files and adding to db, poor.
 
 == TODO ==
 
