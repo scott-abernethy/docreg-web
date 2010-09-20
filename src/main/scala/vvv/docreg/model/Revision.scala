@@ -4,6 +4,7 @@ import _root_.net.liftweb.mapper._
 import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
 import java.text._
+import java.util.TimeZone
 import scala.xml.{NodeSeq, Text}
 
 class Revision extends LongKeyedMapper[Revision] with IdPK {
@@ -16,7 +17,8 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
   object filename extends MappedString(this, 200)
   object author extends MappedString(this, 100)
   object date extends MappedDateTime(this) {
-    final val dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
+    final val dateFormat = new SimpleDateFormat("HH:mm, dd/MMM/yyyy")
+    dateFormat.setTimeZone(TimeZone.getDefault)
     override def asHtml = Text(if (is != null) dateFormat format is else "?")
   }
   object comment extends MappedText(this) {
