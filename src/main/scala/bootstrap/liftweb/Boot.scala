@@ -68,7 +68,7 @@ class Boot {
         () => Download.download(key, version)
     }
 
-    LiftRules.rewrite.append {
+    LiftRules.statelessRewrite.append {
       case RewriteRequest(ParsePath(List("doc", key, "info"), _, _, _), _, _) =>
         RewriteResponse("doc" :: "info" :: Nil, Map("key" -> key))
     }

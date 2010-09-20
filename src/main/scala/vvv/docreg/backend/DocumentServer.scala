@@ -26,7 +26,7 @@ object DocumentServer extends Actor {
           subscribers ::= subscriber
           subscriber ! Subscribed()
         case Unsubscribe(subscriber) =>
-          subscribers -= subscriber
+          subscribers = subscribers filterNot (_ == subscriber)
         case a @ DocumentAdded(d) =>
           println(d.key + " added")
           distribute(a)
