@@ -1,6 +1,8 @@
 <lift:surround with="default" at="content">
   <lift:snippet type="DocumentView:view">
-    <h3><doc:title/></h3>
+    <h3>[<doc:key/>] <doc:title/></h3>
+    <p><em>Project:</em> <doc:project/></p>
+    <doc:edit/>
     <table>
       <tr>
         <th>Version</th>
