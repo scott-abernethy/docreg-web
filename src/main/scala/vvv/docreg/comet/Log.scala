@@ -37,10 +37,8 @@ class Log extends DocumentSubscriber {
     case DocumentRevised(document, latest) =>
       add(latest)
     case DocumentChanged(document) =>
-      val update = for (
-        r <- revisions
-        if r.document == document
-      ) yield Replace(r.id.is.toString, bindRevision(revisionPart, r))
+      revisions = revisions map {r => if (r.document == document) r.reload else r}
+      val update = revisions filter {r => r.document == document} map {r => Replace(r.id.is.toString, bindRevision(revisionPart, r))}
       partialUpdate(update)
     case _ =>
   }
