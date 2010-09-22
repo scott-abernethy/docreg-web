@@ -23,6 +23,7 @@ Avait colours?
 No recent activity initially, for Rowan and Rich on occassion (chrome). Add loading thingy?
 Ajax indication.
 What is limiting clean startup speed when on mysql db? Try postgresql or other? Am I not creating innodb? Single thread doing both loading of log files and adding to db, poor.
+When document changes after --Resync-- the log version is now reloaded from db.
 
 == TODO ==
 
