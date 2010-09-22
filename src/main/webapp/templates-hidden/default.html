@@ -56,8 +56,15 @@
   </head>
   <body>
     <div class="container">
-      <div class="column span-12 last" style="text-align: right">
+      <div class="span-12" style="text-align: right">
         <h1><a href="/">DocReg<sup>beta</sup></a></h1>
+      </div>
+      <div class="span-6">
+        <lift:snippet type="Search:go">
+          <search:form type="post">
+            <search:text/><search:submit/>
+          </search:form>
+        </lift:snippet>
       </div>
 
       <hr/>
@@ -71,9 +78,10 @@
         </div>
       </div>
 
-      <div class="column span-17 last">
+      <div id="primary_content" class="column span-17 last">
         <lift:bind name="content" />
       </div>
+      <div id="secondary_content" style="display:none" class="column span-17 last"/>
 
       <hr />
       <div class="column span-23 last" style="text-align: center">

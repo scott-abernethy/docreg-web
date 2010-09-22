@@ -26,8 +26,7 @@ class Search extends Logger {
   object search extends RequestVar("")
   def go(xhtml: NodeSeq): NodeSeq = {
     bind("search", xhtml, 
-      "form" -> form _,
-      "results" -> <div/> % ("id" -> "results"))
+      "form" -> form _)
   }
   def form(xhtml: NodeSeq): NodeSeq = {
     ajaxForm (
@@ -39,7 +38,7 @@ class Search extends Logger {
   def processSearch(): JsCmd = {
     debug("Search for '" + search.is + "'")
     if (search.is.size == 0) {
-      Hide("results", 0) & Show("dashboard", 0)
+      Hide("secondary_content", 0) & Show("primary_content", 0)
     } else {
       val ds = Document.search(search.is) 
       val x = ds.flatMap(d => bind("doc", resultPart,
@@ -62,7 +61,7 @@ class Search extends Logger {
         </table>
 
       //debug("Resulted in " + out)
-      SetHtml("results", out) & Show("results", 0) & Hide("dashboard", 0)
+      SetHtml("secondary_content", out) & Show("secondary_content", 0) & Hide("primary_content", 0)
     }
   }
 }
