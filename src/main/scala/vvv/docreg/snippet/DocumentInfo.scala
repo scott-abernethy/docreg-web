@@ -22,7 +22,10 @@ class DocumentView {
       Text("Invalid document '" + key + "'")
     } else {
       bind("doc", xhtml,
+        "key" -> document.key,
         "title" -> document.title,
+        "project" -> document.projectName,
+        "edit" -> (if (document.editor.is == null) Text("") else <p><em>Editor:</em>{document.editor.is}</p>),
         "revision" -> revisions _)
     }
   }

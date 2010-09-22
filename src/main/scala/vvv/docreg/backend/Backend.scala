@@ -1,26 +1,31 @@
 package vvv.docreg.backend
 
 import com.hstx.docregsx._
-import scala.actors._
+import scala.actors.Actor
 import scala.actors.Actor._
 import scala.collection.JavaConversions._
 import vvv.docreg.model._
+import vvv.docreg.util._
 
 import _root_.net.liftweb.mapper._
 import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
 
 case class Connect()
+case class Reload(d: Document)
 
-class Backend extends Actor {
+class Backend extends Actor with Logger {
+  val reconciler = new Reconciler(this)
   var agent: Agent = _
   def act() {
     loop {
       react {
         case Connect() => 
-          val server = "shelob.GNET.global.vpn"
-          agent = new Agent("0.1", server, "docreg-web")
-          val library = new FileList(server, agent)
+          val name = ProjectProps.get("project.name") openOr "drw"
+          val version = ProjectProps.get("project.version") openOr "0.0"
+          info("Starting " + name + " v" + version + " " + java.util.TimeZone.getDefault.getDisplayName)
+          agent = new Agent(version, Backend.server, name)
+          val library = new FileList(Backend.server, agent)
           library.addUpdateListener(new UpdateListener() {
             def updated(ds: java.util.List[Doc]) = ds.foreach(Backend.this ! _)
             def updated(d: Doc) = Backend.this ! d 
@@ -32,6 +37,9 @@ class Backend extends Actor {
           } else {
             updateDocument(document, d)
           }
+        case Reload(d) =>
+          updateRevisions(d)
+        case _ => 
       }
     }
   }
@@ -72,13 +80,9 @@ class Backend extends Actor {
   }
   
   private def updateDocument(document: Document, d: Doc) {
-    // todo check project from latest revision !!!!!
-    //println(document.key + " check latest " + document.latest + " against " + d.getVersion.toLong)
     if (document.latest_?(d.getVersion.toLong)) {
-      //println(document.key + " document update, only needs reconcile")
-      Reconciler ! PriorityReconcile(document)
+      reconciler ! PriorityReconcile(document)
     } else {
-      println(document.key + " new revisions detected")
       updateRevisions(document)
     }
     
@@ -119,4 +123,8 @@ class Backend extends Actor {
       }
     }
   }
+}
+
+object Backend {
+  val server: String = Props.get("backend.server") openOr "shelob" // shelob.gnet.global.vpn?
 }

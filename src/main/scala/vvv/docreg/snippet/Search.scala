@@ -16,7 +16,7 @@ import vvv.docreg.model.Document
 
 class Search extends Logger {
   private val resultPart: NodeSeq = 
-    <tr doc:id_attr="">
+    <tr>
       <td class="nowrap"><doc:project/></td>
       <td class="nowrap"><doc:key_link/></td>
       <td><doc:title/></td>
@@ -37,6 +37,7 @@ class Search extends Logger {
     )
   }
   def processSearch(): JsCmd = {
+    debug("Search for '" + search.is + "'")
     if (search.is.size == 0) {
       Hide("results", 0) & Show("dashboard", 0)
     } else {
@@ -60,6 +61,7 @@ class Search extends Logger {
           {x}
         </table>
 
+      //debug("Resulted in " + out)
       SetHtml("results", out) & Show("results", 0) & Hide("dashboard", 0)
     }
   }
