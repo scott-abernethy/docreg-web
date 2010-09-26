@@ -1,9 +1,7 @@
 import sbt._
 
 class LiftProject(info: ProjectInfo) extends DefaultWebProject(info) {
-  val scalatoolsSnapshot = 
-    "Scala Tools Snapshot" at "http://scala-tools.org/repo-snapshots/"
-  val liftVersion = "2.1-SNAPSHOT"
+  val liftVersion = "2.1"
 
   // If you're using JRebel for Lift development, uncomment
   // this line
