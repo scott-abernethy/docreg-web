@@ -1,4 +1,4 @@
-db.driver=com.mysql.jdbc.Driver
-db.url=jdbc:mysql://localhost/docregweb
-db.user=root
+db.driver=org.h2.Driver
+db.url=jdbc:h2:docreg-web;AUTO_SERVER=TRUE
+db.user=
 db.password=
