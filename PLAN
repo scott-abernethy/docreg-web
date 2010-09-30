@@ -1,7 +1,14 @@
+java.io.IOException: Network is unreachable
+        at java.net.PlainDatagramSocketImpl.send(Native Method)
+        at java.net.DatagramSocket.send(DatagramSocket.java:629)
+        at com.hstx.docregsx.Agent$2.send(Unknown Source)
+        at com.hstx.docregsx.Agent$2.run(Unknown Source)
+        at java.lang.Thread.run(Thread.java:636)
+
 == 0.2 TODO ==
 
 Sort search by most recent changes as default
-Project filter
+Project filter, all, none, select, focus
 Reconciliation, slowly over time
 Use lift actors instead of scala actors, and set priorities correctly?
 Twitter like look?

@@ -26,4 +26,16 @@
       <h3>Favourites</h3>
       <p class="quiet">Coming soon...</p>
     </div>
+  <lift:bind-at name="sidebar">
+    <lift:snippet type="ProjectSelection.snippet">
+      <h3>Projects</h3>
+      <ol id="projects">
+        <projects:item>
+          <li>
+            <project:check/><project:name/>
+          </li>
+        </projects:item>
+      </ol>
+    </lift:snippet>
+  </lift:bind-at>
 </lift:surround>

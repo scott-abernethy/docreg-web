@@ -12,7 +12,8 @@ class Project extends LongKeyedMapper[Project] with IdPK {
 
 object Project extends Project with LongKeyedMetaMapper[Project] {
   def forName(name: String) = {
-    val xs = findAll(By(Project.name, name))
+    val xs = findAll(By(Project.name, name), OrderBy(Project.name, Ascending))
     if (xs isEmpty) null else xs head
   }
+  override def findAll = findAll(OrderBy(Project.name, Ascending))
 }
