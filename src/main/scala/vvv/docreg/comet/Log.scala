@@ -14,7 +14,8 @@ import net.liftweb.http.js.jquery.JqJsCmds._
 
 class Log extends DocumentSubscriber {
   private var revisions: List[Revision] = Nil
-  private lazy val revisionPart = deepFindKids(defaultXml, "log", "item")
+  private lazy val revisionPart: NodeSeq = deepFindKids(defaultXml, "log", "item")
+  private lazy val revisionInnerPart: NodeSeq = revisionPart \ "div"
 
   override def defaultPrefix = Full("log")
 
@@ -38,7 +39,7 @@ class Log extends DocumentSubscriber {
       add(latest)
     case DocumentChanged(document) =>
       revisions = revisions map {r => if (r.document == document) r.reload else r}
-      val update = revisions filter {r => r.document == document} map {r => Replace(r.id.is.toString, bindRevision(revisionPart, r))}
+      val update = revisions filter {r => r.document == document} map {r => SetHtml(r.id.is.toString, bindRevision(revisionInnerPart, r, false))}
       partialUpdate(update)
     case _ =>
   }
@@ -46,18 +47,19 @@ class Log extends DocumentSubscriber {
   private def add(r: Revision) = {
     val remove = revisions.last
     revisions = r :: revisions.dropRight(1)
-    partialUpdate(PrependHtml("log", bindRevision(revisionPart, r)) & Replace(remove.id.is.toString, Text("")))
+    partialUpdate(PrependHtml("log", bindRevision(revisionPart, r, true)) & FadeIn(r.id.is.toString) & Replace(remove.id.is.toString, Text("")))
   }
 
   def render = bind("log", "item" -> bindRevisions _)
 
   private def bindRevisions(xml: NodeSeq): NodeSeq =
-    revisions.flatMap(bindRevision(xml, _))
+    revisions.flatMap(bindRevision(xml, _, false))
 
-  private def bindRevision(xml: NodeSeq, r: Revision): NodeSeq = {
+  private def bindRevision(xml: NodeSeq, r: Revision, hidden: Boolean): NodeSeq = {
     val d: Document = r.document.obj openOr null
     bind("doc", xml, 
       AttrBindParam("id_attr", r.id.is.toString, "id"),
+      AttrBindParam("style_attr", if (hidden) "display:none" else "", "style"),
       "link" -> <span><a href={d.latest.link}>{d.key}</a></span><span class="quiet">v<a href={r.link}>{r.version}</a></span>,
       "info" -> <span><a href={d.infoLink}>more</a></span>,
       "key" -> d.key,
