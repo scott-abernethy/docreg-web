@@ -35,8 +35,7 @@ project/boot
 
 # db
 lift_proto*
-/*.h2.db
-/*.lock.db
+/*.db
 
 # other scm
 .svn
