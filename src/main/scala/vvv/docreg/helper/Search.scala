@@ -1,4 +1,4 @@
-package vvv.docreg.snippet
+package vvv.docreg.helper
 
 import _root_.scala.xml._
 import _root_.net.liftweb._
@@ -12,9 +12,9 @@ import js._
 import JsCmds._
 import _root_.net.liftweb.http.js.jquery.JqJsCmds._
 import _root_.net.liftweb.http.js.JE.JsRaw
-import vvv.docreg.model.Document
+import vvv.docreg.model.{FilteredDocument,Document}
 
-class Search extends Logger {
+trait Search extends Logger {
   private val resultPart: NodeSeq = 
     <tr>
       <td class="nowrap"><doc:project/></td>
@@ -23,8 +23,8 @@ class Search extends Logger {
       <td class="nowrap"><doc:author/></td>
       <td class="nowrap"><doc:date/></td>
     </tr>
-  object search extends RequestVar("")
-  def go(xhtml: NodeSeq): NodeSeq = {
+  object search extends SessionVar("")
+  def bindSearch(xhtml: NodeSeq): NodeSeq = {
     bind("search", xhtml, 
       "form" -> form _)
   }
@@ -36,11 +36,11 @@ class Search extends Logger {
     )
   }
   def processSearch(): JsCmd = {
-    debug("Search for '" + search.is + "'")
+    info("Search for '" + search.is + "'")
     if (search.is.size == 0) {
       Hide("secondary_content", 0) & Show("primary_content", 0)
     } else {
-      val ds = Document.search(search.is) 
+      val ds = FilteredDocument.search(search.is) 
       val x = ds.flatMap(d => bind("doc", resultPart,
         "project" -> d.projectName,
         "author" -> d.latest.author,

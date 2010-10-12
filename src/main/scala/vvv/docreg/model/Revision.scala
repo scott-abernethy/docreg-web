@@ -10,7 +10,7 @@ import scala.xml.{NodeSeq, Text}
 class Revision extends LongKeyedMapper[Revision] with IdPK {
   def getSingleton = Revision
 
-  object document extends MappedLongForeignKey(this, Document) {
+  object document extends LongMappedMapper(this, Document) {
     override def dbIndexed_? = true
   }
   object version extends MappedLong(this) // unique?

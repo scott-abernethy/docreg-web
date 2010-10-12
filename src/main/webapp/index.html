@@ -1,5 +1,6 @@
 <lift:surround with="default" at="content">
     <div class="span-8 colborder">
+      <lift:snippet type="Dashboard.log">
       <h3>Recent Activity</h3>
       <lift:comet type="Log">
         <ol id="log">
@@ -21,6 +22,7 @@
           </log:item>
         </ol>
       </lift:comet>
+      </lift:snippet>
     </div>
     <div class="span-8 last">
       <h3>Favourites</h3>
@@ -28,7 +30,7 @@
     </div>
   <lift:bind-at name="sidebar">
     <div class="sidebox">
-    <lift:snippet type="ProjectSelection.snippet">
+    <lift:snippet type="Dashboard.filter">
       <h3>Projects</h3>
       <ol id="projects">
         <projects:item>
@@ -39,5 +41,12 @@
       </ol>
     </lift:snippet>
     </div>
+  </lift:bind-at>
+  <lift:bind-at name="topbar">
+    <lift:snippet type="Dashboard.search">
+      <search:form type="post">
+        <search:text/><search:submit/>
+      </search:form>
+    </lift:snippet>
   </lift:bind-at>
 </lift:surround>

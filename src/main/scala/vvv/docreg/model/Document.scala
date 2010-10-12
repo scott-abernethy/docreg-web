@@ -8,7 +8,7 @@ class Document extends LongKeyedMapper[Document] with IdPK {
   def getSingleton = Document
 
   object key extends MappedString(this, 20) // unique
-  object project extends MappedLongForeignKey(this, Project)
+  object project extends LongMappedMapper(this, Project)
   object title extends MappedString(this, 200)
   object editor extends MappedString(this, 100) 
   def revisions = Revision.forDocument(this)
@@ -30,8 +30,14 @@ object Document extends Document with LongKeyedMetaMapper[Document] {
     val xs = findAll(By(Document.key, key))
     if (xs isEmpty) null else xs head
   }
+}
+
+object FilteredDocument {
+  import vvv.docreg.helper.ProjectSelection
   def search(request: String): List[Document] = {
-    findAll(Like(Document.title, "%" + request + "%"), OrderBy(Document.id, Descending), MaxRows(100)) :::
-    findAll(Like(Document.key, "%" + request), OrderBy(Document.id, Descending), MaxRows(10))
+    // currently search for all then filter for matchings. a bit lame.
+    val ds = Document.findAll(Like(Document.title, "%" + request + "%"), OrderBy(Document.id, Descending), MaxRows(100))
+    val checked = ProjectSelection.projects.is
+    ds filter ( _.project.obj.map( checked contains _ ) openOr false )
   }
 }
