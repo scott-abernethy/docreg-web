@@ -12,10 +12,16 @@ import util.Helpers._
 import net.liftweb.http.js.JsCmds._
 import net.liftweb.http.js.jquery.JqJsCmds._
 
+object CurrentLog extends SessionVar[Box[Log]](Empty)
+
+case class ReloadLog()
+
 class Log extends DocumentSubscriber {
   private var revisions: List[Revision] = Nil
   private lazy val revisionPart: NodeSeq = deepFindKids(defaultXml, "log", "item")
   private lazy val revisionInnerPart: NodeSeq = revisionPart \ "div"
+
+  CurrentLog.set(Full(this))
 
   override def defaultPrefix = Full("log")
 
@@ -31,8 +37,7 @@ class Log extends DocumentSubscriber {
 
   override def lowPriority = {
     case Subscribed() => 
-      revisions = Revision.findAll(OrderBy(Revision.date, Descending), MaxRows(20))
-      reRender(true)
+      this ! ReloadLog()
     case DocumentAdded(document) =>
       add(document.latest)
     case DocumentRevised(document, latest) =>
@@ -41,6 +46,9 @@ class Log extends DocumentSubscriber {
       revisions = revisions map {r => if (r.document == document) r.reload else r}
       val update = revisions filter {r => r.document == document} map {r => SetHtml(r.id.is.toString, bindRevision(revisionInnerPart, r, false))}
       partialUpdate(update)
+    case ReloadLog() =>
+      revisions = FilteredRevision.findRecent()
+      reRender(true)
     case _ =>
   }
 

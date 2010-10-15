@@ -1,5 +1,6 @@
 package vvv.docreg.snippet
 
+import vvv.docreg.comet._
 import vvv.docreg.model._
 import vvv.docreg.helper._
 import net.liftweb._
@@ -25,7 +26,10 @@ class Dashboard extends Logger
   lazy val indexXhtml = TemplateFinder.findAnyTemplate("index" :: Nil) openOr <div/>
   //lazy val logXhtml = indexXhtml \\ "snippet" filter ( _.attribute("type") == Some(Text("Dashboard.log")) )
   lazy val logXhtml = indexXhtml \\ "surround" \ "div"
-  override def projectSelectionUpdate(): JsCmd = SetHtml("primary_content", logXhtml) & processSearch
+  override def projectSelectionUpdate(): JsCmd = {
+    CurrentLog.foreach(_ ! ReloadLog())
+    SetHtml("primary_content", logXhtml) & processSearch
+  }
   // later use this to bind? and seperate bits as seperate templates. because it is going to have to be a sethtml js response.
 /*  val xhtml = TemplateFinder.findAnyTemplate("path" :: "to" :: "file" :: Nil) match {
   case Full(template) => bind("hello", template, "world" -> "Mads says hi!")
