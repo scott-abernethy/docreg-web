@@ -46,10 +46,8 @@ object Revision extends Revision with LongKeyedMetaMapper[Revision] {
 object FilteredRevision {
   import vvv.docreg.helper.ProjectSelection
   def findRecent(): List[Revision] = {
-    // currently search for all then filter for matchings. a bit lame.
-      val rs = Revision.findAll(OrderBy(Revision.date, Descending), MaxRows(20))
-    val checked = ProjectSelection.projects.is
-    rs filter ( _.document.obj.map( _.project.obj.map( checked contains _ ) openOr false ) openOr false )
+    val checked = ProjectSelection.projects.is.toList
+    Revision.findAll(In(Revision.document, Document.id, In(Document.project, Project.id, ByList(Project.name, checked map ( _.name.is )))), OrderBy(Revision.date, Descending), MaxRows(20))
   }
 }
 

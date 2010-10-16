@@ -35,9 +35,8 @@ object Document extends Document with LongKeyedMetaMapper[Document] {
 object FilteredDocument {
   import vvv.docreg.helper.ProjectSelection
   def search(request: String): List[Document] = {
-    // currently search for all then filter for matchings. a bit lame.
-    val ds = Document.findAll(Like(Document.title, "%" + request + "%"), OrderBy(Document.id, Descending), MaxRows(100))
-    val checked = ProjectSelection.projects.is
+    val checked = ProjectSelection.projects.is.toList
+    val ds = Document.findAll(Like(Document.title, "%" + request + "%"), In(Document.project, Project.id, ByList(Project.name, checked map ( _.name.is ))), OrderBy(Document.id, Descending), MaxRows(100))
     ds filter ( _.project.obj.map( checked contains _ ) openOr false )
   }
 }
