@@ -31,11 +31,11 @@ trait ProjectSelection extends Logger {
     SHtml.ajaxCheckbox(initial, checked => projectChecked(p, checked))
   }
   private def projectFocused(project: Project): JsCmd = {
-    info("focused " + project.name.is)
+    //info("focused " + project.name.is)
     projectSelectionUpdate
   }
   private def projectChecked(project: Project, checked: Boolean): JsCmd = {
-    info("checked " + project.name.is)
+    //info("checked " + project.name.is)
     val process = if (checked) ProjectSelection.projects.checked _ else ProjectSelection.projects.unchecked _
     process(project)
     projectSelectionUpdate
@@ -45,8 +45,27 @@ trait ProjectSelection extends Logger {
 
 object ProjectSelection {
   import scala.collection.immutable._
-  object projects extends SessionVar[Set[Project]] (Project.findAll.toSet[Project]) {
-    def checked(p: Project) { this(is + p) }
-    def unchecked(p: Project) { this(is - p) }
+  import net.liftweb.http.provider.HTTPCookie
+
+  object projects extends SessionVar[Set[Project]] (findSelected) {
+    def checked(p: Project) { save(is + p) }
+    def unchecked(p: Project) { save(is - p) }
+    def save(ps: Set[Project]) {
+      saveSelected(ps)
+      this(ps) 
+    }
+  }
+
+  val selectedProjectsCookie = "DocRegSelectedProjects"
+
+  def findSelected(): Set[Project] = {
+    // cookie value is list of selected project ids.
+    //println("in " + S.receivedCookies) 
+    S.cookieValue(selectedProjectsCookie).map(_.split(",").map(Project.find(_) openOr null).filter(_ != null).toSet[Project]) openOr Project.findAll.toSet[Project]
+  }
+
+  def saveSelected(ps: Set[Project]) {
+    val cookie = HTTPCookie(selectedProjectsCookie, ps.map(_.id.is.toString).reduceRight((a, b) => a + ":" + b)).setMaxAge(3600 * 24 * 365)  
+    S.addCookie(cookie) 
   }
 }

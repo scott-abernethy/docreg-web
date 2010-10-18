@@ -28,6 +28,8 @@ class Dashboard extends Logger
   lazy val logXhtml = indexXhtml \\ "surround" \ "div"
   override def projectSelectionUpdate(): JsCmd = {
     CurrentLog.foreach(_ ! ReloadLog())
+    println("in " + S.receivedCookies) 
+    println("out " + S.responseCookies)
     SetHtml("primary_content", logXhtml) & processSearch
   }
   // later use this to bind? and seperate bits as seperate templates. because it is going to have to be a sethtml js response.
