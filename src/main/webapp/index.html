@@ -31,14 +31,17 @@
   <lift:bind-at name="sidebar">
     <div class="sidebox">
     <lift:snippet type="Dashboard.filter">
-      <h3>Projects</h3>
-      <ol id="projects">
-        <projects:item>
+      <div id="project_filter">
+        <h3>Projects</h3>
+        <projects:all/><projects:none/>
+        <ol class="projects">
+          <projects:item>
           <li>
             <project:check/><project:name/>
           </li>
-        </projects:item>
-      </ol>
+          </projects:item>
+        </ol>
+      </div>
     </lift:snippet>
     </div>
   </lift:bind-at>

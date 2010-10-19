@@ -9,11 +9,14 @@ import js._
 import js.JsCmds._
 import scala.xml.{NodeSeq, Text}
 import vvv.docreg.model._
+import vvv.docreg.util._
 
 trait ProjectSelection extends Logger {
   def projects(in: NodeSeq): NodeSeq = {
-    val selected = S.findCookie("vvv.docreg.projectsSelected")
-    bind("projects", in, "item" -> bindProjects _)
+    bind("projects", in, 
+      "all" -> SHtml.ajaxButton("All", () => checkAll),
+      "none" -> SHtml.ajaxButton("None", () => checkNone),
+      "item" -> bindProjects _)
   }
   private def bindProjects(in: NodeSeq): NodeSeq = {
     val checked = ProjectSelection.projects.is
@@ -40,6 +43,19 @@ trait ProjectSelection extends Logger {
     process(project)
     projectSelectionUpdate
   }
+  private def checkAll: JsCmd = {
+    ProjectSelection.projects.all
+    updateProjects & projectSelectionUpdate
+  }
+  private def checkNone: JsCmd = {
+    ProjectSelection.projects.none
+    updateProjects & projectSelectionUpdate
+  }
+  lazy val projectFilterXhtml = TemplateParse.parseDiv(TemplateFinder.findAnyTemplate("index" :: Nil), "project_filter")
+  private def updateProjects: JsCmd = {
+    SetHtml("project_filter", projects(projectFilterXhtml))
+  }
+    
   def projectSelectionUpdate: JsCmd = Noop
 }
 
@@ -48,6 +64,8 @@ object ProjectSelection {
   import net.liftweb.http.provider.HTTPCookie
 
   object projects extends SessionVar[Set[Project]] (findSelected) {
+    def all() { save(findAllProjects) }
+    def none() { save(Set.empty) }
     def checked(p: Project) { save(is + p) }
     def unchecked(p: Project) { save(is - p) }
     def save(ps: Set[Project]) {
@@ -58,14 +76,17 @@ object ProjectSelection {
 
   val selectedProjectsCookie = "DocRegSelectedProjects"
 
+  def findAllProjects(): Set[Project] = Project.findAll.toSet[Project]
+
   def findSelected(): Set[Project] = {
     // cookie value is list of selected project ids.
     //println("in " + S.receivedCookies) 
-    S.cookieValue(selectedProjectsCookie).map(_.split(",").map(Project.find(_) openOr null).filter(_ != null).toSet[Project]) openOr Project.findAll.toSet[Project]
+    S.cookieValue(selectedProjectsCookie).map(_.split(",").map(Project.find(_) openOr null).filter(_ != null).toSet[Project]) openOr findAllProjects 
   }
 
   def saveSelected(ps: Set[Project]) {
-    val cookie = HTTPCookie(selectedProjectsCookie, ps.map(_.id.is.toString).reduceRight((a, b) => a + ":" + b)).setMaxAge(3600 * 24 * 365)  
+    val value = if (ps.isEmpty) "" else ps.map(_.id.is.toString).reduceRight((a, b) => a + ":" + b)
+    val cookie = HTTPCookie(selectedProjectsCookie, value).setMaxAge(3600 * 24 * 365)  
     S.addCookie(cookie) 
   }
 }
