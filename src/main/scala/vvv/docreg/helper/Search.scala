@@ -16,13 +16,24 @@ import vvv.docreg.model.{FilteredDocument,Document}
 
 trait Search extends Logger {
   private val resultPart: NodeSeq = 
-    <tr>
-      <td class="nowrap"><doc:project/></td>
-      <td class="nowrap"><doc:key_link/></td>
-      <td><doc:title/></td>
-      <td class="nowrap"><doc:author/></td>
-      <td class="nowrap"><doc:date/></td>
-    </tr>
+        <table>
+          <tr>
+            <th>Project</th>
+            <th>Doc</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Date</th>
+          </tr>
+          <search:result>
+            <tr>
+              <td><doc:project/></td>
+              <td class="nowrap"><doc:key_link/></td>
+              <td><doc:title/></td>
+              <td class="nowrap"><doc:author/></td>
+              <td class="nowrap"><doc:date/></td>
+            </tr>
+          </search:result>
+        </table>
   object search extends SessionVar("")
   def bindSearch(xhtml: NodeSeq): NodeSeq = {
     bind("search", xhtml, 
@@ -40,28 +51,19 @@ trait Search extends Logger {
     if (search.is.size == 0) {
       Hide("secondary_content", 0) & Show("primary_content", 0)
     } else {
-      val ds = FilteredDocument.search(search.is) 
-      val x = ds.flatMap(d => bind("doc", resultPart,
+      val ds = FilteredDocument.searchLike(Document.title, "%" + search.is + "%") 
+      SetHtml("secondary_content", results(resultPart, ds)) & Show("secondary_content", 0) & Hide("primary_content", 0)
+    }
+  }
+  def results(in: NodeSeq, ds: List[Document]): NodeSeq = {
+    bind("search", in, "result" -> (n => items(n, ds)))
+  }
+  def items(in: NodeSeq, ds: List[Document]): NodeSeq = {
+    ds.flatMap(d => bind("doc", in,
         "project" -> d.projectName,
         "author" -> d.latest.author,
         "key_link" -> <a href={d.latest.link}>{d.key}</a>,
         "date" -> d.latest.date,
         "title" -> <a href={d.infoLink}>{d.title}</a>))
-
-      val out = 
-        <table>
-          <tr>
-            <th>Project</th>
-            <th>Doc</th>
-            <th>Title</th>
-            <th>Author</th>
-            <th>Date</th>
-          </tr>
-          {x}
-        </table>
-
-      //debug("Resulted in " + out)
-      SetHtml("secondary_content", out) & Show("secondary_content", 0) & Hide("primary_content", 0)
-    }
   }
 }
