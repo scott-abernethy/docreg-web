@@ -51,12 +51,14 @@ trait Search extends Logger {
     if (search.is.size == 0) {
       Hide("secondary_content", 0) & Show("primary_content", 0)
     } else {
-      val ds = FilteredDocument.searchLike(Document.title, "%" + search.is + "%") 
-      SetHtml("secondary_content", results(resultPart, ds)) & Show("secondary_content", 0) & Hide("primary_content", 0)
+      val keyMatches = results(resultPart, FilteredDocument.searchLike(Document.key, pad(search.is)))
+      val titleMatches = results(resultPart, FilteredDocument.searchLike(Document.title, "%" + search.is + "%"))
+      SetHtml("secondary_content", keyMatches ++ titleMatches) & Show("secondary_content", 0) & Hide("primary_content", 0)
     }
   }
-  def results(in: NodeSeq, ds: List[Document]): NodeSeq = {
-    bind("search", in, "result" -> (n => items(n, ds)))
+  def results(in: NodeSeq, ds: List[Document]): NodeSeq = ds match {
+    case Nil => Text("")
+    case xs => bind("search", in, "result" -> (n => items(n, xs)))
   }
   def items(in: NodeSeq, ds: List[Document]): NodeSeq = {
     ds.flatMap(d => bind("doc", in,
@@ -65,5 +67,10 @@ trait Search extends Logger {
         "key_link" -> <a href={d.latest.link}>{d.key}</a>,
         "date" -> d.latest.date,
         "title" -> <a href={d.infoLink}>{d.title}</a>))
+  }
+  def pad(key: String) = {
+    var x = key
+    List.range(x.size, 4).foreach((i) => x = "0" + x)
+    x 
   }
 }
