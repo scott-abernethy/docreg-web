@@ -2,6 +2,7 @@ package vvv.docreg.comet
 
 import vvv.docreg.model._
 import vvv.docreg.backend._
+import vvv.docreg.helper._
 import scala.xml.{NodeSeq,Text}
 import net.liftweb._
 import http._
@@ -39,9 +40,9 @@ class Log extends DocumentSubscriber {
     case Subscribed() => 
       this ! ReloadLog()
     case DocumentAdded(document) =>
-      add(document.latest)
+      add(document, document.latest)
     case DocumentRevised(document, latest) =>
-      add(latest)
+      add(document, latest)
     case DocumentChanged(document) =>
       revisions = revisions map {r => if (r.document == document) r.reload else r}
       val update = revisions filter {r => r.document == document} map {r => SetHtml(r.id.is.toString, bindRevision(revisionInnerPart, r, false))}
@@ -52,10 +53,12 @@ class Log extends DocumentSubscriber {
     case _ =>
   }
 
-  private def add(r: Revision) = {
-    val remove = revisions.last
-    revisions = r :: revisions.dropRight(1)
-    partialUpdate(PrependHtml("log", bindRevision(revisionPart, r, true)) & FadeIn(r.id.is.toString) & Replace(remove.id.is.toString, Text("")))
+  private def add(d: Document, r: Revision) = {
+    if (d.project.map(ProjectSelection.projects.is contains _) openOr false) {
+      val remove = revisions.last
+      revisions = r :: revisions.dropRight(1)
+      partialUpdate(PrependHtml("log", bindRevision(revisionPart, r, true)) & FadeIn(r.id.is.toString) & Replace(remove.id.is.toString, Text("")))
+    }
   }
 
   def render = bind("log", "item" -> bindRevisions _)
