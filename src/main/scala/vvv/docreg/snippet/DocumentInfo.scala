@@ -1,14 +1,16 @@
 package vvv.docreg.snippet
 
+import vvv.docreg.backend._
 import vvv.docreg.model._
 import net.liftweb._
 import util._
 import common._
 import Helpers._
 import http._
+import js._
 import scala.xml.{NodeSeq, Text}
 
-class DocumentView {
+class DocumentView extends Logger {
   var key = S.param("key") openOr ""
 
   var document: Document = try {
@@ -26,7 +28,8 @@ class DocumentView {
         "title" -> document.title,
         "project" -> document.projectName,
         "edit" -> (if (document.editor.is == null) Text("") else <p><em>Editor:</em>{document.editor.is}</p>),
-        "revision" -> revisions _)
+        "revision" -> revisions _,
+        "approval" -> approvalForm _)
     }
   }
 
@@ -39,5 +42,16 @@ class DocumentView {
         "link" -> <span><a href={r.link}>{r.version}</a></span>,
         "comment" -> r.comment)
     }
+  }
+
+  private def approvalForm(xhtml: NodeSeq): NodeSeq = {
+    SHtml.ajaxForm (
+      bind("approval", xhtml,
+        "approve" -> SHtml.submit("Approve", approve _)) ++ SHtml.hidden(approve _)
+    )
+  }
+  private def approve(): JsCmd = {
+    Backend ! ApprovalApproved(document, document.latest)
+    JsCmds.Noop
   }
 }

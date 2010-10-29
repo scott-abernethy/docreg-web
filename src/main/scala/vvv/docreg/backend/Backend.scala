@@ -13,6 +13,7 @@ import _root_.net.liftweb.common._
 
 case class Connect()
 case class Reload(d: Document)
+case class ApprovalApproved(document: Document, revision: Revision)
 
 class Backend extends Actor with Logger {
   val reconciler = new Reconciler(this)
@@ -39,6 +40,15 @@ class Backend extends Actor with Logger {
           }
         case Reload(d) =>
           updateRevisions(d)
+        case ApprovalApproved(d, r) =>
+          val done = agent.approval(r.filename, 
+            "Scott Abernethy", 
+            "scott.abernethy@aviatnet.com",
+            ApprovalStatus.Approved,
+            "x",
+            "10.16.1.12",
+            "scott.abernethy@aviatnet.com")
+          println("approval for " + d + " " + r + " => " + done)
         case _ => 
       }
     }
@@ -125,6 +135,6 @@ class Backend extends Actor with Logger {
   }
 }
 
-object Backend {
+object Backend extends Backend {
   val server: String = Props.get("backend.server") openOr "shelob" // shelob.gnet.global.vpn?
 }

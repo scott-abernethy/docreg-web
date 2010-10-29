@@ -75,8 +75,7 @@ class Boot {
 
     DocumentServer start
 
-    val backend = new Backend
-    backend.start
-    backend ! Connect()
+    Backend.start
+    Backend ! Connect()
   }
 }
