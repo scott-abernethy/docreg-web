@@ -18,7 +18,12 @@
           <td class="nowrap"><rev:link/></td>
           <td class="nowrap"><rev:author/></td>
           <td class="nowrap"><rev:date/></td>
-          <td class="quiet"><rev:comment/></td>
+          <td class="quiet">
+            <rev:comment/>
+            <rev:approvals>
+            <br/><approval:state/><approval:date/><approval:comment/>
+            </rev:approvals>
+          </td>
         </tr>
       </doc:revision>
     </table>

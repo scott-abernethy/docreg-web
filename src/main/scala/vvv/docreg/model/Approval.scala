@@ -15,6 +15,7 @@ class Approval extends LongKeyedMapper[Approval] with IdPK {
 
 object Approval extends Approval with LongKeyedMetaMapper[Approval] {
   override def fieldOrder = List(revision, state, by, date, comment)
+  def forRevision(r: Revision): List[Approval] = findAll(By(Approval.revision, r))
 }
 
 object ApprovalState extends Enumeration {
@@ -22,4 +23,9 @@ object ApprovalState extends Enumeration {
   val approved = Value("Approved")
   val notApproved = Value("Not Approved")
   val pending = Value("Pending")
+  def parse(text: String): ApprovalState = text match {
+    case "Approved" => approved
+    case "Pending" => pending
+    case _ => notApproved
+  }
 }

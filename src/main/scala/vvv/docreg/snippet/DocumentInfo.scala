@@ -39,6 +39,7 @@ class DocumentView extends Logger {
         "version" -> r.version,
         "author" -> r.author,
         "date" -> r.date,
+        "approvals" -> ((in: NodeSeq) => approvals(in, r)),
         "link" -> <span><a href={r.link}>{r.version}</a></span>,
         "comment" -> r.comment)
     }
@@ -53,5 +54,14 @@ class DocumentView extends Logger {
   private def approve(): JsCmd = {
     Backend ! ApprovalApproved(document, document.latest)
     JsCmds.Noop
+  }
+
+  private def approvals(xhtml: NodeSeq, r: Revision): NodeSeq = {
+    Approval.forRevision(r) flatMap {a =>
+      bind("approval", xhtml,
+        "state" -> a.state,
+        "comment" -> a.comment,
+        "date" -> a.date)
+    }
   }
 }

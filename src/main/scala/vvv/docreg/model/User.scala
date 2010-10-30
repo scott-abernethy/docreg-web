@@ -24,4 +24,5 @@ object User extends User with LongKeyedMetaMapper[User] {
   override def dbTableName = "users"
   override def fieldOrder = List(id, name, email)
   def loggedIn_? = false
+  def forEmail(email: String): Box[User] = find(By(User.email, email)) 
 }

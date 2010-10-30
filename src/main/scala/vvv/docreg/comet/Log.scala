@@ -55,6 +55,7 @@ class Log extends DocumentSubscriber {
 
   private def add(d: Document, r: Revision) = {
     if (d.project.map(ProjectSelection.projects.is contains _) openOr false) {
+      // TODO bug here if no revisions! 
       val remove = revisions.last
       revisions = r :: revisions.dropRight(1)
       partialUpdate(PrependHtml("log", bindRevision(revisionPart, r, true)) & FadeIn(r.id.is.toString) & Replace(remove.id.is.toString, Text("")))

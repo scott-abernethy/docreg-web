@@ -1,6 +1,6 @@
 package vvv.docreg.backend
 
-import com.hstx.docregsx._
+import com.hstx.docregsx.{Document => AgentDocument, Revision => AgentRevision, Approval => AgentApproval, ApprovalStatus => AgentApprovalState, _}
 import scala.actors.Actor
 import scala.actors.Actor._
 import scala.collection.JavaConversions._
@@ -12,6 +12,7 @@ import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
 
 case class Connect()
+case class Updated(d: AgentDocument)
 case class Reload(d: Document)
 case class ApprovalApproved(document: Document, revision: Revision)
 
@@ -28,10 +29,10 @@ class Backend extends Actor with Logger {
           agent = new Agent(version, Backend.server, name)
           val library = new FileList(Backend.server, agent)
           library.addUpdateListener(new UpdateListener() {
-            def updated(ds: java.util.List[Doc]) = ds.foreach(Backend.this ! _)
-            def updated(d: Doc) = Backend.this ! d 
+            def updated(ds: java.util.List[AgentDocument]) = ds.foreach(Backend.this ! Updated(_))
+            def updated(d: AgentDocument) = Backend.this ! Updated(d)
           })
-        case d: Doc => 
+        case Updated(d) => 
           val document = Document.forKey(d.getKey)
           if (document == null) {
             createDocument(d)
@@ -44,12 +45,12 @@ class Backend extends Actor with Logger {
           val done = agent.approval(r.filename, 
             "Scott Abernethy", 
             "scott.abernethy@aviatnet.com",
-            ApprovalStatus.Approved,
+            AgentApprovalState.Approved,
             "x",
             "10.16.1.12",
             "scott.abernethy@aviatnet.com")
           println("approval for " + d + " " + r + " => " + done)
-        case _ => 
+        case _ => println("?")
       }
     }
   }
@@ -67,21 +68,22 @@ class Backend extends Actor with Logger {
     }
   }
 
-  private def createDocument(d: Doc) {
+  private def createDocument(d: AgentDocument) {
     try {
       val document = Document.create
       assignDocument(document, d)
       document.save
 
       agent.loadRevisions(d).foreach{createRevision(document, _)}
-
+      agent.loadApprovals(d).foreach{createApproval(document, _)}
+      
       DocumentServer ! DocumentAdded(document)
     } catch {
       case e: java.lang.NullPointerException => println("Exception " + e + " with " + d.getKey)
     }
   }
 
-  private def createRevision(document: Document, r: Rev): Revision = {
+  private def createRevision(document: Document, r: AgentRevision): Revision = {
     val revision = Revision.create
     revision.document(document)
     assignRevision(revision, r)
@@ -89,7 +91,16 @@ class Backend extends Actor with Logger {
     revision
   }
   
-  private def updateDocument(document: Document, d: Doc) {
+  private def createApproval(document: Document, a: AgentApproval): Approval = {
+    val approval = Approval.create
+    approval.revision(Revision.forDocument(document, a.getVersion))
+    approval.by(User.forEmail(a.getApproverEmail))
+    assignApproval(approval, a)
+    approval.save
+    approval
+  }
+  
+  private def updateDocument(document: Document, d: AgentDocument) {
     if (document.latest_?(d.getVersion.toLong)) {
       reconciler ! PriorityReconcile(document)
     } else {
@@ -103,19 +114,25 @@ class Backend extends Actor with Logger {
     }
   }
 
-  private def assignDocument(document: Document, d: Doc) {
+  private def assignDocument(document: Document, d: AgentDocument) {
     document.key(d.getKey)
     document.project(projectWithName(d.getProject))
     document.title(d.getTitle)
     document.editor(d.getEditor)
   }
 
-  private def assignRevision(revision: Revision, r: Rev) {
+  private def assignRevision(revision: Revision, r: AgentRevision) {
     revision.version(r.getVersion)
     revision.filename(r.getFilename)
     revision.author(r.getAuthor)
     revision.date(r.getDate)
     revision.comment(r.getComment)
+  }
+  
+  private def assignApproval(approval: Approval, a: AgentApproval) {
+    approval.state(ApprovalState.parse(a.getStatus.toString))
+    approval.date(a.getDate)
+    approval.comment(a.getComment)
   }
 
   private def updateRevisions(document: Document) {
@@ -131,6 +148,12 @@ class Backend extends Actor with Logger {
           DocumentServer ! DocumentChanged(document)
         }
       }
+    }
+  }
+
+  private def updateApprovals(document: Document) {
+    agent.loadApprovals(document.key).foreach { a =>
+      println("found approval " + a)
     }
   }
 }
