@@ -36,7 +36,7 @@ class Boot {
     // Use Lift's Mapper ORM to populate the database
     // you don't need to use Mapper to use Lift... use
     // any ORM you want
-    Schemifier.schemify(true, Schemifier.infoF _, User, Project, Document, Revision)
+    Schemifier.schemify(true, Schemifier.infoF _, User, Project, Document, Revision, Approval)
 
     // where to search snippet
     LiftRules.addToPackages("vvv.docreg")
@@ -44,9 +44,7 @@ class Boot {
     // Build SiteMap
     val entries = List(
       Menu.i("Home") / "index", // the simple way to declare a menu
-      Nil) :::
-    // the User management menu items
-    User.sitemap
+      Nil)
 
     // set the sitemap.  Note if you don't want access control for
     // each page, just comment this line out.
