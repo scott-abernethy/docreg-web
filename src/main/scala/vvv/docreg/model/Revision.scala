@@ -13,7 +13,9 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
   object document extends LongMappedMapper(this, Document) {
     override def dbIndexed_? = true
   }
-  object version extends MappedLong(this) // unique?
+  object version extends MappedLong(this) { // unique?
+    override def asHtml = Text("v" + is)
+  }
   object filename extends MappedString(this, 200)
   object author extends MappedString(this, 100)
   object date extends MappedDateTime(this) {

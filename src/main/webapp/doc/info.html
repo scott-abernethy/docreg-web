@@ -1,31 +1,55 @@
 <lift:surround with="default" at="content">
   <lift:snippet type="DocumentView:view">
-    <h3>[<doc:key/>] <doc:title/></h3>
-    <p><em>Project:</em> <doc:project/></p>
-    <doc:edit/>
-    <doc:approval>
-      <approval:approve/>
-    </doc:approval>
-    <table>
-      <tr>
-        <th>Version</th>
-        <th>Author</th>
-        <th>Date</th>
-        <th>Comment</th>
-      </tr>
-      <doc:revision>
+    <h3><doc:title/></h3>
+    <hr/>
+    <div class="span-9">
+      <h4>Information</h4>
+      <table>
+        <tr><th>Project:</th><td><doc:project/></td></tr>
+        <tr><th>Key:</th><td><doc:key/></td></tr>
+        <tr><th>Version:</th><td><doc:version/></td></tr>
+        <tr><th>Updated By:</th><td><doc:author/> @ <doc:revised/></td></tr>
+        <tr><th>Editor:</th><td><doc:edit/></td></tr>
+      </table>
+    </div>
+    <div class="span-9 last">
+      <h4>Actions</h4>
+      <span><doc:link>Download</doc:link> this document</span><br/>
+      <doc:approval>
+        <span><approval:approve/> this version</span><br/>
+      </doc:approval>
+    </div>
+    <hr/>
+    <div class="span-18 last">
+      <h4>Document History</h4>
+      <table>
         <tr>
-          <td class="nowrap"><rev:link/></td>
-          <td class="nowrap"><rev:author/></td>
-          <td class="nowrap"><rev:date/></td>
-          <td class="quiet">
-            <rev:comment/>
-            <rev:approvals>
-            <br/><approval:state/><approval:date/><approval:comment/>
-            </rev:approvals>
-          </td>
+          <th>Version</th>
+          <th>Author</th>
+          <th>Date</th>
+          <th>Comment</th>
         </tr>
-      </doc:revision>
-    </table>
+        <doc:revision>
+          <tr>
+            <td class="nowrap"><rev:link/></td>
+            <td class="nowrap"><rev:author/></td>
+            <td class="nowrap"><rev:date/></td>
+            <td class="quiet">
+              <rev:comment/>
+              <rev:approvals>
+              <br/><approval:state/><approval:date/><approval:comment/>
+              </rev:approvals>
+            </td>
+          </tr>
+        </doc:revision>
+      </table>
+    </div>
   </lift:snippet>
+  <lift:bind-at name="topbar">
+    <lift:snippet type="Dashboard.search">
+      <search:form type="post">
+        <search:text/><search:submit/>
+      </search:form>
+    </lift:snippet>
+  </lift:bind-at>
 </lift:surround>

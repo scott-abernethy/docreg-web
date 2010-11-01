@@ -26,8 +26,12 @@ class DocumentView extends Logger {
       bind("doc", xhtml,
         "key" -> document.key,
         "title" -> document.title,
+        "author" -> document.latest.author,
+        "revised" -> document.latest.date,
+        "link" -> ((in: NodeSeq) => <a href={document.latest.link}>{in}</a>),
+        "version" -> document.latest.version,
         "project" -> document.projectName,
-        "edit" -> (if (document.editor.is == null) Text("") else <p><em>Editor:</em>{document.editor.is}</p>),
+        "edit" -> (if (document.editor.is == null) Text("-") else <span class="highlight">{document.editor.asHtml}</span>),
         "revision" -> revisions _,
         "approval" -> approvalForm _)
     }
@@ -40,16 +44,14 @@ class DocumentView extends Logger {
         "author" -> r.author,
         "date" -> r.date,
         "approvals" -> ((in: NodeSeq) => approvals(in, r)),
-        "link" -> <span><a href={r.link}>{r.version}</a></span>,
+        "link" -> <a href={r.link}>{r.version.asHtml}</a>,
         "comment" -> r.comment)
     }
   }
 
   private def approvalForm(xhtml: NodeSeq): NodeSeq = {
-    SHtml.ajaxForm (
-      bind("approval", xhtml,
-        "approve" -> SHtml.submit("Approve", approve _)) ++ SHtml.hidden(approve _)
-    )
+    bind("approval", xhtml,
+      "approve" -> SHtml.a(() => {approve}, Text("Approve")))
   }
   private def approve(): JsCmd = {
     Backend ! ApprovalApproved(document, document.latest)

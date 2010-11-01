@@ -58,7 +58,7 @@ class Documents extends DocumentSubscriber {
       "key_link" -> <a href={d.latest.filename}>{d.key}</a>,
       "project" -> d.projectName, 
       "title" -> d.title, 
-      "author" -> d.author,
+      "author" -> d.latest.author,
       "editor" -> d.editor,
-      "dateRevised" -> d.dateRevised)
+      "dateRevised" -> d.latest.date)
 }

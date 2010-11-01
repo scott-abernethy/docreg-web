@@ -22,7 +22,7 @@
 
       <hr/>
 
-      <div class="column span-6 colborder sidebar">
+      <div class="column span-6 sidebar">
         <!--<lift:Menu.builder />-->
         <lift:bind name="sidebar" />
         <hr class="space"/>
@@ -32,13 +32,13 @@
         </div>
       </div>
 
-      <div id="primary_content" class="column span-17 last">
+      <div id="primary_content" class="column span-18 last">
         <lift:bind name="content" />
       </div>
-      <div id="secondary_content" style="display:none" class="column span-17 last"/>
+      <div id="secondary_content" style="display:none" class="column span-18 last"/>
 
       <hr />
-      <div class="column span-23 last" style="text-align: center">
+      <div class="column span-24 last" style="text-align: center">
         <p class="alt"><a href="/"><lift:Information.name/></a> v<lift:Information.version/> built on <a href="http://liftweb.com/">Lift</a> / <a href="http://scala-lang.org">Scala</a>, powered by <a href="http://jetty.codehaus.org/jetty/">Jetty</a> / <a href="http://nginx.net/">Nginx</a></p>
       </div>
       

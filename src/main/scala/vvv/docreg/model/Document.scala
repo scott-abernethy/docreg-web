@@ -18,8 +18,6 @@ class Document extends LongKeyedMapper[Document] with IdPK {
     val r = latest
     r != null && r.version.is == version
   }
-  def author = latest author 
-  def dateRevised = latest date 
   def projectName = project.obj.map(_.name.is) openOr "?"
   def infoLink: String = "/doc/" + key.is + "/info"
 }
