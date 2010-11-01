@@ -60,15 +60,17 @@ class Boot {
     S.addAround(DB.buildLoanWrapper)
 
     LiftRules.dispatch.append {
-      case Req("doc" :: key :: "download" :: Nil, _, GetRequest) => 
+      case Req("d" :: key :: "download" :: Nil, _, GetRequest) => 
         () => Download.download(key)
-      case Req("doc" :: key :: version :: "download" :: Nil, _, GetRequest) => 
+      case Req("d" :: key :: "v" :: version :: "download" :: Nil, _, GetRequest) => 
         () => Download.download(key, version)
     }
 
     LiftRules.statelessRewrite.append {
-      case RewriteRequest(ParsePath(List("doc", key, "info"), _, _, _), _, _) =>
+      case RewriteRequest(ParsePath("d" :: key :: Nil, _, _, _), _, _) =>
         RewriteResponse("doc" :: "info" :: Nil, Map("key" -> key))
+      case RewriteRequest(ParsePath("d" :: key :: "v" :: version :: Nil, _, _, _), _, _) =>
+        RewriteResponse("doc" :: "info" :: Nil, Map("key" -> key, "version" -> version))
     }
 
     DocumentServer start

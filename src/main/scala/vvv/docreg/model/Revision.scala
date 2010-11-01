@@ -31,7 +31,7 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
   }
   //object server extends MappedLong(this)
   def when: String = "?"
-  def link: String = "/doc/" + (document.obj.map(_.key.is) openOr "?") + "/" + version + "/download"
+  def link: String = "/d/" + (document.obj.map(_.key.is) openOr "?") + "/v/" + version + "/download"
 }
 
 object Revision extends Revision with LongKeyedMetaMapper[Revision] {

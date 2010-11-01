@@ -19,7 +19,7 @@ class Document extends LongKeyedMapper[Document] with IdPK {
     r != null && r.version.is == version
   }
   def projectName = project.obj.map(_.name.is) openOr "?"
-  def infoLink: String = "/doc/" + key.is + "/info"
+  def infoLink: String = "/d/" + key.is
 }
 
 object Document extends Document with LongKeyedMetaMapper[Document] {
