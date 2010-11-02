@@ -6,18 +6,12 @@
         <ol id="log">
           <log:item>
             <li doc:id_attr="" doc:style_attr="">
-              <div class="span-6">
-                <h6><doc:title/></h6>
-              </div>
-              <div class="span-1 last">
-                <doc:link/>
-              </div>
-              <div class="span-8">
-                <p>
-                  <doc:comment/><br/>
-                  <span class="quiet"><doc:author/> at <doc:date/></span>
-                </p>
-              </div>
+              <span><b><doc:title/></b></span><span class="quiet"> - <doc:key/><doc:version/></span>
+              <p>
+                <doc:author/> <span class="quiet">&quot;</span><doc:comment/><span class="quiet">&quot;</span><br/>
+                <span class="quiet"><doc:when/></span>
+              </p>
+              <hr/>
             </li>
           </log:item>
         </ol>

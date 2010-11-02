@@ -3,11 +3,14 @@ package vvv.docreg.model
 import _root_.net.liftweb.mapper._
 import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
+import scala.xml._
 
 class Document extends LongKeyedMapper[Document] with IdPK {
   def getSingleton = Document
 
-  object key extends MappedString(this, 20) // unique
+  object key extends MappedString(this, 20) { // unique
+    override def asHtml = Text("d" + is)
+  }
   object project extends LongMappedMapper(this, Project)
   object title extends MappedString(this, 200)
   object editor extends MappedString(this, 100) 

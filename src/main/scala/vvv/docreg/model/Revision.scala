@@ -6,6 +6,7 @@ import _root_.net.liftweb.common._
 import java.text._
 import java.util.TimeZone
 import scala.xml.{NodeSeq, Text}
+import vvv.docreg.util.ShortDate
 
 class Revision extends LongKeyedMapper[Revision] with IdPK {
   def getSingleton = Revision
@@ -19,7 +20,7 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
   object filename extends MappedString(this, 200)
   object author extends MappedString(this, 100)
   object date extends MappedDateTime(this) {
-    final val dateFormat = new SimpleDateFormat("hh:mm  dd-MMM-yyyy")
+    final val dateFormat = new SimpleDateFormat("d MMM yyyy, h:mm a")
     dateFormat.setTimeZone(TimeZone.getDefault)
     override def asHtml = Text(if (is != null) dateFormat format is else "?")
   }
@@ -29,8 +30,7 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
       if (is != v) super.apply(v) else fieldOwner
     }
   }
-  //object server extends MappedLong(this)
-  def when: String = "?"
+  def when: String = new ShortDate(date.is).toString
   def link: String = "/d/" + (document.obj.map(_.key.is) openOr "?") + "/v/" + version + "/download"
 }
 
