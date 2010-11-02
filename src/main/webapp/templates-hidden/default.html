@@ -13,11 +13,25 @@
   </head>
   <body>
     <div class="container">
-      <div class="span-12" style="text-align: right">
+      <div class="span-24 last" style="text-align: right">
+        <lift:snippet type="User.control">
+          <user:id/> | <user:signOut/>
+        </lift:snippet>
+      </div>
+
+      <div class="span-6 prepend-6">
         <h1><a href="/">DocReg<sup>beta</sup></a></h1>
       </div>
-      <div class="span-6">
+      <div class="span-6 last">
         <lift:bind name="topbar" />
+      </div>
+
+      <div id="notices" class="span-12 prepend-6">
+        <lift:Msgs showAll="false">
+          <lift:error_class>error</lift:error_class>
+          <lift:warning_class>notice</lift:warning_class>
+          <lift:notice_class>success</lift:notice_class>
+        </lift:Msgs>
       </div>
 
       <hr/>
@@ -26,16 +40,14 @@
         <!--<lift:Menu.builder />-->
         <lift:bind name="sidebar" />
         <hr class="space"/>
-        <div>
-          <lift:Msgs showAll="true"/>
-          <hr class="space" />
-        </div>
       </div>
 
-      <div id="primary_content" class="column span-18 last">
-        <lift:bind name="content" />
+      <div class="column span-18 last">
+        <div id="primary_content">
+          <lift:bind name="content" />
+        </div>
+        <div id="secondary_content" style="display:none"/>
       </div>
-      <div id="secondary_content" style="display:none" class="column span-18 last"/>
 
       <hr />
       <div class="column span-24 last" style="text-align: center">

@@ -26,12 +26,21 @@ a:hover {
   color: red;
 }
 
+#notices ul {
+	margin:0;
+	padding:0;
+      }
+#notices ul li {
+	margin:0;
+	padding:0;
+	list-style:none;
+}
+
 .sidebar ul {
 	margin:0;
 	padding:0;
 	border-bottom:1px solid #ccc;
 }
-	 
 
 .sidebar ul li {
 	margin:0;

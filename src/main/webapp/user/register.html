@@ -1,0 +1,12 @@
+<lift:surround with="default" at="content">
+  <lift:snippet type="User.register" form="post">
+    <div>
+      <h3>Hello</h3>
+      <p>I can't find a user for &quot;<register:email/>&quot;</p>
+      <p>To register a new account, please enter your name (as you would like it displayed)</p>
+      Name: <register:name/> e.g. "Scott Abernethy"<br/>
+      <register:submit/> <register:cancel/>
+    </div>
+    <hr class="space"/>
+  </lift:snippet>
+</lift:surround>

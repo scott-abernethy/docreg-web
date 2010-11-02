@@ -41,14 +41,20 @@ class Boot {
     // where to search snippet
     LiftRules.addToPackages("vvv.docreg")
 
+    val loggedIn = If(() => User.loggedIn_?, () => RedirectResponse("/user/signin"))
+
     // Build SiteMap
-    val entries = List(
-      Menu.i("Home") / "index", // the simple way to declare a menu
-      Nil)
+    val entries: List[ConvertableToMenu] = List(
+      Menu.i("Home") / "index" >> loggedIn,
+      Menu.i("Login") / "user" / "signin",
+      Menu.i("Logout") / "user" / "signout" >> loggedIn,
+      Menu.i("Register") / "user" / "register",
+      Menu.i("Info") / "doc" / "info" >> loggedIn
+    )
 
     // set the sitemap.  Note if you don't want access control for
     // each page, just comment this line out.
-    //LiftRules.setSiteMap(SiteMap(entries:_*))
+    LiftRules.setSiteMap(SiteMap(entries:_*))
 
     // Force the request to be UTF-8
     LiftRules.early.append(_.setCharacterEncoding("UTF-8"))
