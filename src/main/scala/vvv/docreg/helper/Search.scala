@@ -42,7 +42,7 @@ trait Search extends Logger {
   def form(xhtml: NodeSeq): NodeSeq = {
     ajaxForm (
       bind("search", xhtml,
-      "text" -> text(search.is, s => search(s)) ,
+      "text" -> JsCmds.FocusOnLoad(text(search.is, s => search(s))),
       "submit" -> submit("Search", processSearch _)) ++ hidden(processSearch _)
     )
   }

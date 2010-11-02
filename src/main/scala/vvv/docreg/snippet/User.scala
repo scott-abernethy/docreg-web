@@ -14,7 +14,7 @@ class User extends Logger {
   object name extends RequestVar("")
   def signIn(in: NodeSeq): NodeSeq = {
     bind("signIn", in,
-      "email" -> SHtml.text(email.is, s => email(s)),
+      "email" -> JsCmds.FocusOnLoad(SHtml.text(email.is, s => email(s))),
       "submit" -> SHtml.submit("Sign In", processLogin _)
     )
   }
@@ -36,7 +36,7 @@ class User extends Logger {
     val submittedEmail = email.is
     bind("register", in,
       "email" -> Text(email.is),
-      "name" -> SHtml.text(name.is, s => name(s)),
+      "name" -> JsCmds.FocusOnLoad(SHtml.text(name.is, s => name(s))),
       "submit" -> SHtml.submit("Register", () => processRegister(submittedEmail)),
       "cancel" -> SHtml.submit("Cancel", () => S.redirectTo("/"))
     )
