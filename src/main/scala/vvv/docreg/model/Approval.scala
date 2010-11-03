@@ -3,13 +3,17 @@ package vvv.docreg.model
 import _root_.net.liftweb.mapper._
 import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
+import scala.xml.Text
+import vvv.docreg.util.DatePresentation
 
 class Approval extends LongKeyedMapper[Approval] with IdPK {
   def getSingleton = Approval
   object revision extends LongMappedMapper(this, Revision)
   object by extends LongMappedMapper(this, User)
   object state extends MappedEnum(this, ApprovalState)
-  object date extends MappedDateTime(this)
+  object date extends MappedDateTime(this) {
+    override def asHtml = Text(if (is != null) DatePresentation.dateTimeF format is else "?")
+  }
   object comment extends MappedString(this, 128)
 }
 

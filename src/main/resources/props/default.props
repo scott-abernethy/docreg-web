@@ -2,3 +2,5 @@ db.driver=org.h2.Driver
 db.url=jdbc:h2:docreg-web;AUTO_SERVER=TRUE
 db.user=
 db.password=
+backend.server=shelob.gnet.global.vpn
+#backend.server=faramir.gnet.global.vpn

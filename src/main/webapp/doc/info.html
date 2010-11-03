@@ -4,7 +4,7 @@
     <hr/>
     <div class="span-9">
       <h4>Information</h4>
-      <table>
+      <table cellpadding="0">
         <tr><th>Project:</th><td><doc:project/></td></tr>
         <tr><th>Key:</th><td><doc:key/></td></tr>
         <tr><th>Version:</th><td><doc:version/></td></tr>
@@ -24,25 +24,33 @@
     <hr/>
     <div class="span-18 last">
       <h4>Document History</h4>
-      <table>
+      <table class="baseline-align-cells" cellpadding="0">
         <tr>
           <th>Version</th>
-          <th>Author</th>
-          <th>Date</th>
+          <th>User</th>
+          <th>Action</th>
           <th>Comment</th>
+          <th>Date</th>
         </tr>
         <doc:revision>
           <tr>
             <td class="nowrap"><rev:link/></td>
             <td class="nowrap"><rev:author/></td>
+            <td class="nowrap"><span class="revision">Submit</span></td>
+            <td class="quiet"><rev:comment/></td>
             <td class="nowrap"><rev:date/></td>
-            <td class="quiet">
-              <rev:comment/>
-              <rev:approvals>
-              <br/><approval:state/><approval:date/><approval:comment/>
-              </rev:approvals>
-            </td>
           </tr>
+          <rev:approvals>
+            <tr>
+              <td class="nowrap"></td>
+              <td class="nowrap"><approval:by/></td>
+              <td class="nowrap"><span class="approval"><approval:state/></span></td>
+              <td class="quiet"><approval:comment/></td>
+              <td class="nowrap"><approval:date/></td>
+            </tr>
+          </rev:approvals>
+          <!-- should use css below, but this works for now: -->
+          <tr><td colspan="5"><hr class="bottom"/></td></tr>
         </doc:revision>
       </table>
     </div>

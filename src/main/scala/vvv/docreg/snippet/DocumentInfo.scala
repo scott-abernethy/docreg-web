@@ -61,6 +61,7 @@ class DocumentView extends Logger {
   private def approvals(xhtml: NodeSeq, r: Revision): NodeSeq = {
     Approval.forRevision(r) flatMap {a =>
       bind("approval", xhtml,
+        "by" -> a.by,
         "state" -> a.state,
         "comment" -> a.comment,
         "date" -> a.date)

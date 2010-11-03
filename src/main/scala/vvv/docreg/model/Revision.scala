@@ -6,7 +6,7 @@ import _root_.net.liftweb.common._
 import java.text._
 import java.util.TimeZone
 import scala.xml.{NodeSeq, Text}
-import vvv.docreg.util.ShortDate
+import vvv.docreg.util.DatePresentation
 
 class Revision extends LongKeyedMapper[Revision] with IdPK {
   def getSingleton = Revision
@@ -20,9 +20,7 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
   object filename extends MappedString(this, 200)
   object author extends MappedString(this, 100)
   object date extends MappedDateTime(this) {
-    final val dateFormat = new SimpleDateFormat("d MMM yyyy, h:mm a")
-    dateFormat.setTimeZone(TimeZone.getDefault)
-    override def asHtml = Text(if (is != null) dateFormat format is else "?")
+    override def asHtml = Text(if (is != null) DatePresentation.dateTimeF format is else "?")
   }
   object comment extends MappedText(this) {
     /** The default apply for MappedText seems to always dirty the field, odd */
@@ -30,7 +28,7 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
       if (is != v) super.apply(v) else fieldOwner
     }
   }
-  def when: String = new ShortDate(date.is).toString
+  def when: String = DatePresentation.short(date.is)
   def link: String = "/d/" + (document.obj.map(_.key.is) openOr "?") + "/v/" + version + "/download"
 }
 
