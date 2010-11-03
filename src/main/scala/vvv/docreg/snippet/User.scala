@@ -53,12 +53,12 @@ class User extends Logger {
   def doSignIn(u: vvv.docreg.model.User) {
     User.login(u)
     S.notice("Welcome " + u.email)
-    S.redirectTo("/")
+    S.redirectTo("/", () => (User.saveUserCookie))
   }
   def signOut(in: NodeSeq): NodeSeq = {
     User.logout()
     S.notice("User signed out")
-    S.redirectTo("/") 
+    S.redirectTo("signin", () => (User.saveUserCookie))
   }
   def control(in: NodeSeq): NodeSeq = {
     if (User.loggedIn_?) {

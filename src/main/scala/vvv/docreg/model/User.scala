@@ -1,9 +1,12 @@
 package vvv.docreg.model
 
-import _root_.net.liftweb.mapper._
-import _root_.net.liftweb.util._
-import _root_.net.liftweb.common._
-import _root_.net.liftweb.http._
+import net.liftweb._
+import mapper._
+import util._
+import common._
+import Helpers._
+import http._
+import provider.HTTPCookie
 
 // http://www.assembla.com/wiki/show/liftweb/How_to_use_Container_Managed_Security
 // http://wiki.eclipse.org/Jetty/Tutorial/JAAS#LdapLoginModule
@@ -23,11 +26,24 @@ class User extends LongKeyedMapper[User] with IdPK {
 }
 
 object User extends User with LongKeyedMetaMapper[User] {
-  object loggedInUser extends SessionVar[Box[User]](Empty)
+  val docRegUserCookie = "DocRegUser"
+  object loggedInUser extends SessionVar[Box[User]](checkForUserCookie)
   override def dbTableName = "users"
   override def fieldOrder = List(id, name, email)
   def loggedIn_? = !loggedInUser.is.isEmpty
   def login(user: User) = loggedInUser(Full(user))
   def logout() = loggedInUser(Empty)
   def forEmail(email: String): Box[User] = find(By(User.email, email.toLowerCase)) 
+  def saveUserCookie() {
+    loggedInUser.is match {
+      case Full(u) => S.addCookie(HTTPCookie(docRegUserCookie, u.id.is.toString).setMaxAge(3600 * 24 * 365).setPath("/"))
+      case _ => S.addCookie(HTTPCookie(docRegUserCookie, "###").setPath("/"))
+    }
+  }
+  def checkForUserCookie: Box[User] = {
+    S.cookieValue(docRegUserCookie) match {
+      case Full(id) => User.find(id)
+      case _ => Empty
+    }
+  }
 }
