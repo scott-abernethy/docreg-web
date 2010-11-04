@@ -58,7 +58,7 @@ class DocumentSnippet extends Logger {
     Approval.forRevision(r) flatMap {a =>
       bind("approval", xhtml,
         "by" -> (a.by.obj.map (_.displayName) openOr "?"),
-        "state" -> a.state,
+        "state" -> <span style={ApprovalState.style(a.state.is)}>{a.state}</span>,
         "comment" -> a.comment,
         "date" -> a.date)
     }
