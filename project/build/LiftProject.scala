@@ -1,7 +1,7 @@
 import sbt._
 
 class LiftProject(info: ProjectInfo) extends DefaultWebProject(info) {
-  val liftVersion = "2.1"
+  val liftVersion = "2.2-M1"
 
   // If you're using JRebel for Lift development, uncomment
   // this line
