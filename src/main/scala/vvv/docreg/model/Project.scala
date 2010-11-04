@@ -11,6 +11,7 @@ class Project extends LongKeyedMapper[Project] with IdPK {
 }
 
 object Project extends Project with LongKeyedMetaMapper[Project] {
+  override def dbIndexes = UniqueIndex(name) :: super.dbIndexes
   def forName(name: String) = {
     val xs = findAll(By(Project.name, name), OrderBy(Project.name, Ascending))
     if (xs isEmpty) null else xs head

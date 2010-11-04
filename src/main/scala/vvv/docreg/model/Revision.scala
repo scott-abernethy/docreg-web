@@ -34,6 +34,7 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
 }
 
 object Revision extends Revision with LongKeyedMetaMapper[Revision] {
+  override def dbIndexes = UniqueIndex(document, version) :: super.dbIndexes
   override def fieldOrder = List(version, filename, author, date, comment)
   def forDocument(document: Document): List[Revision] = {
     Revision.findAll(By(Revision.document, document.id), OrderBy(Revision.version, Descending))

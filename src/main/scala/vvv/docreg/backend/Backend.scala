@@ -18,16 +18,16 @@ case class Reload(d: Document)
 case class ApprovalApproved(document: Document, revision: Revision, user: User, state: ApprovalState, comment: String)
 
 class Backend extends Actor with Logger {
+  val product = ProjectProps.get("project.name") openOr "drw"
+  val version = ProjectProps.get("project.version") openOr "0.0"
   val reconciler = new Reconciler(this)
   var agent: Agent = _
   def act() {
     loop {
       react {
         case Connect() => 
-          val name = ProjectProps.get("project.name") openOr "drw"
-          val version = ProjectProps.get("project.version") openOr "0.0"
-          info("Starting " + name + " v" + version + " " + java.util.TimeZone.getDefault.getDisplayName)
-          agent = new Agent(version, Backend.server, name)
+          info("Starting " + product + " v" + version + " " + java.util.TimeZone.getDefault.getDisplayName)
+          agent = new Agent(version, Backend.server, product)
           val library = new FileList(Backend.server, agent)
           library.addUpdateListener(new UpdateListener() {
             def updated(ds: java.util.List[AgentDocument]) = ds.foreach(Backend.this ! Updated(_))
@@ -40,6 +40,7 @@ class Backend extends Actor with Logger {
           }
         case Reload(d) =>
           updateRevisions(d)
+          updateApprovals(d)
         case ApprovalApproved(d, r, user, state, comment) =>
           val done = agent.approval(r.filename, 
             user.displayName, 
@@ -49,7 +50,7 @@ class Backend extends Actor with Logger {
               case _ => AgentApprovalState.NotApproved
             },
             comment,
-            "DocReg+Web",
+            product,
             user.email.is)
         case _ => println("?")
       }
@@ -92,17 +93,20 @@ class Backend extends Actor with Logger {
     revision
   }
   
-  private def createApproval(document: Document, a: AgentApproval) = {
+  private def createApproval(document: Document, a: AgentApproval) {
     Revision.forDocument(document, a.getVersion) match {
-      case Full(revision) =>
-        val approval = Approval.create
-        approval.revision(revision)
-        approval.by(User.forEmailOrCreate(a.getApproverEmail))
-        assignApproval(approval, a)
-        approval.save
-        approval
+      case Full(revision) => createApproval(revision, User.forEmailOrCreate(a.getApproverEmail) openOr null, a)
       case _ => warn("Approval found with no matching revision: " + a)
     }
+  }
+
+  private def createApproval(revision: Revision, user: User, a: AgentApproval): Approval = {
+    val approval = Approval.create
+    approval.revision(revision)
+    approval.by(user)
+    assignApproval(approval, a)
+    approval.save
+    approval
   }
   
   private def updateDocument(document: Document, d: AgentDocument) {
@@ -158,7 +162,22 @@ class Backend extends Actor with Logger {
 
   private def updateApprovals(document: Document) {
     agent.loadApprovals(document.key).foreach { a =>
-      println("found approval " + a)
+      Revision.forDocument(document, a.getVersion) match {
+        case Full(revision) =>
+          val user = User.forEmailOrCreate(a.getApproverEmail)
+          val state = ApprovalState.parse(a.getStatus.toString)
+          val approval = Approval.findAll(By(Approval.revision, revision), By(Approval.by, user), By(Approval.state, state)) match {
+            case Nil => Empty
+            case x :: Nil => Full(x)
+            case x :: xs => warn("Found duplicate approvals for " + a); Full(x)
+          } 
+          approval match {
+            case Full(a) => //update
+            case _ => createApproval(revision, user openOr null, a)
+
+          }
+        case _ => warn("Approval found with no matching revision: " + a)
+      } 
     }
   }
 }

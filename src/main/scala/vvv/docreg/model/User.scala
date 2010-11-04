@@ -20,8 +20,7 @@ class User extends LongKeyedMapper[User] with IdPK {
   object email extends MappedEmail(this, 64) {
     override def apply(s: String) = super.apply(s.toLowerCase)
     override def apply(b: Box[String]) = super.apply(b map { _.toLowerCase })
-    override def dbIndexed_? = true
-    override def validations = valUnique(S.??("unique.email.address")) _ :: super.validations
+    override def validations = valUnique(S.??("unique.email.address")) _ :: super.validations // Doesn't seem to work.
   }
   def displayName = name.is
 }
@@ -30,6 +29,7 @@ object User extends User with LongKeyedMetaMapper[User] {
   val docRegUserCookie = "DocRegUser"
   object loggedInUser extends SessionVar[Box[User]](checkForUserCookie)
   override def dbTableName = "users"
+  override def dbIndexes = UniqueIndex(email) :: super.dbIndexes
   override def fieldOrder = List(id, name, email)
   def loggedIn_? = !loggedInUser.is.isEmpty
   def login(user: User) = loggedInUser(Full(user))

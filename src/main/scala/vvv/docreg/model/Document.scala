@@ -8,7 +8,7 @@ import scala.xml._
 class Document extends LongKeyedMapper[Document] with IdPK {
   def getSingleton = Document
 
-  object key extends MappedString(this, 20) { // unique
+  object key extends MappedString(this, 20) {
     override def asHtml = Text("d" + is)
   }
   object project extends LongMappedMapper(this, Project)
@@ -26,6 +26,7 @@ class Document extends LongKeyedMapper[Document] with IdPK {
 }
 
 object Document extends Document with LongKeyedMetaMapper[Document] {
+  override def dbIndexes = UniqueIndex(key) :: super.dbIndexes
   override def fieldOrder = List(key, project, title)
   def forKey(key: String): Box[Document] = {
     val xs = findAll(By(Document.key, key))
