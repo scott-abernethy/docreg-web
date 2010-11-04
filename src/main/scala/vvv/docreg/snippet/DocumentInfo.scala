@@ -11,7 +11,7 @@ import http._
 import js._
 import scala.xml.{NodeSeq, Text}
 
-class DocumentSnippet extends Logger {
+class DocumentSnippet extends Loggable {
   val key = S.param("key") openOr ""
   val version: Long = S.param("version") map (_.toLong) openOr -1 
   val document: Box[Document] = try {

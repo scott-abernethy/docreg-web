@@ -10,6 +10,8 @@ class LiftProject(info: ProjectInfo) extends DefaultWebProject(info) {
   override def libraryDependencies = Set(
     "net.liftweb" %% "lift-mapper" % liftVersion % "compile->default",
     "net.liftweb" %% "lift-wizard" % liftVersion % "compile->default",
+    "log4j" % "log4j" % "1.2.16",
+    "org.slf4j" % "slf4j-log4j12" % "1.6.1",
     "org.mortbay.jetty" % "jetty" % "6.1.25" % "test->default",
     "junit" % "junit" % "4.5" % "test->default",
     "org.scala-tools.testing" %% "specs" % "1.6.5" % "test->default",

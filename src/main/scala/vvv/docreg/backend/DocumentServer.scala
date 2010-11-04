@@ -1,10 +1,11 @@
 package vvv.docreg.backend
 
-import scala.actors._
+import scala.actors.Actor
 import scala.actors.Actor._
 import net.liftweb.http._
 import net.liftweb.actor._
 import net.liftweb.util._
+import net.liftweb.common._
 import vvv.docreg.model._
 
 case class Subscribe(subscriber: DocumentSubscriber)
@@ -17,7 +18,7 @@ case class DocumentChanged(document: Document)
 trait DocumentSubscriber extends CometActor {
 }
 
-object DocumentServer extends Actor {
+object DocumentServer extends Actor with Loggable {
   private var subscribers: List[DocumentSubscriber] = Nil
   def act() {
     loop {
@@ -28,13 +29,13 @@ object DocumentServer extends Actor {
         case Unsubscribe(subscriber) =>
           subscribers = subscribers filterNot (_ == subscriber)
         case a @ DocumentAdded(d) =>
-          println(d.key + " added")
+          logger.info(d.key + " added")
           distribute(a)
         case r @ DocumentRevised(d, _) => 
-          println(d.key + " revised")
+          logger.info(d.key + " revised")
           distribute(r)
         case c @ DocumentChanged(d) => 
-          println(d.key + " changed")
+          logger.info(d.key + " changed")
           distribute(c)
         case _ =>
       }

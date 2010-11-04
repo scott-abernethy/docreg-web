@@ -17,7 +17,7 @@ case class Updated(d: AgentDocument)
 case class Reload(d: Document)
 case class ApprovalApproved(document: Document, revision: Revision, user: User, state: ApprovalState, comment: String)
 
-class Backend extends Actor with Logger {
+class Backend extends Actor with Loggable {
   val product = ProjectProps.get("project.name") openOr "drw"
   val version = ProjectProps.get("project.version") openOr "0.0"
   val reconciler = new Reconciler(this)
@@ -26,7 +26,7 @@ class Backend extends Actor with Logger {
     loop {
       react {
         case Connect() => 
-          info("Starting " + product + " v" + version + " " + java.util.TimeZone.getDefault.getDisplayName)
+          logger.info("Starting " + product + " v" + version + " " + java.util.TimeZone.getDefault.getDisplayName)
           agent = new Agent(version, Backend.server, product)
           val library = new FileList(Backend.server, agent)
           library.addUpdateListener(new UpdateListener() {
@@ -52,7 +52,7 @@ class Backend extends Actor with Logger {
             comment,
             product,
             user.email.is)
-        case _ => println("?")
+        case m @ _ => logger.warn("Unrecognised message " + m)
       }
     }
   }
@@ -81,7 +81,7 @@ class Backend extends Actor with Logger {
       
       DocumentServer ! DocumentAdded(document)
     } catch {
-      case e: java.lang.NullPointerException => println("Exception " + e + " with " + d.getKey); e.printStackTrace
+      case e: java.lang.NullPointerException => logger.error("Exception " + e + " with " + d.getKey); e.printStackTrace
     }
   }
 
@@ -96,7 +96,7 @@ class Backend extends Actor with Logger {
   private def createApproval(document: Document, a: AgentApproval) {
     Revision.forDocument(document, a.getVersion) match {
       case Full(revision) => createApproval(revision, User.forEmailOrCreate(a.getApproverEmail) openOr null, a)
-      case _ => warn("Approval found with no matching revision: " + a)
+      case _ => logger.warn("Approval found with no matching revision: " + a)
     }
   }
 
@@ -169,14 +169,14 @@ class Backend extends Actor with Logger {
           val approval = Approval.findAll(By(Approval.revision, revision), By(Approval.by, user), By(Approval.state, state)) match {
             case Nil => Empty
             case x :: Nil => Full(x)
-            case x :: xs => warn("Found duplicate approvals for " + a); Full(x)
+            case x :: xs => logger.warn("Found duplicate approvals for " + a); Full(x)
           } 
           approval match {
             case Full(a) => //update
             case _ => createApproval(revision, user openOr null, a)
 
           }
-        case _ => warn("Approval found with no matching revision: " + a)
+        case _ => logger.warn("Approval found with no matching revision: " + a)
       } 
     }
   }

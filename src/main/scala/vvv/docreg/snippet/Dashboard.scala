@@ -12,7 +12,7 @@ import js._
 import js.JsCmds._
 import scala.xml.{NodeSeq, Text}
 
-class Dashboard extends Logger 
+class Dashboard extends Loggable 
   with ProjectSelection with Search {
   def search(in: NodeSeq): NodeSeq = {
     bindSearch(in)

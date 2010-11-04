@@ -1,0 +1,18 @@
+## log4j production default
+log4j.rootLogger=info, file
+
+## CONSOLE APPENDER
+log4j.appender.console=org.apache.log4j.ConsoleAppender
+log4j.appender.console.Target=System.out
+log4j.appender.console.layout=org.apache.log4j.PatternLayout
+log4j.appender.console.layout.ConversionPattern=[%p] %m%n
+
+## FILE APPENDER
+log4j.appender.file=org.apache.log4j.RollingFileAppender
+log4j.appender.file.File=docreg-web.log
+log4j.appender.file.MaxFileSize=1000KB
+log4j.appender.file.MaxBackupIndex=5
+log4j.appender.file.layout=org.apache.log4j.PatternLayout
+log4j.appender.file.layout.ConversionPattern=%d [%p] %m%n
+
+## LOGGER CONTROL

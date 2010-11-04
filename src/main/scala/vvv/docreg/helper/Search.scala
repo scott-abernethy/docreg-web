@@ -14,7 +14,7 @@ import _root_.net.liftweb.http.js.jquery.JqJsCmds._
 import _root_.net.liftweb.http.js.JE.JsRaw
 import vvv.docreg.model.{FilteredDocument,Document}
 
-trait Search extends Logger {
+trait Search extends Loggable {
   private val resultPart: NodeSeq = 
         <table>
           <tr>
@@ -47,7 +47,7 @@ trait Search extends Logger {
     )
   }
   def processSearch(): JsCmd = {
-    info("Search for '" + search.is + "'")
+    //logger.info("Search for '" + search.is + "'")
     if (search.is.size == 0) {
       Hide("secondary_content", 0) & Show("primary_content", 0)
     } else {

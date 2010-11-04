@@ -11,7 +11,7 @@ import scala.xml.{NodeSeq, Text}
 import vvv.docreg.model._
 import vvv.docreg.util._
 
-trait ProjectSelection extends Logger {
+trait ProjectSelection extends Loggable {
   def projects(in: NodeSeq): NodeSeq = {
     bind("projects", in, 
       "all" -> SHtml.ajaxButton("All", () => checkAll),
@@ -34,11 +34,11 @@ trait ProjectSelection extends Logger {
     SHtml.ajaxCheckbox(initial, checked => projectChecked(p, checked))
   }
   private def projectFocused(project: Project): JsCmd = {
-    //info("focused " + project.name.is)
+    //logger.info("focused " + project.name.is)
     projectSelectionUpdate
   }
   private def projectChecked(project: Project, checked: Boolean): JsCmd = {
-    //info("checked " + project.name.is)
+    //logger.info("checked " + project.name.is)
     val process = if (checked) ProjectSelection.projects.checked _ else ProjectSelection.projects.unchecked _
     process(project)
     projectSelectionUpdate
@@ -80,7 +80,6 @@ object ProjectSelection {
 
   def findSelected(): Set[Project] = {
     // cookie value is list of selected project ids.
-    //println("in " + S.receivedCookies) 
     S.cookieValue(selectedProjectsCookie).map(_.split(",").map(Project.find(_) openOr null).filter(_ != null).toSet[Project]) openOr findAllProjects 
   }
 

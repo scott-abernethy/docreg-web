@@ -10,7 +10,7 @@ import http._
 import js._
 import scala.xml.{NodeSeq, Text}
 
-class User extends Logger {
+class User extends Loggable {
   object email extends RequestVar("Email")
   object name extends RequestVar("")
   def signIn(in: NodeSeq): NodeSeq = {
@@ -43,7 +43,7 @@ class User extends Logger {
     )
   }
   def processRegister(e: String) {
-    info("Register user " + e + " = " + name.is)
+    logger.info("Register user " + e + " = " + name.is)
     val u = User.create
     u.email(e)
     u.name(name.is)
