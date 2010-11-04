@@ -3,8 +3,7 @@
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
     <meta name="description" content="" />
     <meta name="keywords" content="" />
-    
-		<title>code:app:0.1-SNAPSHOT</title>
+    <title><span class="lift:Menu.title">code:app:0.1-SNAPSHOT</span></title>
     <lift:CSS.blueprint />
     <lift:CSS.fancyType />
     <script id="jquery" src="/classpath/jquery.js" type="text/javascript"/>
@@ -63,11 +62,11 @@
 
       <div class="column span-6 colborder sidebar">
         <hr class="space" />
-        <lift:Menu.builder />	
-        <div>
-          <lift:Msgs showAll="true"/>
-          <hr class="space" />
-        </div>
+
+	<span class="lift:Menu.builder"/>
+
+        <div class="lift:Msgs?showAll=true"/>
+        <hr class="space" />
       </div>
 
       <div class="column span-17 last">
@@ -78,9 +77,9 @@
       <div class="column span-23 last" style="text-align: center">
         <h4 class="alt">
           <a href="http://www.liftweb.net"><i>Lift</i></a> 
-	        is Copyright 2007-2010 WorldWide Conferencing, LLC.  Distributed under an Apache 2.0 License.</h4>
+	  is Copyright 2007-2010 WorldWide Conferencing, LLC.
+	  Distributed under an Apache 2.0 License.</h4>
       </div>
-      
     </div>
   </body>
 </html>
