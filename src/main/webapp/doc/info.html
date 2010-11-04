@@ -1,5 +1,5 @@
 <lift:surround with="default" at="content">
-  <lift:snippet type="DocumentView:view">
+  <lift:snippet type="DocumentSnippet:info">
     <h3><doc:title/></h3>
     <hr/>
     <div class="span-9">
@@ -16,9 +16,7 @@
       <h4>Actions</h4>
       <ul>
         <li><doc:link>Download</doc:link> this document</li>
-        <doc:approval>
-          <li><approval:approve/> this version</li>
-        </doc:approval>
+        <li><doc:approve>Approve</doc:approve> this version</li>
       </ul>
     </div>
     <hr/>
@@ -54,11 +52,4 @@
       </table>
     </div>
   </lift:snippet>
-  <lift:bind-at name="topbar">
-    <lift:snippet type="Dashboard.search">
-      <search:form type="post">
-        <search:text/><search:submit/>
-      </search:form>
-    </lift:snippet>
-  </lift:bind-at>
 </lift:surround>

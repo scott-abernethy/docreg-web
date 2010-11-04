@@ -73,6 +73,9 @@ a:hover {
   border-top-left-radius: 10px 10px;
   border-top-right-radius: 10px 10px;
 }
+.baseline-align-cells th {
+  vertical-align: baseline;
+}
 .baseline-align-cells td {
   vertical-align: baseline;
 }
@@ -81,4 +84,7 @@ a:hover {
 }
 .approval {
   color: #2c2;
+}
+.smalltextarea {
+  height: 100px;
 }

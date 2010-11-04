@@ -5,6 +5,7 @@ import scala.actors.Actor
 import scala.actors.Actor._
 import scala.collection.JavaConversions._
 import vvv.docreg.model._
+import vvv.docreg.model.ApprovalState._
 import vvv.docreg.util._
 
 import _root_.net.liftweb.mapper._
@@ -14,7 +15,7 @@ import _root_.net.liftweb.common._
 case class Connect()
 case class Updated(d: AgentDocument)
 case class Reload(d: Document)
-case class ApprovalApproved(document: Document, revision: Revision)
+case class ApprovalApproved(document: Document, revision: Revision, user: User, state: ApprovalState, comment: String)
 
 class Backend extends Actor with Logger {
   val reconciler = new Reconciler(this)
@@ -33,23 +34,23 @@ class Backend extends Actor with Logger {
             def updated(d: AgentDocument) = Backend.this ! Updated(d)
           })
         case Updated(d) => 
-          val document = Document.forKey(d.getKey)
-          if (document == null) {
-            createDocument(d)
-          } else {
-            updateDocument(document, d)
+          Document.forKey(d.getKey) match {
+            case Full(document) => updateDocument(document, d)
+            case _ => createDocument(d)
           }
         case Reload(d) =>
           updateRevisions(d)
-        case ApprovalApproved(d, r) =>
+        case ApprovalApproved(d, r, user, state, comment) =>
           val done = agent.approval(r.filename, 
-            "Scott Abernethy", 
-            "scott.abernethy@aviatnet.com",
-            AgentApprovalState.Approved,
-            "x",
-            "10.16.1.12",
-            "scott.abernethy@aviatnet.com")
-          println("approval for " + d + " " + r + " => " + done)
+            user.displayName, 
+            user.email.is,
+            state match {
+              case ApprovalState.approved => AgentApprovalState.Approved
+              case _ => AgentApprovalState.NotApproved
+            },
+            comment,
+            "DocReg+Web",
+            user.email.is)
         case _ => println("?")
       }
     }

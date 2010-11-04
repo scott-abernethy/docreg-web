@@ -49,7 +49,8 @@ class Boot {
       Menu.i("Login") / "user" / "signin",
       Menu.i("Logout") / "user" / "signout" >> loggedIn,
       Menu.i("Register") / "user" / "register",
-      Menu.i("Info") / "doc" / "info" >> loggedIn
+      Menu.i("Info") / "doc" / "info" >> loggedIn,
+      Menu.i("Approve") / "doc" / "approve" >> loggedIn
     )
 
     // set the sitemap.  Note if you don't want access control for
@@ -77,6 +78,8 @@ class Boot {
         RewriteResponse("doc" :: "info" :: Nil, Map("key" -> key))
       case RewriteRequest(ParsePath("d" :: key :: "v" :: version :: Nil, _, _, _), _, _) =>
         RewriteResponse("doc" :: "info" :: Nil, Map("key" -> key, "version" -> version))
+      case RewriteRequest(ParsePath("d" :: key :: "v" :: version :: "approve" :: Nil, _, _, _), _, _) =>
+        RewriteResponse("doc" :: "approve" :: Nil, Map("key" -> key, "version" -> version))
     }
 
     DocumentServer start

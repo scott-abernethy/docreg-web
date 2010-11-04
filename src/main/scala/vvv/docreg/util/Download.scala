@@ -10,15 +10,13 @@ import vvv.docreg.backend.Backend
 object Download {
   def download(key: String): Box[LiftResponse] = {
     println(key + " download")
-    val d = Document.forKey(key)
-    if (d == null) Empty else Full(RedirectResponse("http://"+Backend.server+"/docreg/release/" + d.latest.filename))
+    Document.forKey(key) map (d => RedirectResponse("http://"+Backend.server+"/docreg/release/" + d.latest.filename))
   }
   def download(key: String, version: String): Box[LiftResponse] = {
     println(key + "-" + version + " download")
-    val d = Document.forKey(key)
-    if (d == null) Empty
-    else {
-      d.revision(version.toLong) map (r => RedirectResponse("http://"+Backend.server+"/docreg/release/" + r.filename))
+    Document.forKey(key) match {
+      case Full(d) => d.revision(version.toLong) map (r => RedirectResponse("http://"+Backend.server+"/docreg/release/" + r.filename))
+      case _ => Empty
     }
   }
 }

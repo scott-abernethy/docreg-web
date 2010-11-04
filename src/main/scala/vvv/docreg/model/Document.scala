@@ -27,9 +27,9 @@ class Document extends LongKeyedMapper[Document] with IdPK {
 
 object Document extends Document with LongKeyedMetaMapper[Document] {
   override def fieldOrder = List(key, project, title)
-  def forKey(key: String) = {
+  def forKey(key: String): Box[Document] = {
     val xs = findAll(By(Document.key, key))
-    if (xs isEmpty) null else xs head
+    if (xs isEmpty) Empty else Full(xs head)
   }
 }
 

@@ -1,0 +1,33 @@
+<lift:surround with="default" at="content">
+  <lift:snippet type="DocumentSnippet:approve" form="post">
+    <h3><doc:title/></h3>
+    <hr/>
+    <div class="span-18 last">
+      <doc:approval>
+        <h4>Document Approval</h4>
+        <table class="baseline-align-cells" cellpadding="0">
+          <tr>
+            <th>Version:</th>
+            <td><approval:version/></td>
+          </tr>
+          <tr>
+            <th>Action:</th>
+            <td><approval:state/></td>
+          </tr>
+          <tr>
+            <th>By:</th>
+            <td class="loud"><approval:by/></td>
+          </tr>
+          <tr>
+            <th>Comment:</th>
+            <td><span class="quiet">(an optional comment describing this approval)</span><br/><approval:comment/></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td><approval:submit/><approval:cancel/></td>
+          </tr>
+        </table>
+      </doc:approval>
+    </div>
+  </lift:snippet>
+</lift:surround>
