@@ -7,6 +7,7 @@ import common._
 import Helpers._
 import http._
 import provider.HTTPCookie
+import vvv.docreg.util.StringUtil
 
 // http://www.assembla.com/wiki/show/liftweb/How_to_use_Container_Managed_Security
 // http://wiki.eclipse.org/Jetty/Tutorial/JAAS#LdapLoginModule
@@ -34,6 +35,19 @@ object User extends User with LongKeyedMetaMapper[User] {
   def login(user: User) = loggedInUser(Full(user))
   def logout() = loggedInUser(Empty)
   def forEmail(email: String): Box[User] = find(By(User.email, email.toLowerCase)) 
+  def forEmailOrCreate(email: String): Box[User] = forEmail(email) match {
+    case existing @ Full(_) => existing 
+    case _ => 
+      val placeholder = User.create
+      placeholder.email(email)
+      placeholder.name(StringUtil nameFromEmail email)
+      placeholder asValid match {
+        case Full(u) => 
+          u.save
+          Full(u)
+        case _ => Empty // TODO if invalid email, use Unknown Author special user.
+      }
+  }
   def saveUserCookie() {
     loggedInUser.is match {
       case Full(u) => S.addCookie(HTTPCookie(docRegUserCookie, u.id.is.toString).setMaxAge(3600 * 24 * 365).setPath("/"))

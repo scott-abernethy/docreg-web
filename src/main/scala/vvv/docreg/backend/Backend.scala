@@ -79,7 +79,7 @@ class Backend extends Actor with Logger {
       
       DocumentServer ! DocumentAdded(document)
     } catch {
-      case e: java.lang.NullPointerException => println("Exception " + e + " with " + d.getKey)
+      case e: java.lang.NullPointerException => println("Exception " + e + " with " + d.getKey); e.printStackTrace
     }
   }
 
@@ -91,13 +91,17 @@ class Backend extends Actor with Logger {
     revision
   }
   
-  private def createApproval(document: Document, a: AgentApproval): Approval = {
-    val approval = Approval.create
-    approval.revision(Revision.forDocument(document, a.getVersion))
-    approval.by(User.forEmail(a.getApproverEmail))
-    assignApproval(approval, a)
-    approval.save
-    approval
+  private def createApproval(document: Document, a: AgentApproval) = {
+    Revision.forDocument(document, a.getVersion) match {
+      case Full(revision) =>
+        val approval = Approval.create
+        approval.revision(revision)
+        approval.by(User.forEmailOrCreate(a.getApproverEmail))
+        assignApproval(approval, a)
+        approval.save
+        approval
+      case _ => warn("Approval found with no matching revision: " + a)
+    }
   }
   
   private def updateDocument(document: Document, d: AgentDocument) {
@@ -137,16 +141,16 @@ class Backend extends Actor with Logger {
 
   private def updateRevisions(document: Document) {
     agent.loadRevisions(document.key).foreach { r =>
-      val revision = document.revision(r.getVersion)
-      if (revision == null) {
-        val latest = createRevision(document, r)
-        DocumentServer ! DocumentRevised(document, latest)
-      } else {
-        assignRevision(revision, r)
-        if (revision.dirty_?) {
-          revision.save
-          DocumentServer ! DocumentChanged(document)
-        }
+      document.revision(r.getVersion) match {
+        case Full(revision) =>
+          assignRevision(revision, r)
+          if (revision.dirty_?) {
+            revision.save
+            DocumentServer ! DocumentChanged(document)
+          }
+        case _ => 
+          val latest = createRevision(document, r)
+          DocumentServer ! DocumentRevised(document, latest)
       }
     }
   }

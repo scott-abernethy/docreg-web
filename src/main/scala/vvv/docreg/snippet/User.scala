@@ -1,6 +1,7 @@
 package vvv.docreg.snippet
 
 import vvv.docreg.model._
+import vvv.docreg.util.StringUtil
 import net.liftweb._
 import util._
 import common._
@@ -36,7 +37,7 @@ class User extends Logger {
     val submittedEmail = email.is
     bind("register", in,
       "email" -> Text(email.is),
-      "name" -> JsCmds.FocusOnLoad(SHtml.text(name.is, s => name(s))),
+      "name" -> JsCmds.FocusOnLoad(SHtml.text(StringUtil nameFromEmail submittedEmail, s => name(s))),
       "submit" -> SHtml.submit("Register", () => processRegister(submittedEmail)),
       "cancel" -> SHtml.submit("Cancel", () => S.redirectTo("/"))
     )

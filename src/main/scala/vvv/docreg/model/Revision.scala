@@ -37,9 +37,10 @@ object Revision extends Revision with LongKeyedMetaMapper[Revision] {
   def forDocument(document: Document): List[Revision] = {
     Revision.findAll(By(Revision.document, document.id), OrderBy(Revision.version, Descending))
   }
-  def forDocument(document: Document, version: Long): Revision = {
+  def forDocument(document: Document, version: Long): Box[Revision] = {
+    // Use find instead?
     val rs = Revision.findAll(By(Revision.document, document.id), By(Revision.version, version))
-    if (rs nonEmpty) rs head else null
+    if (rs nonEmpty) Full(rs head) else Empty
   }
 }
 

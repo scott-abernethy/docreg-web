@@ -18,8 +18,7 @@ object Download {
     val d = Document.forKey(key)
     if (d == null) Empty
     else {
-    val r = d.revision(version.toLong)
-    if (r == null) Empty else Full(RedirectResponse("http://"+Backend.server+"/docreg/release/" + r.filename))
+      d.revision(version.toLong) map (r => RedirectResponse("http://"+Backend.server+"/docreg/release/" + r.filename))
     }
   }
 }
