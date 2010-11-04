@@ -28,7 +28,7 @@ class DocumentSnippet extends Logger {
     case Full(d) =>
       bind("doc", xhtml,
         "key" -> d.key,
-        "title" -> d.title,
+        "title" -> <a href={d.latest.info}>{d.title}</a>,
         "author" -> d.latest.author,
         "revised" -> d.latest.date,
         "link" -> ((in: NodeSeq) => <a href={d.latest.link}>{in}</a>),
@@ -71,7 +71,7 @@ class DocumentSnippet extends Logger {
         // TODO warning if document is being editted!
         bind("doc", in,
           "key" -> d.key,
-          "title" -> d.title,
+          "title" -> <a href={d.latest.info}>{d.title}</a>,
           "author" -> r.author,
           "revised" -> r.date,
           "link" -> ((in: NodeSeq) => <a href={r.link}>{in}</a>),
@@ -94,7 +94,7 @@ class DocumentSnippet extends Logger {
       "state" -> SHtml.select(states, Full(state.toString), (selected) => (state = ApprovalState parse selected)),
       "comment" -> SHtml.textarea(comment, comment = _) % ("class" -> "smalltextarea"),
       "submit" -> SHtml.submit("Submit", () => processApprove(d, r, state, comment)),
-      "cancel" -> SHtml.submit("Cancel", () => S.redirectTo("/"))
+      "cancel" -> SHtml.submit("Cancel", () => S.redirectTo(r.info))
     )
   }
   
