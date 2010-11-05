@@ -11,12 +11,13 @@ import js._
 import scala.xml.{NodeSeq, Text}
 
 class User extends Loggable {
-  object email extends RequestVar("Email")
+  val emailHint = "your.name@aviatnet.com"
+  object email extends RequestVar(emailHint)
   object name extends RequestVar("")
   def signIn(in: NodeSeq): NodeSeq = {
     bind("signIn", in,
-      "email" -> JsCmds.FocusOnLoad(SHtml.text(email.is, s => email(s))),
-      "submit" -> SHtml.submit("Sign In", processLogin _)
+      "email" -> JsCmds.FocusOnLoad(SHtml.text(email.is, s => email(s)) % ("style" -> "width: 250px")),
+      "submit" -> SHtml.submit("Sign In", () => (if (email.is != emailHint) processLogin() else S.error("Please enter YOUR email address")))
     )
   }
   def processLogin() {
