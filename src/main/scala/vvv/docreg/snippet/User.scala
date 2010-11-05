@@ -17,21 +17,27 @@ class User extends Loggable {
   def signIn(in: NodeSeq): NodeSeq = {
     bind("signIn", in,
       "email" -> JsCmds.FocusOnLoad(SHtml.text(email.is, s => email(s)) % ("style" -> "width: 250px")),
-      "submit" -> SHtml.submit("Sign In", () => (if (email.is != emailHint) processLogin() else S.error("Please enter YOUR email address")))
+      "submit" -> SHtml.submit("Sign In", processLogin _)
     )
   }
   def processLogin() {
-    val submittedEmail = email.is.toLowerCase
-    User.forEmail(submittedEmail) match {
-      case Full(u) => doSignIn(u)
-      case Empty => User.create.email(submittedEmail).asValid match {
-        case Full(u) => 
-          S.warning("User '" + submittedEmail + "' is not registered")
-          S.redirectTo("register", () => email(submittedEmail))
-        case Empty => S.error("Unknown error")
+    if (email.is.indexOf('@') == -1) email(email.is + "@aviatnet.com")
+    var submittedEmail = email.is.toLowerCase
+
+    if (submittedEmail == emailHint) {
+      S.error("Please enter YOUR email address")
+    } else {
+      User.forEmail(submittedEmail) match {
+        case Full(u) => doSignIn(u)
+        case Empty => User.create.email(submittedEmail).asValid match {
+          case Full(u) => 
+            S.warning("User '" + submittedEmail + "' is not registered")
+            S.redirectTo("register", () => email(submittedEmail))
+          case Empty => S.error("Unknown error")
+          case Failure(msg, _, _) => S.error(msg)
+        }
         case Failure(msg, _, _) => S.error(msg)
       }
-      case Failure(msg, _, _) => S.error(msg)
     }
   }
   def register(in: NodeSeq): NodeSeq = {
