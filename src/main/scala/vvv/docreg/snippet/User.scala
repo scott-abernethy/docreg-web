@@ -21,7 +21,7 @@ class User extends Loggable {
     )
   }
   def processLogin() {
-    if (email.is.indexOf('@') == -1) email(email.is + "@aviatnet.com")
+    if (email.is.indexOf('@') == -1) email(email.is.replaceAll(" ",".") + "@aviatnet.com")
     var submittedEmail = email.is.toLowerCase
 
     if (submittedEmail == emailHint) {
