@@ -13,36 +13,55 @@ import scala.xml.{NodeSeq, Text}
 
 class DocumentSnippet extends Loggable {
   val key = S.param("key") openOr ""
-  val version: Long = S.param("version") map (_.toLong) openOr -1 
+  val version = S.param("version") openOr "latest"
   val document: Box[Document] = try {
     Document.forKey(key)
   } catch {
     case e:NumberFormatException => null 
   }
   val revision: Box[Revision] = document match {
-    case Full(d) => Revision.forDocument(d, version)
+    case Full(d) => 
+      if (version == "latest") {
+        Full(d.latest)
+      } else {
+        Revision.forDocument(d, version.toLong)
+      }
     case _ => Empty
   }
 
-  def info(xhtml: NodeSeq): NodeSeq = document match {
-    case Full(d) =>
-      bind("doc", xhtml,
-        "key" -> d.key,
-        "title" -> <a href={d.latest.info}>{d.title}</a>,
-        "author" -> d.latest.author,
-        "revised" -> d.latest.date,
-        "link" -> ((in: NodeSeq) => <a href={d.latest.link}>{in}</a>),
-        "version" -> d.latest.version,
-        "project" -> d.projectName,
-        "edit" -> (if (d.editor.is == null) Text("-") else <span class="highlight">{d.editor.asHtml}</span>),
-        "revision" -> revisions _,
-        "approve" -> ((in: NodeSeq) => <a href={"/d/" + d.key + "/v/" + d.latest.version + "/approve"}>{in}</a>))
-    case _ =>
-      Text("Invalid document '" + key + "'")
+  def forRequest(in: NodeSeq, op: (NodeSeq, Document, Revision) => NodeSeq): NodeSeq = {
+    document match {
+      case Full(d) => revision match {
+        case Full(r) => 
+          // TODO warning if document is being editted!
+          if (!d.latest_?(r.version.is)) S.warning("Not the most recent version of this document")
+          op(in, d, r)
+        case _ => 
+          S.error("Invalid version '" + version + "' for document '" + key + "'")
+          NodeSeq.Empty
+      }
+      case _ => 
+        S.error("Invalid document '" + key + "'")
+        NodeSeq.Empty
+    }
   }
 
-  private def revisions(xhtml: NodeSeq): NodeSeq = document match {
-    case Full(d) => d.revisions flatMap { r =>
+  def info(in: NodeSeq): NodeSeq = forRequest(in, (in, d, r) => {
+      bind("doc", in,
+        "key" -> d.key,
+        "title" -> <a href={r.info}>{r.fullTitle}</a>,
+        "author" -> r.author,
+        "revised" -> r.date,
+        "link" -> ((in: NodeSeq) => <a href={r.link}>{in}</a>),
+        "version" -> r.version,
+        "project" -> d.projectName,
+        "edit" -> (if (d.editor.is == null) Text("-") else <span class="highlight">{d.editor.asHtml}</span>),
+        "revision" -> ((in: NodeSeq) => revisions(in, d, r)),
+        "approve" -> ((in: NodeSeq) => <a href={"/d/" + d.key + "/v/" + r.version + "/approve"}>{in}</a>))
+    })
+
+  private def revisions(xhtml: NodeSeq, d: Document, revisionInRequest: Revision): NodeSeq = {
+    d.revisions flatMap { r =>
       bind("rev", xhtml,
         "version" -> r.version,
         "author" -> r.author,
@@ -51,7 +70,6 @@ class DocumentSnippet extends Loggable {
         "link" -> <a href={r.link}>{r.version.asHtml}</a>,
         "comment" -> r.comment)
     }
-    case _ => Text("")
   }
 
   private def approvals(xhtml: NodeSeq, r: Revision): NodeSeq = {
@@ -64,25 +82,18 @@ class DocumentSnippet extends Loggable {
     }
   }
 
-  def approve(in: NodeSeq): NodeSeq = document match {
-    case Full(d) => revision match {
-      case Full(r) =>
-        if (!d.latest_?(r.version.is)) S.warning("Approval is not for the most recent version")
-        // TODO warning if document is being editted!
-        bind("doc", in,
-          "key" -> d.key,
-          "title" -> <a href={d.latest.info}>{d.title}</a>,
-          "author" -> r.author,
-          "revised" -> r.date,
-          "link" -> ((in: NodeSeq) => <a href={r.link}>{in}</a>),
-          "version" -> r.version,
-          "project" -> d.projectName,
-          "edit" -> (if (d.editor.is == null) Text("-") else <span class="highlight">{d.editor.asHtml}</span>),
-        "approval" -> ((in: NodeSeq) => approvalForm(in, d, r)))
-      case _ => S.error("Invalid revision '" + version + "'"); NodeSeq.Empty
-    }
-    case _ => S.error("Invalid document '" + key + "'"); NodeSeq.Empty
-  }
+  def approve(in: NodeSeq): NodeSeq = forRequest(in, (in, d, r) => {
+      bind("doc", in,
+        "key" -> d.key,
+        "title" -> <a href={r.info}>{r.fullTitle}</a>,
+        "author" -> r.author,
+        "revised" -> r.date,
+        "link" -> ((in: NodeSeq) => <a href={r.link}>{in}</a>),
+        "version" -> r.version,
+        "project" -> d.projectName,
+        "edit" -> (if (d.editor.is == null) Text("-") else <span class="highlight">{d.editor.asHtml}</span>),
+      "approval" -> ((in: NodeSeq) => approvalForm(in, d, r)))
+  })
 
   private def approvalForm(in: NodeSeq, d: Document, r: Revision): NodeSeq = {
     val states = List(ApprovalState.approved, ApprovalState.notApproved) map (state => (state.toString, state.toString))

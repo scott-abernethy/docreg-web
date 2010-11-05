@@ -77,7 +77,7 @@ class Log extends DocumentSubscriber {
       "key" -> d.key,
       "version" -> r.version,
       "project" -> d.projectName, 
-      "title" -> <a href={d.infoLink}>{d.title}</a>, 
+      "title" -> <a href={d.infoLink}>{r.fullTitle}</a>, 
       "author" -> r.author,
       "date" -> r.date,
       "when" -> r.when,

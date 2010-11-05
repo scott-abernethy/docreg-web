@@ -11,6 +11,7 @@ syntax: glob
 
 # logs
 derby.log
+docreg-web.log
 
 # eclipse conf file
 .settings

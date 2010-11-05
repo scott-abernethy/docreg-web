@@ -14,9 +14,7 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
   object document extends LongMappedMapper(this, Document) {
     override def dbIndexed_? = true
   }
-  object version extends MappedLong(this) { // unique?
-    override def asHtml = Text("v" + is)
-  }
+  object version extends MappedLong(this)
   object filename extends MappedString(this, 200)
   object author extends MappedString(this, 100)
   object date extends MappedDateTime(this) {
@@ -31,6 +29,7 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
   def when: String = DatePresentation.short(date.is)
   def info: String = "/d/" + (document.obj.map(_.key.is) openOr "?") + "/v/" + version
   def link: String = "/d/" + (document.obj.map(_.key.is) openOr "?") + "/v/" + version + "/download"
+  def fullTitle: String = (document.obj.map(_.key.is) openOr "?") + "-" + version.is + ": " + (document.obj.map(_.title.is) openOr "?")
 }
 
 object Revision extends Revision with LongKeyedMetaMapper[Revision] {

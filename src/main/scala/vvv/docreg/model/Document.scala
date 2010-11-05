@@ -8,9 +8,7 @@ import scala.xml._
 class Document extends LongKeyedMapper[Document] with IdPK {
   def getSingleton = Document
 
-  object key extends MappedString(this, 20) {
-    override def asHtml = Text("d" + is)
-  }
+  object key extends MappedString(this, 20)
   object project extends LongMappedMapper(this, Project)
   object title extends MappedString(this, 200)
   object editor extends MappedString(this, 100) 
