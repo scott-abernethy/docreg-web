@@ -49,6 +49,7 @@ class Boot {
       Menu.i("Login") / "user" / "signin",
       Menu.i("Logout") / "user" / "signout" >> loggedIn,
       Menu.i("Register") / "user" / "register",
+      Menu.i("Profile") / "user" / "profile" >> loggedIn,
       Menu.i("Info") / "doc" / "info" >> loggedIn,
       Menu.i("Approve") / "doc" / "approve" >> loggedIn
     )
@@ -80,6 +81,8 @@ class Boot {
         RewriteResponse("doc" :: "info" :: Nil, Map("key" -> key, "version" -> version))
       case RewriteRequest(ParsePath("d" :: key :: "v" :: version :: "approve" :: Nil, _, _, _), _, _) =>
         RewriteResponse("doc" :: "approve" :: Nil, Map("key" -> key, "version" -> version))
+      case RewriteRequest(ParsePath("user" :: user :: "profile" :: Nil, _, _, _), _, _) =>
+        RewriteResponse("user" :: "profile" :: Nil, Map("user" -> user))
     }
 
     DocumentServer start

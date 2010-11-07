@@ -23,6 +23,7 @@ class User extends LongKeyedMapper[User] with IdPK {
     override def validations = valUnique(S.??("unique.email.address")) _ :: super.validations // Doesn't seem to work.
   }
   def displayName = name.is
+  def profileLink = "/user/" + id + "/profile"
 }
 
 object User extends User with LongKeyedMetaMapper[User] {

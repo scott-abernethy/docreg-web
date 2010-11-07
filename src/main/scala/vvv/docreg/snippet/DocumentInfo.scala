@@ -75,7 +75,7 @@ class DocumentSnippet extends Loggable {
   private def approvals(xhtml: NodeSeq, r: Revision): NodeSeq = {
     Approval.forRevision(r) flatMap {a =>
       bind("approval", xhtml,
-        "by" -> (a.by.obj.map (_.displayName) openOr "?"),
+        "by" -> (a.by.obj.map (o => <a href={o.profileLink}>{o.displayName}</a>) openOr Text("?")),
         "state" -> <span style={ApprovalState.style(a.state.is)}>{a.state}</span>,
         "comment" -> a.comment,
         "date" -> a.date)

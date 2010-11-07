@@ -71,11 +71,21 @@ class User extends Loggable {
   def control(in: NodeSeq): NodeSeq = {
     if (User.loggedIn_?) {
       bind("user", in,
-        "id" -> (User.loggedInUser.map(_.email.is) openOr "?"),
+        "id" -> (User.loggedInUser.map(o => <a href={o.profileLink}>{o.email}</a>) openOr Text("?")),
         "signOut" -> <a href="/user/signout">Sign out</a>
       )
     } else {
       <a href="/user/signin">Sign in</a>
     }
+  }
+  def profile(in: NodeSeq): NodeSeq = {
+    val user = S.param("user") match {
+      case Full(uid) => User.find(uid)
+      case _ => User.loggedInUser.is
+    }
+    user map {u => bind("profile", in, 
+      "name" -> u.displayName,
+      "email" -> u.email
+    )} openOr {S.error("No such user found"); NodeSeq.Empty}
   }
 }
