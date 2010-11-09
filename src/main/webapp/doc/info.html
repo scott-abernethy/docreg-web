@@ -1,5 +1,14 @@
 <lift:surround with="default" at="content">
   <lift:snippet type="DocumentSnippet:info">
+    <script type="text/javascript">                                         
+      $(document).ready(function() {
+        $("#history tbody").hover(function() {
+          $(this).addClass("row-highlight").find(".actions").show();
+          },function(){
+          $(this).removeClass("row-highlight").find(".actions").hide();
+          });
+        });
+    </script>
     <h3><doc:title/></h3>
     <hr/>
     <div class="span-9">
@@ -16,38 +25,42 @@
       <h4>Actions</h4>
       <ul>
         <li><doc:link>Download</doc:link> this version</li>
-        <li><doc:approve>Approve</doc:approve> this version</li>
+        <li><doc:approve>Approve...</doc:approve> this version</li>
       </ul>
     </div>
     <hr/>
     <div class="span-18 last">
       <h4>Document History</h4>
-      <table class="baseline-align-cells" cellpadding="0">
-        <tr>
-          <th>Version</th>
-          <th>User</th>
-          <th>Action</th>
-          <th>Comment</th>
-          <th>Date</th>
-        </tr>
-        <doc:revision>
+      <table id="history" class="baseline-align-cells" cellspacing="0" border-collapse="collapse">
+        <thead>
           <tr>
-            <td class="nowrap"><rev:link/></td>
-            <td class="nowrap"><rev:author/></td>
-            <td class="nowrap"><span class="revision">Submit</span></td>
-            <td class="quiet"><rev:comment/></td>
-            <td class="nowrap"><rev:date/></td>
+            <th>Version</th>
+            <th>User</th>
+            <th>Action</th>
+            <th>Comment</th>
+            <th>Date</th>
           </tr>
-          <rev:approvals>
+        </thead>
+        <doc:revision>
+          <tbody>
             <tr>
-              <td class="nowrap"></td>
-              <td class="nowrap"><approval:by/></td>
-              <td class="nowrap"><approval:state/></td>
-              <td class="quiet"><approval:comment/></td>
-              <td class="nowrap"><approval:date/></td>
+              <td class="border-top nowrap"><rev:link/></td>
+              <td class="border-top nowrap"><rev:author/></td>
+              <td class="border-top nowrap"><span class="revision">Submit</span></td>
+              <td class="border-top quiet"><rev:comment/></td>
+              <td class="border-top nowrap"><rev:date/></td>
             </tr>
-          </rev:approvals>
-          <tr><td colspan="5"><hr class="bottom"/></td></tr>
+            <rev:approvals>
+              <tr>
+                <td class="nowrap"></td>
+                <td class="nowrap"><approval:by/></td>
+                <td class="nowrap"><approval:state/></td>
+                <td class="quiet"><approval:comment/></td>
+                <td class="nowrap"><approval:date/></td>
+              </tr>
+            </rev:approvals>
+            <tr class="hide actions"><td colspan="5"><span class=""><a rev:download_attr="">Download</a> | <a rev:approve_attr="">Approve...</a></span></td></tr>
+          </tbody>
         </doc:revision>
       </table>
     </div>

@@ -16,6 +16,9 @@ a:hover {
   margin: 0;
   list-style: none;
 }
+#log li {
+  padding: 6px 10px 6px 5px;
+}
 .projects {
   margin: 0;
   list-style: none;
@@ -84,4 +87,10 @@ a:hover {
 }
 .smalltextarea {
   height: 100px;
+}
+.row-highlight {
+  background-color: #dfefff;
+}
+.border-top {
+  border-top: 1px solid #ddd;
 }

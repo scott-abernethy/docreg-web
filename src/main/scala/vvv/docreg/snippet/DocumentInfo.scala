@@ -9,6 +9,7 @@ import common._
 import Helpers._
 import http._
 import js._
+import JE._
 import scala.xml.{NodeSeq, Text}
 
 class DocumentSnippet extends Loggable {
@@ -63,6 +64,8 @@ class DocumentSnippet extends Loggable {
   private def revisions(xhtml: NodeSeq, d: Document, revisionInRequest: Revision): NodeSeq = {
     d.revisions flatMap { r =>
       bind("rev", xhtml,
+        AttrBindParam("download_attr", "/d/" + d.key + "/v/" + r.version + "/download", "href"),
+        AttrBindParam("approve_attr", "/d/" + d.key + "/v/" + r.version + "/approve", "href"),
         "version" -> r.version,
         "author" -> r.author,
         "date" -> r.date,

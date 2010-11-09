@@ -10,6 +10,7 @@ import actor._
 import common._
 import mapper._
 import util.Helpers._
+import net.liftweb.http.js._
 import net.liftweb.http.js.JsCmds._
 import net.liftweb.http.js.jquery.JqJsCmds._
 
@@ -72,6 +73,9 @@ class Log extends DocumentSubscriber {
     bind("doc", xml, 
       AttrBindParam("id_attr", r.id.is.toString, "id"),
       AttrBindParam("style_attr", if (hidden) "display:none" else "", "style"),
+      AttrBindParam("info_attr", r.info, "href"),
+      AttrBindParam("onmouseover_attr", JE.JsRaw("$(this).addClass('row-highlight').find('.actions').show();"), "onmouseover"),
+      AttrBindParam("onmouseout_attr", JE.JsRaw("$(this).removeClass('row-highlight').find('.actions').hide();"), "onmouseout"),
       "link" -> <span><a href={d.latest.link}>{d.key}</a></span><span class="quiet">v<a href={r.link}>{r.version}</a></span>,
       "info" -> <span><a href={d.infoLink}>more</a></span>,
       "key" -> d.key,
