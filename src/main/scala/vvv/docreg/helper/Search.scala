@@ -42,8 +42,8 @@ trait Search extends Loggable {
   def form(xhtml: NodeSeq): NodeSeq = {
     ajaxForm (
       bind("search", xhtml,
-      "text" -> JsCmds.FocusOnLoad(text(search.is, s => search(s))),
-      "submit" -> submit("Search", processSearch _)) ++ hidden(processSearch _)
+      "text" -> JsCmds.FocusOnLoad(SHtml.text(search.is, s => search(s)) % ("style" -> "width: 250px")),
+      "submit" -> SHtml.submit("Search", processSearch _)) ++ hidden(processSearch _)
     )
   }
   def processSearch(): JsCmd = {
