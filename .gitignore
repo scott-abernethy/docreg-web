@@ -10,8 +10,8 @@ syntax: glob
 .DS_Store
 
 # logs
-derby.log
-docreg-web.log
+derby.log*
+docreg-web.log*
 
 # eclipse conf file
 .settings
