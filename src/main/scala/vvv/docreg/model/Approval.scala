@@ -17,9 +17,15 @@ class Approval extends LongKeyedMapper[Approval] with IdPK {
   object comment extends MappedString(this, 128)
 }
 
-object Approval extends Approval with LongKeyedMetaMapper[Approval] {
+object Approval extends Approval with LongKeyedMetaMapper[Approval] with Loggable {
   override def fieldOrder = List(revision, state, by, date, comment)
+  override def dbIndexes = UniqueIndex(revision, by) :: super.dbIndexes
   def forRevision(r: Revision): List[Approval] = findAll(By(Approval.revision, r))
+  def forRevisionBy(r: Revision, by: User): Box[Approval] = findAll(By(Approval.revision, r), By(Approval.by, by)) match {
+    case Nil => Empty 
+    case a :: Nil => Full(a)
+    case a :: as => logger.warn("Found duplicate approvals for " + r + " by " + by) ; Full(a)
+  }
 }
 
 object ApprovalState extends Enumeration {

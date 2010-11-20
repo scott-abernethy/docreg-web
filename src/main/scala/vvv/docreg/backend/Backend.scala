@@ -40,7 +40,7 @@ class Backend extends Actor with Loggable {
           }
         case Reload(d) =>
           updateRevisions(d)
-          updateApprovals(d)
+          applyApprovals(d, agent.loadApprovals(d.key))
         case ApprovalApproved(d, r, user, state, comment) =>
           val done = agent.approval(r.filename, 
             user.displayName, 
@@ -77,7 +77,7 @@ class Backend extends Actor with Loggable {
       document.save
 
       agent.loadRevisions(d).foreach{createRevision(document, _)}
-      agent.loadApprovals(d).foreach{createApproval(document, _)}
+      applyApprovals(document, agent.loadApprovals(d))
       
       DocumentServer ! DocumentAdded(document)
     } catch {
@@ -92,23 +92,25 @@ class Backend extends Actor with Loggable {
     revision.save
     revision
   }
-  
-  private def createApproval(document: Document, a: AgentApproval) {
+
+  private def applyApprovals(document: Document, approvals: Iterable[AgentApproval]) = approvals foreach { a =>
+    // The agent returns a single approval item per revision/user pair, so no need to cull.
     Revision.forDocument(document, a.getVersion) match {
-      case Full(revision) => createApproval(revision, User.forEmailOrCreate(a.getApproverEmail) openOr null, a)
-      case _ => logger.warn("Approval found with no matching revision: " + a)
+      case Full(revision) => 
+        val user = User.forEmailOrCreate(a.getApproverEmail) openOr null
+        val approval = Approval.forRevisionBy(revision, user) match {
+          case Full(a) => a
+          case _ => Approval.create.revision(revision).by(user)
+        } 
+        approval.state(ApprovalState.parse(a.getStatus.toString))
+        approval.date(a.getDate)
+        approval.comment(a.getComment)
+        approval.save
+      case _ => 
+        logger.warn("Approval found with no matching revision: " + a)
     }
   }
 
-  private def createApproval(revision: Revision, user: User, a: AgentApproval): Approval = {
-    val approval = Approval.create
-    approval.revision(revision)
-    approval.by(user)
-    assignApproval(approval, a)
-    approval.save
-    approval
-  }
-  
   private def updateDocument(document: Document, d: AgentDocument) {
     if (document.latest_?(d.getVersion.toLong)) {
       reconciler ! PriorityReconcile(document)
@@ -138,12 +140,6 @@ class Backend extends Actor with Loggable {
     revision.comment(r.getComment)
   }
   
-  private def assignApproval(approval: Approval, a: AgentApproval) {
-    approval.state(ApprovalState.parse(a.getStatus.toString))
-    approval.date(a.getDate)
-    approval.comment(a.getComment)
-  }
-
   private def updateRevisions(document: Document) {
     agent.loadRevisions(document.key).foreach { r =>
       document.revision(r.getVersion) match {
@@ -160,26 +156,6 @@ class Backend extends Actor with Loggable {
     }
   }
 
-  private def updateApprovals(document: Document) {
-    agent.loadApprovals(document.key).foreach { a =>
-      Revision.forDocument(document, a.getVersion) match {
-        case Full(revision) =>
-          val user = User.forEmailOrCreate(a.getApproverEmail)
-          val state = ApprovalState.parse(a.getStatus.toString)
-          val approval = Approval.findAll(By(Approval.revision, revision), By(Approval.by, user), By(Approval.state, state)) match {
-            case Nil => Empty
-            case x :: Nil => Full(x)
-            case x :: xs => logger.warn("Found duplicate approvals for " + a); Full(x)
-          } 
-          approval match {
-            case Full(a) => //update
-            case _ => createApproval(revision, user openOr null, a)
-
-          }
-        case _ => logger.warn("Approval found with no matching revision: " + a)
-      } 
-    }
-  }
 }
 
 object Backend extends Backend {
