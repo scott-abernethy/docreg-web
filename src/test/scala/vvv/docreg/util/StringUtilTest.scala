@@ -17,6 +17,10 @@ object StringUtilTestSpecs extends Specification {
       StringUtil.nameFromEmail("SCOTT-andrew+abErnethy@Gmail.com") must be equalTo("Scott Andrew Abernethy")
       StringUtil.nameFromEmail("david.36.smith@bt.com") must be equalTo("David Smith")
       StringUtil.nameFromEmail("Sunil.Kumar2@Aviatnet.com") must be equalTo("Sunil Kumar")
+      StringUtil.nameFromEmail("") must be equalTo("")
+      StringUtil.nameFromEmail("the quick Brown fox") must be equalTo("")
+      StringUtil.nameFromEmail("yogie@") must be equalTo("Yogie")
+      StringUtil.nameFromEmail("@that doesn't work") must be equalTo("")
     }
   }
 }

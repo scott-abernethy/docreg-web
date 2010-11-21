@@ -16,6 +16,7 @@ case class Connect()
 case class Updated(d: AgentDocument)
 case class Reload(d: Document)
 case class ApprovalApproved(document: Document, revision: Revision, user: User, state: ApprovalState, comment: String)
+case class ApprovalRequested(document: Document, revision: Revision, users: Iterable[User])
 
 class Backend extends Actor with Loggable {
   val product = ProjectProps.get("project.name") openOr "drw"
@@ -47,11 +48,15 @@ class Backend extends Actor with Loggable {
             user.email.is,
             state match {
               case ApprovalState.approved => AgentApprovalState.Approved
-              case _ => AgentApprovalState.NotApproved
+              case ApprovalState.notApproved => AgentApprovalState.NotApproved
+              case _ => AgentApprovalState.Pending
             },
             comment,
             product,
             user.email.is)
+          if (done) logger.info("Approval processed") else logger.warn("Approval rejected for " + r + " by " + user + " to " + state)
+        case ApprovalRequested(d, r, users) =>
+          users foreach (this ! ApprovalApproved(d, r, _, ApprovalState.pending, ""))
         case m @ _ => logger.warn("Unrecognised message " + m)
       }
     }

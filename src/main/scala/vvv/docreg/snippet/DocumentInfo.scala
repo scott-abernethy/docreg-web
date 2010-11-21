@@ -3,12 +3,14 @@ package vvv.docreg.snippet
 import vvv.docreg.backend._
 import vvv.docreg.model._
 import vvv.docreg.model.ApprovalState._
+import vvv.docreg.util.TemplateParse
 import net.liftweb._
 import util._
 import common._
 import Helpers._
 import http._
 import js._
+import js.jquery._
 import JE._
 import scala.xml.{NodeSeq, Text}
 
@@ -33,7 +35,7 @@ class DocumentSnippet extends Loggable {
   def forRequest(in: NodeSeq, op: (NodeSeq, Document, Revision) => NodeSeq): NodeSeq = {
     document match {
       case Full(d) => revision match {
-        case Full(r) => 
+        case Full(r) =>
           // TODO warning if document is being editted!
           if (!d.latest_?(r.version.is)) S.warning("Not the most recent version of this document")
           op(in, d, r)
@@ -58,7 +60,8 @@ class DocumentSnippet extends Loggable {
         "project" -> d.projectName,
         "edit" -> (if (d.editor.is == null) Text("-") else <span class="highlight">{d.editor.asHtml}</span>),
         "revision" -> ((in: NodeSeq) => revisions(in, d, r)),
-        "approve" -> ((in: NodeSeq) => <a href={"/d/" + d.key + "/v/" + r.version + "/approve"}>{in}</a>))
+        "approve" -> ((in: NodeSeq) => <a href={"/d/" + d.key + "/v/" + r.version + "/approve"}>{in}</a>),
+        "request-approval" -> ((in: NodeSeq) => <a href={"/d/" + d.key + "/v/" + r.version + "/request-approval"}>{in}</a>))
     })
 
   private def revisions(xhtml: NodeSeq, d: Document, revisionInRequest: Revision): NodeSeq = {
@@ -66,6 +69,7 @@ class DocumentSnippet extends Loggable {
       bind("rev", xhtml,
         AttrBindParam("download_attr", "/d/" + d.key + "/v/" + r.version + "/download", "href"),
         AttrBindParam("approve_attr", "/d/" + d.key + "/v/" + r.version + "/approve", "href"),
+        AttrBindParam("request-approval_attr", "/d/" + d.key + "/v/" + r.version + "/request-approval", "href"),
         "version" -> r.version,
         "author" -> r.author,
         "date" -> r.date,
@@ -123,6 +127,44 @@ class DocumentSnippet extends Loggable {
     approval.save
     Backend ! ApprovalApproved(d, r, user, state, comment)
     S.notice("Document " + state)
+    S.redirectTo(r.info)
+  }
+
+  lazy val approverPartial = TemplateFinder.findAnyTemplate("doc" :: "request-approval" :: Nil) match {
+    case Full(in) => in \\ "tr" filter (x => (x \ "@class").text.contains("approval:approver"))
+    case _ => NodeSeq.Empty
+  }
+
+  def requestApproval(in: NodeSeq): NodeSeq = forRequest(in, (in, d, r) => {
+      ("#doc:title *" #> <a href={r.info}>{r.fullTitle}</a> &
+       "#doc:version" #> r.version &
+       ".approval:approver" #> approver &
+       ".approver:add" #> SHtml.ajaxButton("Add", () => {JqJsCmds.AppendHtml("addTo", approver(approverPartial))}) &
+       "#submit" #> SHtml.submit("Submit", () => (processRequestApproval(d, r))) &
+       "#cancel" #> SHtml.submit("Cancel", () => S.redirectTo(r.info)) &
+       ClearClearable) apply in
+  })
+
+  var approverCount: Int = 0
+  object selected extends RequestVar[List[String]](Nil)
+
+  def approver = {
+    approverCount = approverCount + 1
+    val id = "approver" + approverCount
+    var approver = ""
+    ".approval:approver [id]" #> id &
+    ".approver:email" #> (SHtml.text(approver, s => selected(s :: selected.is)) % ("style" -> "width: 250px")) &
+    ".approver:remove" #> SHtml.ajaxButton("Remove", () => {JsCmds.Replace(id, NodeSeq.Empty)})
+  }
+
+  def processRequestApproval(d: Document, r: Revision) = {
+    selected.is.map(User.forEmailOrCreate(_) openOr null).filterNot(_ == null) match {
+      case Nil =>
+        S.warning("Approval request with no users!")     
+      case xs  =>
+        Backend ! ApprovalRequested(d, r, xs)
+        S.notice("Approval requested for " + (xs.map(_.displayName).reduceRight((a, b) => a + "; " + b)))
+    }
     S.redirectTo(r.info)
   }
 }

@@ -4,8 +4,12 @@ import java.util.regex._
 
 object StringUtil {
   def nameFromEmail(email: String): String = {
-    val namePart = email substring (0, email indexOf '@') replaceAll ("[._%\\-+]"," ") replaceAll ("[0-9]","") replaceAll ("  "," ")
-    titleCase(namePart)
+    email indexOf '@' match {
+      case -1 => ""
+      case i =>
+        val namePart = email substring (0, i) replaceAll ("[._%\\-+]"," ") replaceAll ("[0-9]","") replaceAll ("  "," ")
+        titleCase(namePart)
+    }
   }
 
   val titleCasePattern = Pattern.compile("(^|\\W)([a-z])")
