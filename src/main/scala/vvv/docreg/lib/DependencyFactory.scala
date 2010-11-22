@@ -1,4 +1,5 @@
-package vvv.docreg.lib
+package code {
+package lib {
 
 import net.liftweb._
 import http._
@@ -28,6 +29,7 @@ object DependencyFactory extends Factory {
   init()
 }
 
+/*
 /**
  * Examples of changing the implementation
  */
@@ -49,4 +51,7 @@ sealed abstract class Changer {
       // perform some calculations here
     }
   }
+}
+*/
+}
 }
