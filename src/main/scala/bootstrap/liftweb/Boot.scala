@@ -68,8 +68,8 @@ class Boot {
     // Make a transaction span the whole HTTP request
     S.addAround(DB.buildLoanWrapper)
 
-    LiftRules.ajaxStart = Full( () => LiftRules.jsArtifacts.show("ajax-loader").cmd )
-LiftRules.ajaxEnd = Full( () => LiftRules.jsArtifacts.hide("ajax-loader").cmd )
+    LiftRules.ajaxStart = Full( () => LiftRules.jsArtifacts.show("loading").cmd )
+    LiftRules.ajaxEnd = Full( () => LiftRules.jsArtifacts.hide("loading").cmd )
 
     LiftRules.dispatch.append {
       case Req("d" :: key :: "download" :: Nil, _, GetRequest) => 

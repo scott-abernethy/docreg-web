@@ -1,3 +1,6 @@
+body {
+  margin: 0px 1.5em 1.5em 1.5em;
+}
 a {
   color: #369;
   text-decoration: none;
@@ -8,6 +11,11 @@ a:visited {
 a:hover {
   color: #fff;
   background-color: #369;
+}
+#loading {
+  background-color: #f9e5ec;
+  border-bottom-left-radius: 8px 8px;
+  border-bottom-right-radius: 8px 8px;
 }
 .nowrap {
   white-space: nowrap;

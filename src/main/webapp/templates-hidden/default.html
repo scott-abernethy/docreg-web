@@ -13,18 +13,26 @@
   </head>
   <body>
     <div class="container">
-      <div class="span-24 last" style="text-align: right">
-        <lift:snippet type="User.control">
-          <user:id/> | <user:signOut/>
-        </lift:snippet>
-      </div>
+        <div class="span-7">
+          <div id="loading" class="span-6" style="display:none;">
+            <img src="/images/ajax-loader.gif" id="ajax-loader" style="margin-bottom:0px; margin-left:1em;" width="8" height="8"/><span style="margin-left:1em; color: #333;">Loading...</span>
+          </div>
+          <div class="span-1">
+            &nbsp;
+          </div>
+        </div>
+        <div class="span-17 last append-bottom" style="text-align: right">
+          <lift:snippet type="User.control">
+            <user:id/> | <user:signOut/>
+          </lift:snippet>
+        </div>
 
-      <div class="span-6">
-        <h1><a href="/">DocReg<sup>beta</sup></a><img src="/images/ajax-loader.gif" id="ajax-loader" style="display:none; margin-bottom:0px; margin-left:5px;" width="16" height="16"/></h1>
-      </div>
-      <div class="span-10 last">
-        <lift:bind name="topbar" />
-      </div>
+        <div class="clear span-6">
+          <h1><a href="/">DocReg<sup>beta</sup></a></h1>
+        </div>
+        <div class="span-10 last">
+          <lift:bind name="topbar" />
+        </div>
 
       <div id="notices" class="span-12 prepend-6">
         <lift:Msgs showAll="false">
