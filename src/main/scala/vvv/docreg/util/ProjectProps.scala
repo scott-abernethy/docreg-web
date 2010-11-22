@@ -13,9 +13,10 @@ object ProjectProps {
   def get(key: String): Box[String] = Box(props.getProperty(key)) 
   lazy val props: Properties = {
     val p = new Properties
-    p.setProperty("project.name", "DocReg+Web")
-    p.setProperty("project.version", "0.3.2")
-    //p.load(getClass.getResourceAsStream("project/build.properties"))
+    //p.setProperty("project.name", "DocReg+Web")
+    //p.setProperty("project.version", "0.3.2")
+    val file = new java.io.FileInputStream("project/build.properties")
+    p.load(file)
     p
   }
 }
