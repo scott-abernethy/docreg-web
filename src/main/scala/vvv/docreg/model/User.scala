@@ -14,7 +14,7 @@ import vvv.docreg.util.StringUtil
 // http://www.mail-archive.com/openbd@googlegroups.com/msg05268.html
 
 // Custom simple user, authentication handled against domain by jetty.
-class User extends LongKeyedMapper[User] with IdPK {
+class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
   def getSingleton = User
   object name extends MappedString(this, 64)
   object email extends MappedEmail(this, 64) {
@@ -22,6 +22,10 @@ class User extends LongKeyedMapper[User] with IdPK {
     override def apply(b: Box[String]) = super.apply(b map { _.toLowerCase })
     override def validations = valUnique(S.??("unique.email.address")) _ :: super.validations // Doesn't seem to work.
   }
+  object subscriptions extends MappedManyToMany(Subscription, Subscription.user, Subscription.document, Document)
+
+  def subscribed_?(d: Document) = Subscription.forDocumentandUser(d, this).nonEmpty
+
   def displayName = name.is
   def profileLink = "/user/" + id + "/profile"
 }

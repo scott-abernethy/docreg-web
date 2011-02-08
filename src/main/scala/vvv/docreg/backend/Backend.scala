@@ -1,6 +1,6 @@
 package vvv.docreg.backend
 
-import com.hstx.docregsx.{Document => AgentDocument, Revision => AgentRevision, Approval => AgentApproval, ApprovalStatus => AgentApprovalState, _}
+import com.hstx.docregsx.{Document => AgentDocument, Revision => AgentRevision, Approval => AgentApproval, Subscriber => AgentSubscriber, ApprovalStatus => AgentApprovalState, _}
 import scala.actors.Actor
 import scala.actors.Actor._
 import scala.collection.JavaConversions._
@@ -17,6 +17,9 @@ case class Updated(d: AgentDocument)
 case class Reload(d: Document)
 case class ApprovalApproved(document: Document, revision: Revision, user: User, state: ApprovalState, comment: String)
 case class ApprovalRequested(document: Document, revision: Revision, users: Iterable[User])
+case class SubscribeRequested(document: Document, user: User)
+case class UnsubscribeRequested(document: Document, user: User)
+
 
 class Backend extends Actor with Loggable {
   val product = ProjectProps.get("project.name") openOr "drw"
@@ -41,6 +44,7 @@ class Backend extends Actor with Loggable {
           }
         case Reload(d) =>
           updateRevisions(d)
+          updateSubscriptions(d)
           applyApprovals(d, agent.loadApprovals(d.key))
         case ApprovalApproved(d, r, user, state, comment) =>
           val done = agent.approval(r.filename, 
@@ -57,6 +61,16 @@ class Backend extends Actor with Loggable {
           if (done) logger.info("Approval processed") else logger.warn("Approval rejected for " + r + " by " + user + " to " + state)
         case ApprovalRequested(d, r, users) =>
           users foreach (this ! ApprovalApproved(d, r, _, ApprovalState.pending, ""))
+        case SubscribeRequested(d, user) =>
+          if(agent.subscribe(d.latest.filename, user.email))
+            logger.info("Subscribe request accepted")
+          else
+            logger.warn("Subscribe request rejected for " + d + " by " + user)
+        case UnsubscribeRequested(d, user) =>
+          if(agent.unsubscribe(d.latest.filename, user.email))
+            logger.info("Unsubscribe request accepted")
+          else
+            logger.warn("Unsubscribe request rejected for " + d + " by " + user)
         case m @ _ => logger.warn("Unrecognised message " + m)
       }
     }
@@ -83,6 +97,9 @@ class Backend extends Actor with Loggable {
 
       agent.loadRevisions(d).foreach{createRevision(document, _)}
       applyApprovals(document, agent.loadApprovals(d))
+
+      agent.loadSubscribers(d).foreach{createSubscription(document, _)}
+
       
       DocumentServer ! DocumentAdded(document)
     } catch {
@@ -116,11 +133,20 @@ class Backend extends Actor with Loggable {
     }
   }
 
+  private def createSubscription(document: Document, s: AgentSubscriber): Subscription = {
+    val subscription = Subscription.create
+    subscription.document(document)
+    assignSubscription(subscription, s)
+    subscription.save
+    subscription
+  }
+
   private def updateDocument(document: Document, d: AgentDocument) {
     if (document.latest_?(d.getVersion.toLong)) {
       reconciler ! PriorityReconcile(document)
     } else {
       updateRevisions(document)
+      updateSubscriptions(document)
     }
     
     assignDocument(document, d)
@@ -144,7 +170,16 @@ class Backend extends Actor with Loggable {
     revision.date(r.getDate)
     revision.comment(r.getComment)
   }
-  
+
+  private def assignSubscription(subscription: Subscription, s: AgentSubscriber) {
+    User.forEmail(s.getSubscriberEmail) match {
+      case Full(u) =>
+        subscription.user(u)
+      case _ =>
+        Empty
+    }
+  }
+
   private def updateRevisions(document: Document) {
     agent.loadRevisions(document.key).foreach { r =>
       document.revision(r.getVersion) match {
@@ -157,6 +192,20 @@ class Backend extends Actor with Loggable {
         case _ => 
           val latest = createRevision(document, r)
           DocumentServer ! DocumentRevised(document, latest)
+      }
+    }
+  }
+
+  private def updateSubscriptions(document: Document) {
+    agent.loadSubscribers(document.key).foreach { s =>
+      document.subscriber(User.forEmailOrCreate(s.getSubscriberEmail) openOr null) match {
+        case Full(subscription) =>
+          assignSubscription(subscription, s)
+          if (subscription.dirty_?) {
+            subscription.save
+          }
+        case _ =>
+          val latest = createSubscription(document, s)
       }
     }
   }

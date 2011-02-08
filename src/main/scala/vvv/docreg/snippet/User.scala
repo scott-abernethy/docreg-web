@@ -85,7 +85,12 @@ class User extends Loggable {
     }
     user map {u => bind("profile", in, 
       "name" -> u.displayName,
-      "email" -> u.email
+      "email" -> u.email,
+      //TODO get subscriptions working on profile page
+      "subscriptions" -> <ul>{ if (u.subscriptions.nonEmpty) u.subscriptions.sortWith((a, b) => a.key.is < b.key.is).map(s =>
+                                      <li><a href={ s.infoLink }>{s.key.is + ": " + s.title.is}</a></li>)
+                                else "-"
+                        }</ul>
     )} openOr {S.error("No such user found"); NodeSeq.Empty}
   }
 }

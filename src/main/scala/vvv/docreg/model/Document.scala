@@ -5,15 +5,20 @@ import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
 import scala.xml._
 
-class Document extends LongKeyedMapper[Document] with IdPK {
+class Document extends LongKeyedMapper[Document] with IdPK with ManyToMany {
   def getSingleton = Document
 
   object key extends MappedString(this, 20)
   object project extends LongMappedMapper(this, Project)
   object title extends MappedString(this, 200)
-  object editor extends MappedString(this, 100) 
+  object editor extends MappedString(this, 100)
+  object subscribers extends MappedManyToMany(Subscription, Subscription.document, Subscription.user, User)
+
   def revisions = Revision.forDocument(this)
   def revision(version: Long) = Revision.forDocument(this, version)
+
+  def subscriber(user: User) = Subscription.forDocumentandUser(this, user)
+
   def latest = if (revisions nonEmpty) revisions head else EmptyRevision
   def latest_?(version: Long): Boolean = {
     val r = latest

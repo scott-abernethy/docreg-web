@@ -59,10 +59,49 @@ class DocumentSnippet extends Loggable {
         "version" -> r.version,
         "project" -> d.projectName,
         "edit" -> (if (d.editor.is == null) Text("-") else <span class="highlight">{d.editor.asHtml}</span>),
+        "subscribers" -> subscribers(d),
         "revision" -> ((in: NodeSeq) => revisions(in, d, r)),
         "approve" -> ((in: NodeSeq) => <a href={"/d/" + d.key + "/v/" + r.version + "/approve"}>{in}</a>),
-        "request-approval" -> ((in: NodeSeq) => <a href={"/d/" + d.key + "/v/" + r.version + "/request-approval"}>{in}</a>))
+        "request-approval" -> ((in: NodeSeq) => <a href={"/d/" + d.key + "/v/" + r.version + "/request-approval"}>{in}</a>),
+        "subscribe" -> subscribe(d)
+      )
     })
+  private def subscribe(d: Document) = {
+    User.loggedInUser.is match {
+      case Full(u) =>
+        SHtml.a(() => { processSubscribe(d, u)
+                        (JsCmds.SetHtml("subscribers", subscribers(d)) &
+                         JsCmds.SetHtml("subscribe", Text( if (u.subscribed_?(d)) "Unsubscribe" else "Subscribe" ))) },
+                                   <span id="subscribe">{ if (u.subscribed_?(d)) "Unsubscribe" else "Subscribe" }</span> )
+      case _ =>
+        NodeSeq.Empty
+    }
+  }
+
+  private def processSubscribe(d: Document, u: vvv.docreg.model.User) = {
+    if (!u.subscribed_?(d)) {
+      Subscription.subscribe(d, u)
+      Backend ! SubscribeRequested(d, u)
+      S.notice("Subscribe request sent")
+    }
+    else {
+      Subscription.unsubscribe(d, u)
+      Backend ! UnsubscribeRequested(d, u)
+      S.notice("Unsubscribe request sent")
+    }
+
+  }
+
+  private def subscribers(d: Document): NodeSeq = {
+    val subscribers = Subscription.forDocument(d).map(_.user.obj.openOr(null)).filterNot(_ == null)
+    if (subscribers.isEmpty)
+      <span>-</span>
+    else {
+      //sort subscribers by last name before creating list of links
+      val sortedSubscribers = subscribers.sortWith((a, b) => a.displayName.split(" ").last < b.displayName.split(" ").last)
+      <span>{ sortedSubscribers.map(s => <a href={ s.profileLink }>{ s.displayName }</a><span>&#44;&nbsp;</span>) }</span>
+    }
+  }
 
   private def revisions(xhtml: NodeSeq, d: Document, revisionInRequest: Revision): NodeSeq = {
     d.revisions flatMap { r =>
