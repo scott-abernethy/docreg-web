@@ -11,6 +11,7 @@ import vvv.docreg.util._
 import _root_.net.liftweb.mapper._
 import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
+import java.io.IOException
 
 case class Connect()
 case class Updated(d: AgentDocument)
@@ -19,7 +20,8 @@ case class ApprovalApproved(document: Document, revision: Revision, user: User, 
 case class ApprovalRequested(document: Document, revision: Revision, users: Iterable[User])
 case class SubscribeRequested(document: Document, user: User)
 case class UnsubscribeRequested(document: Document, user: User)
-
+case class Edit(document: Document, user: User)
+case class Unedit(document: Document, user: User)
 
 class Backend extends Actor with Loggable {
   val product = ProjectProps.get("project.name") openOr "drw"
@@ -71,6 +73,15 @@ class Backend extends Actor with Loggable {
             logger.info("Unsubscribe request accepted")
           else
             logger.warn("Unsubscribe request rejected for " + d + " by " + user)
+        case Edit(d, user) =>
+          agent.edit(d.latest.filename, user.displayName)
+          logger.info("Edit request sent")
+        case Unedit(d, user) =>
+          try {
+            agent.unedit(d.latest.filename, user.displayName)
+          } catch {
+            case e: IOException => logger.info("Unedit request sent")
+          }
         case m @ _ => logger.warn("Unrecognised message " + m)
       }
     }

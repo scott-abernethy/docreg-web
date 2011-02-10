@@ -58,7 +58,8 @@ class DocumentSnippet extends Loggable {
         "link" -> ((in: NodeSeq) => <a href={r.link}>{in}</a>),
         "version" -> r.version,
         "project" -> d.projectName,
-        "edit" -> (if (d.editor.is == null) Text("-") else <span class="highlight">{d.editor.asHtml}</span>),
+        "editor" -> (if (d.editor.is == null) Text("-") else <span class="highlight">{d.editor.asHtml}</span>),
+        "submissions" -> submissionLinks(d),
         "subscribers" -> subscribers(d),
         "revision" -> ((in: NodeSeq) => revisions(in, d, r)),
         "approve" -> ((in: NodeSeq) => <a href={"/d/" + d.key + "/v/" + r.version + "/approve"}>{in}</a>),
@@ -66,6 +67,42 @@ class DocumentSnippet extends Loggable {
         "subscribe" -> subscribe(d)
       )
     })
+
+  private def submissionLinks(d: Document) = {
+    User.loggedInUser.is match {
+      case Full(u) =>
+        processSubmissionLinks(d, u)
+      case _ =>
+        NodeSeq.Empty
+    }
+  }
+
+  private def processSubmissionLinks(d: Document, u: vvv.docreg.model.User): NodeSeq = {
+    if (d.editor.is == null)
+      <li>{ SHtml.a(() => { processEdit(d, u); JsCmds._Noop }, <span>Edit</span>)  }</li>
+    else {
+      if (d.editor.is == u.displayName) {
+
+        <li>Submit</li><li>{SHtml.a(() => { processUnedit(d, u); JsCmds._Noop }, <span>Cancel Edit</span>) }</li>
+      }
+      else {
+        NodeSeq.Empty
+      }
+    }
+  }
+
+  private def processEdit(d: Document, u: vvv.docreg.model.User) = {
+    Backend ! Edit(d, u)
+    S.notice("Edit request sent")
+  }
+
+  private def processUnedit(d: Document, u: vvv.docreg.model.User) = {
+    Backend ! Unedit(d, u)
+    S.notice("Cancel edit request sent")
+  }
+
+
+
   private def subscribe(d: Document) = {
     User.loggedInUser.is match {
       case Full(u) =>
@@ -78,6 +115,8 @@ class DocumentSnippet extends Loggable {
     }
   }
 
+
+
   private def processSubscribe(d: Document, u: vvv.docreg.model.User) = {
     if (!u.subscribed_?(d)) {
       Subscription.subscribe(d, u)
@@ -89,7 +128,6 @@ class DocumentSnippet extends Loggable {
       Backend ! UnsubscribeRequested(d, u)
       S.notice("Unsubscribe request sent")
     }
-
   }
 
   private def subscribers(d: Document): NodeSeq = {
