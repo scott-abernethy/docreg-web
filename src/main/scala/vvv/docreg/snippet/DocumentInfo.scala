@@ -79,13 +79,13 @@ class DocumentSnippet extends Loggable {
 
   private def processSubmissionLinks(d: Document, u: vvv.docreg.model.User): NodeSeq = {
     if (d.editor.is == null)
-      <li>{ SHtml.a(() => { processEdit(d, u); JsCmds._Noop }, <span>Edit</span>)  }</li>
+      <li>{ SHtml.a(() => { processEdit(d, u); JsCmds.RedirectTo(d.latest.link) }, <span>Edit</span>)  }</li>
     else {
       if (d.editor.is == u.displayName) {
-
-        <li>Submit</li><li>{SHtml.a(() => { processUnedit(d, u); JsCmds._Noop }, <span>Cancel Edit</span>) }</li>
+        <li>{ SHtml.a(() => { processSubmit(d, u); JsCmds._Noop }, <span>Submit</span>) }</li> ++
+        <li>{ SHtml.a(() => { processUnedit(d, u); JsCmds._Noop }, <span>Cancel Edit</span>) }</li>
       }
-      else {
+      else { //i.e. someone else is editing
         NodeSeq.Empty
       }
     }
@@ -99,6 +99,10 @@ class DocumentSnippet extends Loggable {
   private def processUnedit(d: Document, u: vvv.docreg.model.User) = {
     Backend ! Unedit(d, u)
     S.notice("Cancel edit request sent")
+  }
+
+  private def processSubmit(d: Document, u: vvv.docreg.model.User) = {
+    S.notice("Document submitted")
   }
 
 
@@ -161,7 +165,7 @@ class DocumentSnippet extends Loggable {
       bind("approval", xhtml,
         "by" -> (a.by.obj.map (o => <a href={o.profileLink}>{o.displayName}</a>) openOr Text("?")),
         "state" -> <span style={ApprovalState.style(a.state.is)}>{a.state}</span>,
-        "comment" -> a.comment,
+        "comment" -> <span>{ if (a.comment.is == "No Comment") "-" else a.comment }</span>,
         "date" -> a.date)
     }
   }
@@ -199,7 +203,7 @@ class DocumentSnippet extends Loggable {
     approval.revision(r)
     approval.by(user)
     approval.state(state)
-    approval.comment(comment)
+    approval.comment(if (comment.trim == "") "No Comment" else comment)
     approval.date(new java.util.Date)
     approval.save
     Backend ! ApprovalApproved(d, r, user, state, comment)
