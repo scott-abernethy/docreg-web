@@ -1,0 +1,33 @@
+<lift:surround with="default" at="content">
+  <lift:snippet type="DocumentSnippet:submit" form="post">
+    <h3><doc:title/></h3>
+    <hr/>
+    <div class="span-18 last">
+      <doc:submission>
+        <h4>Document Submission</h4>
+        <table class="baseline-align-cells" cellpadding="0">
+          <tr>
+            <th>New Version:</th>
+            <td><submission:version/></td>
+          </tr>
+          <tr>
+            <th>Select File: </th>
+            <td><submission:file/></td>
+          </tr>
+          <tr>
+            <th>By:</th>
+            <td class="loud"><submission:by/></td>
+          </tr>
+          <tr>
+            <th>Comment:</th>
+            <td><submission:comment/></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td><submission:submit/><submission:cancel/></td>
+          </tr>
+        </table>
+      </doc:submission>
+    </div>
+  </lift:snippet>
+</lift:surround>

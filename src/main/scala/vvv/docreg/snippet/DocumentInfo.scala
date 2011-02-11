@@ -80,16 +80,24 @@ class DocumentSnippet extends Loggable {
 
   private def processSubmissionLinks(d: Document, u: vvv.docreg.model.User): NodeSeq = {
     if (d.editor.is == null)//If no one is editing, current user has the option to edit
-      <li>{ SHtml.a(() => { processEdit(d, u); JsCmds.RedirectTo(d.latest.link) & JsCmds.RedirectTo("/d/" + d.key) }, <span>Edit</span>)  }</li>
+      <li>{ SHtml.a(() => { processEdit(d, u); JsCmds.RedirectTo(d.latest.link) }, <span>Edit</span>)  }</li>
     else {
       if (d.editor.is == u.displayName) {  //If current user is editing, they can either submit changes or cancel
-        <li>{ SHtml.a(() => { processSubmit(d, u); JsCmds._Noop }, <span>Submit</span>) }</li> ++
+        <li><a href={d.latest.info + "/submit"}>Submit...</a></li> ++
         <li>{ SHtml.a(() => { processUnedit(d, u); JsCmds._Noop }, <span>Cancel Edit</span>) }</li>
       }
       else { //otherwise, someone else is editing, so current user has no options
         NodeSeq.Empty
       }
     }
+  }
+
+  // TODO this method is only here to make testing the submission sysem easier.
+  // Delete when done and change submissionLinks method to call processSubmissionLinks
+  private def processSubmissionLinksAll(d: Document, u: vvv.docreg.model.User): NodeSeq = {
+      <li>{ SHtml.a(() => { processEdit(d, u); JsCmds.RedirectTo(d.latest.link) }, <span>Edit</span>)  }</li> ++
+      <li><a href={d.latest.info + "/submit"}>Submit...</a></li> ++
+      <li>{ SHtml.a(() => { processUnedit(d, u); JsCmds._Noop }, <span>Cancel Edit</span>) }</li>
   }
 
   private def processEdit(d: Document, u: vvv.docreg.model.User) = {
@@ -250,4 +258,25 @@ class DocumentSnippet extends Loggable {
     }
     S.redirectTo(r.info)
   }
+
+/*  def submit(in: NodeSeq) = forRequest(in, (in, d, r) => {
+    bind("doc", in,
+        "title" -> <a href={r.info}>{r.fullTitle}</a>,
+        "submission" -> ((in: NodeSeq) => submissionForm(in, d, r))
+    )})
+
+  private object submitFile extends RequestVar[Box[FileParamHolder]](Empty)
+
+   private def submissionForm(in: NodeSeq, d: Document, r: Revision): NodeSeq = {
+     var comment = ""
+      bind("submission", in,
+      "version" -> r.version,
+      "by" -> Text(User.loggedInUser map (_.displayName) openOr "?"),
+      "file" -> SHtml.fileUpload(ul => submitFile(Full(ul))),
+      "comment" -> SHtml.textarea(comment, comment = _) % ("class" -> "smalltextarea"),
+      "submit" -> SHtml.submit("Submit", () => { println(submitFile.is.getClass); }),
+      "cancel" -> SHtml.submit("Cancel", () => S.redirectTo(r.info))
+    )
+  }*/
 }
+

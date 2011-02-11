@@ -52,7 +52,8 @@ class Boot {
       Menu.i("Profile") / "user" / "profile" >> loggedIn,
       Menu.i("Info") / "doc" / "info" >> loggedIn,
       Menu.i("Approve") / "doc" / "approve" >> loggedIn,
-      Menu.i("Request Approval") / "doc" / "request-approval" >> loggedIn
+      Menu.i("Request Approval") / "doc" / "request-approval" >> loggedIn,
+      Menu.i("Submit") / "doc" / "submit" >> loggedIn
     )
 
     // set the sitemap.  Note if you don't want access control for
@@ -85,6 +86,8 @@ class Boot {
         RewriteResponse("doc" :: "info" :: Nil, Map("key" -> key, "version" -> version))
       case RewriteRequest(ParsePath("d" :: key :: "v" :: version :: "approve" :: Nil, _, _, _), _, _) =>
         RewriteResponse("doc" :: "approve" :: Nil, Map("key" -> key, "version" -> version))
+      case RewriteRequest(ParsePath("d" :: key :: "v" :: version :: "submit" :: Nil, _, _, _), _, _) =>
+        RewriteResponse("doc" :: "submit" :: Nil, Map("key" -> key, "version" -> version))
       case RewriteRequest(ParsePath("d" :: key :: "v" :: version :: "request-approval" :: Nil, _, _, _), _, _) =>
         RewriteResponse("doc" :: "request-approval" :: Nil, Map("key" -> key, "version" -> version))
       case RewriteRequest(ParsePath("user" :: user :: "profile" :: Nil, _, _, _), _, _) =>
