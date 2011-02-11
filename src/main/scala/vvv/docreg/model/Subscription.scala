@@ -9,7 +9,7 @@ object Subscription extends Subscription with LongKeyedMetaMapper[Subscription] 
   def subscribe(d: Document, u: User) = this.create.document(d).user(u).save
 
   def unsubscribe(d: Document, u: User) = {
-    forDocumentandUser(d, u) match {
+    forDocumentBy(d, u) match {
       case Full(sub) =>
         sub.delete_!
         sub.save()
@@ -18,7 +18,7 @@ object Subscription extends Subscription with LongKeyedMetaMapper[Subscription] 
     }
   }
 
-  def forDocumentandUser(document: Document, user: User): Box[Subscription] = {
+  def forDocumentBy(document: Document, user: User): Box[Subscription] = {
     val ss = Subscription.findAll(By(Subscription.document, document.id), By(Subscription.user, user))
     if (ss nonEmpty) Full(ss head) else Empty
   }

@@ -24,7 +24,7 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
   }
   object subscriptions extends MappedManyToMany(Subscription, Subscription.user, Subscription.document, Document)
 
-  def subscribed_?(d: Document) = Subscription.forDocumentandUser(d, this).nonEmpty
+  def subscribed_?(d: Document) = Subscription.forDocumentBy(d, this).nonEmpty
 
   def displayName = name.is
   def profileLink = "/user/" + id + "/profile"

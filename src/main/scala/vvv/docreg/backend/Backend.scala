@@ -65,12 +65,12 @@ class Backend extends Actor with Loggable {
           users foreach (this ! ApprovalApproved(d, r, _, ApprovalState.pending, ""))
         case SubscribeRequested(d, user) =>
           if(agent.subscribe(d.latest.filename, user.email))
-            logger.info("Subscribe request accepted")
+            logger.info(user + " has subscribed to " + d)
           else
             logger.warn("Subscribe request rejected for " + d + " by " + user)
         case UnsubscribeRequested(d, user) =>
           if(agent.unsubscribe(d.latest.filename, user.email))
-            logger.info("Unsubscribe request accepted")
+            logger.info(user + " has unsubscribed from " + d)
           else
             logger.warn("Unsubscribe request rejected for " + d + " by " + user)
         case Edit(d, user) =>
@@ -79,7 +79,8 @@ class Backend extends Actor with Loggable {
         case Unedit(d, user) =>
           try {
             agent.unedit(d.latest.filename, user.displayName)
-          } catch {
+          } catch { /* An IOException means there was no reply from the sent request.
+                       This is what we want since there is no reply from an UNEDIT_RQST. */
             case e: IOException => logger.info("Unedit request sent")
           }
         case m @ _ => logger.warn("Unrecognised message " + m)

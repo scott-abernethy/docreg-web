@@ -17,7 +17,7 @@ class Document extends LongKeyedMapper[Document] with IdPK with ManyToMany {
   def revisions = Revision.forDocument(this)
   def revision(version: Long) = Revision.forDocument(this, version)
 
-  def subscriber(user: User) = Subscription.forDocumentandUser(this, user)
+  def subscriber(user: User) = Subscription.forDocumentBy(this, user)
 
   def latest = if (revisions nonEmpty) revisions head else EmptyRevision
   def latest_?(version: Long): Boolean = {
