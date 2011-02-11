@@ -12,7 +12,8 @@ import http._
 import js._
 import js.jquery._
 import JE._
-import scala.xml.{NodeSeq, Text}
+import scala.xml.{NodeSeq, Text, Elem}
+
 
 class DocumentSnippet extends Loggable {
   val key = S.param("key") openOr ""
@@ -78,14 +79,14 @@ class DocumentSnippet extends Loggable {
   }
 
   private def processSubmissionLinks(d: Document, u: vvv.docreg.model.User): NodeSeq = {
-    if (d.editor.is == null)
-      <li>{ SHtml.a(() => { processEdit(d, u); JsCmds.RedirectTo(d.latest.link) }, <span>Edit</span>)  }</li>
+    if (d.editor.is == null)//If no one is editing, current user has the option to edit
+      <li>{ SHtml.a(() => { processEdit(d, u); JsCmds.RedirectTo(d.latest.link) & JsCmds.RedirectTo("/d/" + d.key) }, <span>Edit</span>)  }</li>
     else {
-      if (d.editor.is == u.displayName) {
+      if (d.editor.is == u.displayName) {  //If current user is editing, they can either submit changes or cancel
         <li>{ SHtml.a(() => { processSubmit(d, u); JsCmds._Noop }, <span>Submit</span>) }</li> ++
         <li>{ SHtml.a(() => { processUnedit(d, u); JsCmds._Noop }, <span>Cancel Edit</span>) }</li>
       }
-      else { //i.e. someone else is editing
+      else { //otherwise, someone else is editing, so current user has no options
         NodeSeq.Empty
       }
     }
@@ -141,7 +142,8 @@ class DocumentSnippet extends Loggable {
     else {
       //sort subscribers by last name before creating list of links
       val sortedSubscribers = subscribers.sortWith((a, b) => a.displayName.split(" ").last < b.displayName.split(" ").last)
-      <span>{ sortedSubscribers.map(s => <a href={ s.profileLink }>{ s.displayName }</a><span>&#44;&nbsp;</span>) }</span>
+                                          //must treat this bit as a NodeSeq otherwise the reduceRight doesn't work
+      <span>{ sortedSubscribers.map(s => <a href={ s.profileLink }>{ s.displayName }</a>: NodeSeq).reduceRight((a, b) => a ++ <span>&#44;&nbsp;</span> ++ b) }</span>
     }
   }
 
@@ -165,7 +167,7 @@ class DocumentSnippet extends Loggable {
       bind("approval", xhtml,
         "by" -> (a.by.obj.map (o => <a href={o.profileLink}>{o.displayName}</a>) openOr Text("?")),
         "state" -> <span style={ApprovalState.style(a.state.is)}>{a.state}</span>,
-        "comment" -> <span>{ if (a.comment.is == "No Comment") "-" else a.comment }</span>,
+        "comment" -> <span>{ if (a.comment.is == "No Comment") "" else a.comment }</span>,
         "date" -> a.date)
     }
   }
@@ -180,7 +182,7 @@ class DocumentSnippet extends Loggable {
         "version" -> r.version,
         "project" -> d.projectName,
         "edit" -> (if (d.editor.is == null) Text("-") else <span class="highlight">{d.editor.asHtml}</span>),
-      "approval" -> ((in: NodeSeq) => approvalForm(in, d, r)))
+        "approval" -> ((in: NodeSeq) => approvalForm(in, d, r)))
   })
 
   private def approvalForm(in: NodeSeq, d: Document, r: Revision): NodeSeq = {
