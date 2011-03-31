@@ -1,4 +1,4 @@
 db.driver=com.mysql.jdbc.Driver
 db.url=jdbc:mysql://localhost/docregweb
-db.user=root
-db.password=
+db.user=docreguser
+db.password=docregsux
