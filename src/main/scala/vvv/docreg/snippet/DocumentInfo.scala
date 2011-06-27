@@ -3,7 +3,6 @@ package vvv.docreg.snippet
 import vvv.docreg.backend._
 import vvv.docreg.model._
 import vvv.docreg.model.ApprovalState._
-import vvv.docreg.util.TemplateParse
 import net.liftweb._
 import util._
 import common._
@@ -13,9 +12,11 @@ import js._
 import js.jquery._
 import JE._
 import scala.xml.{NodeSeq, Text, Elem}
+import vvv.docreg.util.{Environment, TemplateParse}
 
 
 class DocumentSnippet extends Loggable {
+  val backend = Environment.env.backend
   val key = S.param("key") openOr ""
   val version = S.param("version") openOr "latest"
   val document: Box[Document] = try {
@@ -101,12 +102,12 @@ class DocumentSnippet extends Loggable {
   }
 
   private def processEdit(d: Document, u: vvv.docreg.model.User) = {
-    Backend ! Edit(d, u)
+    backend ! Edit(d, u)
     S.notice("Edit request sent")
   }
 
   private def processUnedit(d: Document, u: vvv.docreg.model.User) = {
-    Backend ! Unedit(d, u)
+    backend ! Unedit(d, u)
     S.notice("Cancel edit request sent")
   }
 
@@ -133,12 +134,12 @@ class DocumentSnippet extends Loggable {
   private def processSubscribe(d: Document, u: vvv.docreg.model.User) = {
     if (!u.subscribed_?(d)) {
       Subscription.subscribe(d, u)
-      Backend ! SubscribeRequested(d, u)
+      backend ! SubscribeRequested(d, u)
       S.notice("Subscribe request sent")
     }
     else {
       Subscription.unsubscribe(d, u)
-      Backend ! UnsubscribeRequested(d, u)
+      backend ! UnsubscribeRequested(d, u)
       S.notice("Unsubscribe request sent")
     }
   }
@@ -216,7 +217,7 @@ class DocumentSnippet extends Loggable {
     approval.comment(if (comment.trim == "") "No Comment" else comment)
     approval.date(new java.util.Date)
     approval.save
-    Backend ! ApprovalApproved(d, r, user, state, comment)
+    backend ! ApprovalApproved(d, r, user, state, comment)
     S.notice("Document " + state)
     S.redirectTo(r.info)
   }
@@ -253,7 +254,7 @@ class DocumentSnippet extends Loggable {
       case Nil =>
         S.warning("Approval request with no users!")     
       case xs  =>
-        Backend ! ApprovalRequested(d, r, xs)
+        backend ! ApprovalRequested(d, r, xs)
         S.notice("Approval requested for " + (xs.map(_.displayName).reduceRight((a, b) => a + "; " + b)))
     }
     S.redirectTo(r.info)

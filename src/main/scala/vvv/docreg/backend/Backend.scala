@@ -23,7 +23,15 @@ case class UnsubscribeRequested(document: Document, user: User)
 case class Edit(document: Document, user: User)
 case class Unedit(document: Document, user: User)
 
-class Backend extends Actor with Loggable {
+trait Backend {
+  val backend: Backend
+  trait Backend extends Actor
+}
+
+trait BackendComponentImpl extends Backend {
+  this: DocumentServerComponent =>
+  val backend = new Backend with Loggable {
+
   val product = ProjectProps.get("project.name") openOr "drw"
   val version = ProjectProps.get("project.version") openOr "0.0"
   val reconciler = new Reconciler(this)
@@ -34,10 +42,11 @@ class Backend extends Actor with Loggable {
         case Connect() => 
           logger.info("Starting " + product + " v" + version + " " + java.util.TimeZone.getDefault.getDisplayName)
           agent = new Agent(version, Backend.server, product)
+          val ref = self
           val library = new FileList(Backend.server, agent)
           library.addUpdateListener(new UpdateListener() {
-            def updated(ds: java.util.List[AgentDocument]) = ds.foreach(Backend.this ! Updated(_))
-            def updated(d: AgentDocument) = Backend.this ! Updated(d)
+            def updated(ds: java.util.List[AgentDocument]) = ds.foreach(d => ref ! Updated(d))
+            def updated(d: AgentDocument) = ref ! Updated(d)
           })
         case Updated(d) => 
           Document.forKey(d.getKey) match {
@@ -113,7 +122,7 @@ class Backend extends Actor with Loggable {
       agent.loadSubscribers(d).foreach{createSubscription(document, _)}
 
       
-      DocumentServer ! DocumentAdded(document)
+      documentServer ! DocumentAdded(document)
     } catch {
       case e: java.lang.NullPointerException => logger.error("Exception " + e + " with " + d.getKey); e.printStackTrace
     }
@@ -164,7 +173,7 @@ class Backend extends Actor with Loggable {
     assignDocument(document, d)
     if (document.dirty_?) { 
       document.save
-      DocumentServer ! DocumentChanged(document)
+      documentServer ! DocumentChanged(document)
     }
   }
 
@@ -199,11 +208,11 @@ class Backend extends Actor with Loggable {
           assignRevision(revision, r)
           if (revision.dirty_?) {
             revision.save
-            DocumentServer ! DocumentChanged(document)
+            documentServer ! DocumentChanged(document)
           }
         case _ => 
           val latest = createRevision(document, r)
-          DocumentServer ! DocumentRevised(document, latest)
+          documentServer ! DocumentRevised(document, latest)
       }
     }
   }
@@ -223,7 +232,8 @@ class Backend extends Actor with Loggable {
   }
 
 }
+}
 
-object Backend extends Backend {
+object Backend {
   val server: String = Props.get("backend.server") openOr "shelob" // shelob.gnet.global.vpn?
 }

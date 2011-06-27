@@ -13,12 +13,14 @@ import util.Helpers._
 import net.liftweb.http.js._
 import net.liftweb.http.js.JsCmds._
 import net.liftweb.http.js.jquery.JqJsCmds._
+import vvv.docreg.util.Environment
 
 object CurrentLog extends SessionVar[Box[Log]](Empty)
 
 case class ReloadLog()
 
 class Log extends DocumentSubscriber {
+  private val documentServer = Environment.env.documentServer
   private var revisions: List[Revision] = Nil
   private lazy val revisionPart: NodeSeq = deepFindKids(defaultXml, "log", "item")
   private lazy val revisionInnerPart: NodeSeq = revisionPart \ "div"
@@ -28,12 +30,12 @@ class Log extends DocumentSubscriber {
   override def defaultPrefix = Full("log")
 
   override def localSetup {
-    DocumentServer ! Subscribe(this)
+    documentServer ! Subscribe(this)
     super.localSetup
   }
 
   override def localShutdown {
-    DocumentServer ! Unsubscribe(this)
+    documentServer ! Unsubscribe(this)
     super.localShutdown
   }
 

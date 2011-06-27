@@ -11,9 +11,8 @@ import Loc._
 import mapper._
 
 import _root_.vvv.docreg.model._
-import _root_.vvv.docreg.backend._
 import _root_.vvv.docreg.util._
-
+import vvv.docreg.backend._
 
 /**
  * A class that's instantiated early and run.  It allows the application
@@ -94,9 +93,14 @@ class Boot {
         RewriteResponse("user" :: "profile" :: Nil, Map("user" -> user))
     }
 
-    DocumentServer start
-
-    Backend.start
-    Backend ! Connect()
+    val env = new Environment with BackendComponentImpl with DocumentServerComponentImpl {
+      def start() {
+        documentServer.start()
+        backend.start()
+        backend ! Connect()
+      }
+    }
+    env.start()
+    Environment.env = env
   }
 }

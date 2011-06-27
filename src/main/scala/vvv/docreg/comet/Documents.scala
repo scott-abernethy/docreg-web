@@ -10,6 +10,7 @@ import common._
 import mapper._
 import util.Helpers._
 import net.liftweb.http.js.JsCmds._
+import vvv.docreg.util.Environment
 
 class Documents extends DocumentSubscriber {
   private var documents: List[Document] = Nil
@@ -18,12 +19,12 @@ class Documents extends DocumentSubscriber {
   override def defaultPrefix = Full("docs")
 
   override def localSetup {
-    DocumentServer ! Subscribe(this)
+    Environment.env.documentServer ! Subscribe(this)
     super.localSetup
   }
 
   override def localShutdown {
-    DocumentServer ! Unsubscribe(this)
+    Environment.env.documentServer ! Unsubscribe(this)
     super.localShutdown
   }
 

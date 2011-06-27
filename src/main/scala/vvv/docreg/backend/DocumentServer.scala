@@ -18,7 +18,14 @@ case class DocumentChanged(document: Document)
 trait DocumentSubscriber extends CometActor {
 }
 
-object DocumentServer extends Actor with Loggable {
+trait DocumentServerComponent {
+  val documentServer: DocumentServer
+  trait DocumentServer extends Actor
+}
+
+trait DocumentServerComponentImpl extends DocumentServerComponent {
+  val documentServer = new DocumentServer with Loggable {
+
   private var subscribers: List[DocumentSubscriber] = Nil
   def act() {
     loop {
@@ -31,10 +38,10 @@ object DocumentServer extends Actor with Loggable {
         case a @ DocumentAdded(d) =>
           logger.info(d.key + " added")
           distribute(a)
-        case r @ DocumentRevised(d, _) => 
+        case r @ DocumentRevised(d, _) =>
           logger.info(d.key + " revised")
           distribute(r)
-        case c @ DocumentChanged(d) => 
+        case c @ DocumentChanged(d) =>
           logger.info(d.key + " changed")
           distribute(c)
         case _ =>
@@ -43,4 +50,6 @@ object DocumentServer extends Actor with Loggable {
   }
 
   private def distribute(msg: AnyRef) { subscribers.foreach(_ ! msg) }
+}
+
 }
