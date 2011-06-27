@@ -23,7 +23,7 @@ class Log extends DocumentSubscriber {
   val limit = 20
   private val documentServer = Environment.env.documentServer
   private var revisions: List[Revision] = Nil
-  private lazy val revisionPart: NodeSeq = deepFindKids(defaultXml, "log", "item")
+  private lazy val revisionPart: NodeSeq = deepFindKids(defaultHtml, "log", "item")
   private lazy val revisionInnerPart: NodeSeq = revisionPart \ "div"
 
   CurrentLog.set(Full(this))

@@ -14,7 +14,7 @@ import vvv.docreg.util.Environment
 
 class Documents extends DocumentSubscriber {
   private var documents: List[Document] = Nil
-  private lazy val documentPart = deepFindKids(defaultXml, "docs", "doc")
+  private lazy val documentPart = deepFindKids(defaultHtml, "docs", "doc")
 
   override def defaultPrefix = Full("docs")
 
