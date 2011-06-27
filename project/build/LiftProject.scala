@@ -18,6 +18,8 @@ class LiftProject(info: ProjectInfo) extends DefaultWebProject(info) with IdeaPr
     "org.mortbay.jetty" % "jetty" % "6.1.22" % "test",
     "junit" % "junit" % "4.5" % "test",
     "org.scala-tools.testing" %% "specs" % "1.6.6" % "test",
+    "org.mockito" % "mockito-all" % "1.8.5" % "test",
+    "c3p0" % "c3p0" % "0.9.1.2",
     "com.h2database" % "h2" % "1.2.138",
     "mysql" % "mysql-connector-java" % "5.1.9"
   ) ++ super.libraryDependencies
