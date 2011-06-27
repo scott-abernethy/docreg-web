@@ -20,6 +20,7 @@ object CurrentLog extends SessionVar[Box[Log]](Empty)
 case class ReloadLog()
 
 class Log extends DocumentSubscriber {
+  val limit = 20
   private val documentServer = Environment.env.documentServer
   private var revisions: List[Revision] = Nil
   private lazy val revisionPart: NodeSeq = deepFindKids(defaultXml, "log", "item")
@@ -51,17 +52,21 @@ class Log extends DocumentSubscriber {
       val update = revisions filter {r => r.document == document} map {r => SetHtml(r.id.is.toString, bindRevision(revisionInnerPart, r, false))}
       partialUpdate(update)
     case ReloadLog() =>
-      revisions = FilteredRevision.findRecent()
+      revisions = FilteredRevision.findRecent(limit)
       reRender(true)
     case _ =>
   }
 
   private def add(d: Document, r: Revision) = {
     if (d.project.map(ProjectSelection.projects.is contains _) openOr false) {
-      // TODO bug here if no revisions! 
-      val remove = revisions.last
-      revisions = r :: revisions.dropRight(1)
-      partialUpdate(PrependHtml("log", bindRevision(revisionPart, r, true)) & FadeIn(r.id.is.toString) & Replace(remove.id.is.toString, Text("")))
+      revisions.lastOption match {
+        case Some(remove) if revisions.size > limit =>
+          revisions = r :: revisions.dropRight(1)
+          partialUpdate(PrependHtml("log", bindRevision(revisionPart, r, true)) & FadeIn(r.id.is.toString) & Replace(remove.id.is.toString, Text("")))
+        case _ => 
+          revisions = r :: revisions
+          partialUpdate(PrependHtml("log", bindRevision(revisionPart, r, true)) & FadeIn(r.id.is.toString))
+      }
     }
   }
 
@@ -71,7 +76,8 @@ class Log extends DocumentSubscriber {
     revisions.flatMap(bindRevision(xml, _, false))
 
   private def bindRevision(xml: NodeSeq, r: Revision, hidden: Boolean): NodeSeq = {
-    val d: Document = r.document.obj openOr null
+    r.document.obj match {
+      case Full(d: Document) =>
     bind("doc", xml, 
       AttrBindParam("id_attr", r.id.is.toString, "id"),
       AttrBindParam("style_attr", if (hidden) "display:none" else "", "style"),
@@ -86,5 +92,7 @@ class Log extends DocumentSubscriber {
       "date" -> r.date,
       "when" -> r.when,
       "comment" -> r.comment)
+      case _ => NodeSeq.Empty
+    }
   }
 }
