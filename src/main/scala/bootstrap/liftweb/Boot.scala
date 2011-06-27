@@ -57,13 +57,20 @@ class Boot {
 
     // set the sitemap.  Note if you don't want access control for
     // each page, just comment this line out.
-    LiftRules.setSiteMap(SiteMap(entries:_*))
+    LiftRules.setSiteMapFunc(() => SiteMap(entries:_*))
+
+    // Use jQuery 1.4
+    LiftRules.jsArtifacts = net.liftweb.http.js.jquery.JQuery14Artifacts
 
     // Force the request to be UTF-8
     LiftRules.early.append(_.setCharacterEncoding("UTF-8"))
 
     // What is the function to test if a user is logged in?
     LiftRules.loggedInTest = Full(() => User.loggedIn_?)
+
+    // Use HTML5 for rendering
+//    LiftRules.htmlProperties.default.set((r: Req) =>
+//      new Html5Properties(r.userAgent))    
 
     // Make a transaction span the whole HTTP request
     S.addAround(DB.buildLoanWrapper)
