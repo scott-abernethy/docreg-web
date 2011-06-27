@@ -1,8 +1,8 @@
 package vvv.docreg.util
 
-import vvv.docreg.backend.{DocumentServerComponent, Backend}
+import vvv.docreg.backend.{AgentComponent, DocumentServerComponent, BackendComponent}
 
-trait Environment extends Backend with DocumentServerComponent {
+trait Environment extends BackendComponent with DocumentServerComponent with AgentComponent {
   def start()
 }
 

@@ -12,9 +12,9 @@ import _root_.net.liftweb.mapper._
 import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
 import java.io.IOException
+import javax.naming.spi.DirStateFactory
 
 case class Connect()
-case class Updated(d: AgentDocument)
 case class Reload(d: Document)
 case class ApprovalApproved(document: Document, revision: Revision, user: User, state: ApprovalState, comment: String)
 case class ApprovalRequested(document: Document, revision: Revision, users: Iterable[User])
@@ -23,31 +23,27 @@ case class UnsubscribeRequested(document: Document, user: User)
 case class Edit(document: Document, user: User)
 case class Unedit(document: Document, user: User)
 
-trait Backend {
+trait BackendComponent {
   val backend: Backend
   trait Backend extends Actor
 }
 
-trait BackendComponentImpl extends Backend {
-  this: DocumentServerComponent =>
+trait BackendComponentImpl extends BackendComponent {
+  this: DocumentServerComponent with AgentComponent =>
   val backend = new Backend with Loggable {
 
   val product = ProjectProps.get("project.name") openOr "drw"
   val version = ProjectProps.get("project.version") openOr "0.0"
   val reconciler = new Reconciler(this)
-  var agent: Agent = _
+  var agent: vvv.docreg.backend.Agent = _
   def act() {
     loop {
       react {
         case Connect() => 
           logger.info("Starting " + product + " v" + version + " " + java.util.TimeZone.getDefault.getDisplayName)
-          agent = new Agent(version, Backend.server, product)
-          val ref = self
-          val library = new FileList(Backend.server, agent)
-          library.addUpdateListener(new UpdateListener() {
-            def updated(ds: java.util.List[AgentDocument]) = ds.foreach(d => ref ! Updated(d))
-            def updated(d: AgentDocument) = ref ! Updated(d)
-          })
+          agent = createAgent(version, Backend.server, product, self)
+        case Loaded(ds) =>
+          ds.foreach(self ! Updated(_))
         case Updated(d) => 
           Document.forKey(d.getKey) match {
             case Full(document) => updateDocument(document, d)

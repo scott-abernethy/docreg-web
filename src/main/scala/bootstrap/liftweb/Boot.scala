@@ -93,7 +93,7 @@ class Boot {
         RewriteResponse("user" :: "profile" :: Nil, Map("user" -> user))
     }
 
-    val env = new Environment with BackendComponentImpl with DocumentServerComponentImpl {
+    val env = new Environment with BackendComponentImpl with DocumentServerComponentImpl with AgentComponentImpl {
       def start() {
         documentServer.start()
         backend.start()
