@@ -1,44 +1,45 @@
 package vvv.docreg.helper
 
 import net.liftweb._
-import util._
 import common._
+import util._
 import Helpers._
 import http._
 import js._
 import js.JsCmds._
+import js.jquery.JqJsCmds.{Show, Hide}
 import scala.xml.{NodeSeq, Text}
 import vvv.docreg.model._
 import vvv.docreg.util._
-import org.h2.engine.Session
 
 trait ProjectSelection extends Loggable {
   def projects(in: NodeSeq): NodeSeq = {
-    bind("projects", in, 
-      "all" -> SHtml.ajaxButton("All", () => JsCmds.Noop),
-      "none" -> SHtml.ajaxButton("Selected", () => JsCmds.Noop),
+    val map = Map("All" -> (() => showAll(true)),
+                  "Selected" -> (() => showAll(false)))
+    val default = if (ProjectSelection.showAll.is) Full("All") else Full("Selected")
+    val choices = SHtml.ajaxRadio(map.keys.toSeq, default, (selected: String) => map(selected).apply())
+
+    bind("projects", in,
+      "all" -> <label>{choices("All")}All</label>,
+      "none" -> <label>{choices("Selected")}Selected</label>,
       "item" -> bindProjects _)
   }
   private def bindProjects(in: NodeSeq): NodeSeq = {
-    // todo
+    val showAll = ProjectSelection.showAll.is
     User.loggedInUser.is match {
       case Full(user) =>
         UserProject.listFor(user).flatMap { i =>
           val project = i._1
           val selected = i._2
           bind("project", in, 
-            "name" -> createProjectFocus(project),
-            "check" -> createProjectCheck(project, selected))
+            "name" -> Text(project.name),
+            "check" -> createProjectCheck(project, selected, !showAll))
         }
       case _ => NodeSeq.Empty
     }
   }
-  private def createProjectFocus(p: Project) = {
-    //SHtml.a(() => projectFocused(p), Text(p.name))
-    Text(p.name)
-  }
-  private def createProjectCheck(p: Project, initial: Boolean) = {
-    SHtml.ajaxCheckbox(initial, checked => projectChecked(p, checked))
+  private def createProjectCheck(p: Project, initial: Boolean, show: Boolean) = {
+    SHtml.ajaxCheckbox(initial, checked => projectChecked(p, checked)).%("style" -> (if (show) "" else "display:none"))
   }
   private def projectChecked(project: Project, checked: Boolean): JsCmd = {
     //logger.info("checked " + project.name.is)
@@ -58,6 +59,12 @@ trait ProjectSelection extends Loggable {
   }
     
   def projectSelectionUpdate: JsCmd = Noop
+
+  def showAll(s: Boolean): JsCmd = {
+    ProjectSelection.showAll(s)
+    val toggleCheckboxes: JsCmd = if (s) Hide(".projects input") else Show(".projects input")
+    projectSelectionUpdate & toggleCheckboxes
+  }
 }
 
 object ProjectSelection {
@@ -81,5 +88,10 @@ object ProjectSelection {
       case _ =>
         Set.empty
     }
+  }
+
+  def isSelected(project: Project): Boolean = {
+    if (showAll.is) return true
+    projects.is.contains(project)
   }
 }

@@ -1,12 +1,12 @@
 package vvv.docreg.model
 
 import _root_.net.liftweb.mapper._
-import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
 import java.text._
 import java.util.TimeZone
 import scala.xml.{NodeSeq, Text}
 import vvv.docreg.util.DatePresentation
+import net.liftweb.util._
 
 class Revision extends LongKeyedMapper[Revision] with IdPK {
   def getSingleton = Revision
@@ -48,8 +48,12 @@ object Revision extends Revision with LongKeyedMetaMapper[Revision] {
 object FilteredRevision {
   import vvv.docreg.helper.ProjectSelection
   def findRecent(limit: Long): List[Revision] = {
-    val checked = ProjectSelection.projects.is.toList
-    Revision.findAll(In(Revision.document, Document.id, In(Document.project, Project.id, ByList(Project.id, checked map ( _.id.is )))), OrderBy(Revision.date, Descending), MaxRows(limit))
+    if (ProjectSelection.showAll.is) {
+      Revision.findAll(OrderBy(Revision.date, Descending), MaxRows(limit))
+    } else {
+      val checked = ProjectSelection.projects.is.toList
+      Revision.findAll(In(Revision.document, Document.id, In(Document.project, Project.id, ByList(Project.id, checked map ( _.id.is )))), OrderBy(Revision.date, Descending), MaxRows(limit))
+    }
   }
 }
 

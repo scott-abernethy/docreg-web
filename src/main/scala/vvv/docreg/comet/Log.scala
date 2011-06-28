@@ -58,7 +58,7 @@ class Log extends DocumentSubscriber {
   }
 
   private def add(d: Document, r: Revision) = {
-    if (d.project.map(ProjectSelection.projects.is contains _) openOr false) {
+    if (d.project.map(ProjectSelection.isSelected(_)) openOr false) {
       revisions.lastOption match {
         case Some(remove) if revisions.size > limit =>
           revisions = r :: revisions.dropRight(1)
