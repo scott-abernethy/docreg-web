@@ -6,7 +6,7 @@ import net.liftweb.http.LiftRules
 import net.liftweb.mapper._
 import vvv.docreg.model._
 
-object DbVendor {
+trait DbVendor {
   def init() {
     if (!DB.jndiJdbcConnAvailable_?) {
       val vendor =
@@ -26,4 +26,6 @@ object DbVendor {
     Schemifier.schemify(true, Schemifier.infoF _, User, Project, Document, Revision, Approval, Subscription, UserProject)
   }
 }
+
+object DbVendor extends DbVendor
 
