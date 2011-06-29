@@ -20,12 +20,7 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
   object date extends MappedDateTime(this) {
     override def asHtml = Text(if (is != null) DatePresentation.dateTimeF format is else "?")
   }
-  object comment extends MappedText(this) {
-    /** The default apply for MappedText seems to always dirty the field, odd */
-    override def apply(v: String) = {
-      if (is != v) super.apply(v) else fieldOwner
-    }
-  }
+  object comment extends MappedTextarea(this, 512)
   def when: String = DatePresentation.short(date.is)
   def info: String = "/d/" + (document.obj.map(_.key.is) openOr "?") + "/v/" + version
   def link: String = "/d/" + (document.obj.map(_.key.is) openOr "?") + "/v/" + version + "/download"
