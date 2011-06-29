@@ -22,6 +22,7 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
     override def apply(b: Box[String]) = super.apply(b map { _.toLowerCase })
     override def validations = valUnique(S.??("unique.email.address")) _ :: super.validations // Doesn't seem to work.
   }
+  object host extends MappedString(this, 64)
   object subscriptions extends MappedManyToMany(Subscription, Subscription.user, Subscription.document, Document)
 
   def subscribed_?(d: Document) = Subscription.forDocumentBy(d, this).nonEmpty
@@ -61,8 +62,23 @@ object User extends User with LongKeyedMetaMapper[User] {
   }
   def checkForUserCookie: Box[User] = {
     S.cookieValue(docRegUserCookie) match {
-      case Full(id) => User.find(id)
-      case _ => Empty
+      case Full(id) =>
+        val existing = User.find(id)
+        existing.foreach { u =>
+          u.host(User.parseHost)
+          u.save
+        }
+        existing
+      case _ =>
+        Empty
     }
+  }
+  def parseHost: String = {
+    val host = S.request match {
+      case Full(req: Req) => req.remoteAddr
+      case _ => "?"
+    }
+    println("????? " + host)
+    host
   }
 }

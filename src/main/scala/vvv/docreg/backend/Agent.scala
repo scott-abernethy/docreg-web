@@ -3,6 +3,7 @@ package vvv.docreg.backend
 import actors.Actor
 import com.hstx.docregsx.{Document, UpdateListener, FileList}
 import scala.collection.JavaConversions._
+import java.io.File
 
 case class Loaded(ds: List[Document])
 case class Updated(d: Document)
@@ -46,6 +47,8 @@ trait Agent {
 //    private void processResponse(com.hstx.docregsx.Message message) { /* compiled code */ }
 //
 //    private com.hstx.docregsx.ReceiveMessage blockingSend(com.hstx.docregsx.SendMessage sendMessage) throws java.io.IOException { /* compiled code */ }
+
+    def registerCopySubmit(file: File, fileName: String, project: String, access: String, user: String, clientHost: String, comment: String)
 }
 
 trait AgentComponent {

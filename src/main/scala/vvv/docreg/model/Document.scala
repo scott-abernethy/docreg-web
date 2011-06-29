@@ -4,6 +4,7 @@ import _root_.net.liftweb.mapper._
 import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
 import scala.xml._
+import vvv.docreg.util.StringUtil.{prePadTo, fileExtension}
 
 class Document extends LongKeyedMapper[Document] with IdPK with ManyToMany {
   def getSingleton = Document
@@ -12,6 +13,7 @@ class Document extends LongKeyedMapper[Document] with IdPK with ManyToMany {
   object project extends LongMappedMapper(this, Project)
   object title extends MappedString(this, 200)
   object editor extends MappedString(this, 100)
+  object access extends MappedString(this, 128)
   object subscribers extends MappedManyToMany(Subscription, Subscription.document, Subscription.user, User)
 
   def revisions = Revision.forDocument(this)
@@ -26,6 +28,15 @@ class Document extends LongKeyedMapper[Document] with IdPK with ManyToMany {
   }
   def projectName = project.obj.map(_.name.is) openOr "?"
   def infoLink: String = "/d/" + key.is
+  def nextVersion: Long = latest.version.toLong + 1L
+  def nextFileName(userFileName: String): String =
+    prePadTo(key, 4, '0') +
+      "-" +
+      prePadTo(nextVersion.toString, 3, '0') +
+      "-" +
+      title +
+      "." +
+      fileExtension(userFileName).getOrElse("")
 }
 
 object Document extends Document with LongKeyedMetaMapper[Document] {

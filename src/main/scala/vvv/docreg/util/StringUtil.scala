@@ -22,4 +22,12 @@ object StringUtil {
     m.appendTail(sb)
     return sb.toString()
   }
+
+  def prePadTo(input: String, len: Int, pad: Char): String = input.reverse.padTo(len, pad).reverse
+
+  val FileName = """.*\.(.+)""".r
+  def fileExtension(fileName: String): Option[String] = fileName match {
+    case FileName(extension) => Some(extension)
+    case _ => None
+  }
 }

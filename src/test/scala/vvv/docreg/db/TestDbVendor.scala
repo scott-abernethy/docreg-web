@@ -8,6 +8,8 @@ trait TestDbVendor extends DbVendor {
     Project.bulkDelete_!!()
     User.bulkDelete_!!()
     UserProject.bulkDelete_!!()
+    Document.bulkDelete_!!()
+    Revision.bulkDelete_!!()
   }
 
   def createUsers = {

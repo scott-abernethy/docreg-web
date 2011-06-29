@@ -28,7 +28,10 @@ class User extends Loggable {
       S.error("Please enter YOUR email address")
     } else {
       User.forEmail(submittedEmail) match {
-        case Full(u) => doSignIn(u)
+        case Full(u) =>
+          u.host(User.parseHost)
+          u.save
+          doSignIn(u)
         case Empty => User.create.email(submittedEmail).asValid match {
           case Full(u) => 
             S.warning("User '" + submittedEmail + "' is not registered")
@@ -54,6 +57,7 @@ class User extends Loggable {
     val u = User.create
     u.email(e)
     u.name(name.is)
+    u.host(User.parseHost)
     u.save
     S.notice("User '" + u.email + "' has been registered")
     doSignIn(u)

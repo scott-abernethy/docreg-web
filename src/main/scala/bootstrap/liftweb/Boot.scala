@@ -71,6 +71,13 @@ class Boot {
         () => Download.download(key, version)
     }
 
+    def uploadViaDisk(fieldName: String, contentType: String, fileName: String, stream: java.io.InputStream): FileParamHolder = OnDiskFileParamHolder(fieldName, contentType, fileName, stream)
+
+    val maxSize = 500 * 1024 * 1024
+    LiftRules.maxMimeSize = maxSize
+    LiftRules.maxMimeFileSize = maxSize
+    LiftRules.handleMimeFile = uploadViaDisk
+
     LiftRules.statelessRewrite.append {
       case RewriteRequest(ParsePath("d" :: key :: Nil, _, _, _), _, _) =>
         RewriteResponse("doc" :: "info" :: Nil, Map("key" -> key))

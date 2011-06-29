@@ -260,7 +260,7 @@ class DocumentSnippet extends Loggable {
     S.redirectTo(r.info)
   }
 
-/*  def submit(in: NodeSeq) = forRequest(in, (in, d, r) => {
+  def submit(in: NodeSeq) = forRequest(in, (in, d, r) => {
     bind("doc", in,
         "title" -> <a href={r.info}>{r.fullTitle}</a>,
         "submission" -> ((in: NodeSeq) => submissionForm(in, d, r))
@@ -270,14 +270,34 @@ class DocumentSnippet extends Loggable {
 
    private def submissionForm(in: NodeSeq, d: Document, r: Revision): NodeSeq = {
      var comment = ""
+     var file: Option[FileParamHolder] = None
       bind("submission", in,
-      "version" -> r.version,
+      "version" -> d.nextVersion,
       "by" -> Text(User.loggedInUser map (_.displayName) openOr "?"),
-      "file" -> SHtml.fileUpload(ul => submitFile(Full(ul))),
+      "file" -> SHtml.fileUpload(ul => file = Some(ul)),
       "comment" -> SHtml.textarea(comment, comment = _) % ("class" -> "smalltextarea"),
-      "submit" -> SHtml.submit("Submit", () => { println(submitFile.is.getClass); }),
+      "submit" -> SHtml.submit("Submit", () => processSubmit(d, comment, file)),
       "cancel" -> SHtml.submit("Cancel", () => S.redirectTo(r.info))
     )
-  }*/
+  }
+
+  private def processSubmit(d: Document, comment: String, file: Option[FileParamHolder]) {
+    file match {
+      case Some(f: OnDiskFileParamHolder) if f.mimeType == null =>
+        S.error("No file uploaded!")
+      case Some(f: OnDiskFileParamHolder) =>
+        S.notice("File uploaded")
+        User.loggedInUser.is match {
+          case Full(user) =>
+            println("send " + f.localFile + " as " + f.fileName + " to " + d.key + " ")
+            Environment.env.backend ! Submit(d, f.localFile, f.fileName, comment, user)
+            S.notice("Submit processing...")
+          case _ =>
+            S.error("Unable to submit, no user logged in!")
+        }
+      case _ => 
+        S.error("Failed to upload file!")
+    }
+  }
 }
 

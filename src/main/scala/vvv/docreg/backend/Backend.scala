@@ -1,6 +1,5 @@
 package vvv.docreg.backend
 
-import com.hstx.docregsx.{Document => AgentDocument, Revision => AgentRevision, Approval => AgentApproval, Subscriber => AgentSubscriber, ApprovalStatus => AgentApprovalState, _}
 import scala.actors.Actor
 import scala.actors.Actor._
 import scala.collection.JavaConversions._
@@ -12,7 +11,7 @@ import _root_.net.liftweb.mapper._
 import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
 import java.io.IOException
-import javax.naming.spi.DirStateFactory
+import com.hstx.docregsx.{Document => AgentDocument, Revision => AgentRevision, Approval => AgentApproval, Subscriber => AgentSubscriber, ApprovalStatus => AgentApprovalState}
 
 case class Connect()
 case class Reload(d: Document)
@@ -22,6 +21,7 @@ case class SubscribeRequested(document: Document, user: User)
 case class UnsubscribeRequested(document: Document, user: User)
 case class Edit(document: Document, user: User)
 case class Unedit(document: Document, user: User)
+case class Submit(document: Document, localFile: java.io.File, userFileName: String, comment: String, user: User)
 
 trait BackendComponent {
   val backend: Backend
@@ -41,7 +41,7 @@ trait BackendComponentImpl extends BackendComponent {
       react {
         case Connect() => 
           logger.info("Starting " + product + " v" + version + " " + java.util.TimeZone.getDefault.getDisplayName)
-          agent = createAgent(version, Backend.server, product, self)
+          agent = createAgent("dr+w " + version, Backend.server, product, self)
         case Loaded(ds) =>
           ds.foreach(self ! Updated(_))
         case Updated(d) => 
@@ -88,6 +88,14 @@ trait BackendComponentImpl extends BackendComponent {
                        This is what we want since there is no reply from an UNEDIT_RQST. */
             case e: IOException => logger.info("Unedit request sent")
           }
+        case Submit(d, localFile, userFileName, comment, user) =>
+          // todo check revision is latest?
+          try {
+            agent.registerCopySubmit(localFile, d.nextFileName(userFileName), d.projectName, d.access.is, user.displayName, user.host.is, comment)
+          } catch {
+            case a => logger.warn("Submit failed " + a)
+            a.printStackTrace()
+          }
         case m @ _ => logger.warn("Unrecognised message " + m)
       }
     }
@@ -107,6 +115,7 @@ trait BackendComponentImpl extends BackendComponent {
   }
 
   private def createDocument(d: AgentDocument) {
+    println("create for " + d.getAccess + " " + d.getSubmitFileName)
     try {
       val document = Document.create
       assignDocument(document, d)
@@ -116,7 +125,6 @@ trait BackendComponentImpl extends BackendComponent {
       applyApprovals(document, agent.loadApprovals(d))
 
       agent.loadSubscribers(d).foreach{createSubscription(document, _)}
-
       
       documentServer ! DocumentAdded(document)
     } catch {
@@ -178,6 +186,8 @@ trait BackendComponentImpl extends BackendComponent {
     document.project(projectWithName(d.getProject))
     document.title(d.getTitle)
     document.editor(d.getEditor)
+    document.access(d.getAccess)
+    // todo check that revision based info here, such as access, is correct in the AgentDocument object.
   }
 
   private def assignRevision(revision: Revision, r: AgentRevision) {
