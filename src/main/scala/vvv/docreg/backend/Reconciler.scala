@@ -6,7 +6,7 @@ import vvv.docreg.model._
 
 case class PriorityReconcile(d: Document)
 
-class Reconciler(private val backend: Actor) extends Actor {
+class Reconciler(private val backend: Backend) extends Actor {
   def act() {
     loop {
       react {

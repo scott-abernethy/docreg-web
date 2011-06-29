@@ -23,9 +23,10 @@ case class Edit(document: Document, user: User)
 case class Unedit(document: Document, user: User)
 case class Submit(document: Document, localFile: java.io.File, userFileName: String, comment: String, user: User)
 
+trait Backend extends Actor
+
 trait BackendComponent {
   val backend: Backend
-  trait Backend extends Actor
 }
 
 trait BackendComponentImpl extends BackendComponent {
@@ -34,7 +35,7 @@ trait BackendComponentImpl extends BackendComponent {
 
   val product = ProjectProps.get("project.name") openOr "drw"
   val version = ProjectProps.get("project.version") openOr "0.0"
-  val reconciler = new Reconciler(this)
+  val reconciler = new Reconciler(this).start()
   var agent: vvv.docreg.backend.Agent = _
   def act() {
     loop {
@@ -44,7 +45,7 @@ trait BackendComponentImpl extends BackendComponent {
           agent = createAgent("dr+w " + version, Backend.server, product, self)
         case Loaded(ds) =>
           ds.foreach(self ! Updated(_))
-        case Updated(d) => 
+        case Updated(d) =>
           Document.forKey(d.getKey) match {
             case Full(document) => updateDocument(document, d)
             case _ => createDocument(d)
@@ -115,7 +116,6 @@ trait BackendComponentImpl extends BackendComponent {
   }
 
   private def createDocument(d: AgentDocument) {
-    println("create for " + d.getAccess + " " + d.getSubmitFileName)
     try {
       val document = Document.create
       assignDocument(document, d)
@@ -175,7 +175,7 @@ trait BackendComponentImpl extends BackendComponent {
     }
     
     assignDocument(document, d)
-    if (document.dirty_?) { 
+    if (document.dirty_?) {
       document.save
       documentServer ! DocumentChanged(document)
     }
