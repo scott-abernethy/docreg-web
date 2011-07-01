@@ -1,4 +1,12 @@
-<lift:surround with="default" at="content">
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+    <title>?</title>
+  </head>
+  <body class="lift:content_id=main">
+    <div id="main" class="lift:surround?with=no-sidebar;at=content">
+
   <lift:snippet type="DocumentSnippet:submit" form="post" multipart="true" >
     <h3><doc:title/></h3>
     <hr/>
@@ -30,4 +38,7 @@
       </doc:submission>
     </div>
   </lift:snippet>
-</lift:surround>
+
+    </div>
+  </body>
+</html>

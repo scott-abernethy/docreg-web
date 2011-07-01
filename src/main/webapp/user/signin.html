@@ -1,4 +1,12 @@
-<lift:surround with="default" at="content">
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+    <title>?</title>
+  </head>
+  <body class="lift:content_id=main">
+    <div id="main" class="lift:surround?with=no-sidebar;at=content">
+
   <lift:snippet type="User.signIn" form="post">
     <div>
       <h3>Hello</h3>
@@ -7,4 +15,7 @@
     </div>
     <hr class="space"/>
   </lift:snippet>
-</lift:surround>
+
+    </div>
+  </body>
+</html>

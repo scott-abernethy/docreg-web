@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+    <title>?</title>
+  </head>
+  <body class="lift:content_id=main">
+    <div id="main" class="lift:surround?with=default;at=body_content">
+
+    <div class="column span-6 sidebar">
+      <div class="lift:snippet?type=Search.projects">
+        <div id="project_filter" class="box roundbox">
+          <h4 style="display:inline;">Projects</h4> <projects:all/><projects:none/>
+          <ol class="projects">
+            <projects:item>
+            <li>
+              <project:check/><project:name/>
+            </li>
+            </projects:item>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="span-16 last">
+      <lift:snippet type="Search.results">
+        <div id="search_results">
+        <table>
+          <tr>
+            <th>Project</th>
+            <th>Doc</th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Date</th>
+          </tr>
+          <search:result>
+            <tr>
+              <td><doc:project/></td>
+              <td class="nowrap"><doc:key_link/></td>
+              <td><doc:title/></td>
+              <td class="nowrap"><doc:author/></td>
+              <td class="nowrap"><doc:date/></td>
+            </tr>
+          </search:result>
+        </table>
+        </div>
+      </lift:snippet>
+    </div>
+
+    </div>
+  </body>
+</html>

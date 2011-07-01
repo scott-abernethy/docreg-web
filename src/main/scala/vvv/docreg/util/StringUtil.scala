@@ -24,6 +24,9 @@ object StringUtil {
   }
 
   def prePadTo(input: String, len: Int, pad: Char): String = input.reverse.padTo(len, pad).reverse
+    /* var x = key
+    List.range(x.size, 4).foreach((i) => x = "0" + x)
+    x */
 
   val FileName = """.*\.(.+)""".r
   def fileExtension(fileName: String): Option[String] = fileName match {

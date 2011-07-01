@@ -1,11 +1,26 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:lift="http://liftweb.net/">
+<!DOCTYPE html>
+<html>
   <head>
     <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
-    <title>Home</title>
+    <title>?</title>
   </head>
   <body class="lift:content_id=main">
-    <div id="main" class="lift:surround?with=default;at=content">
+    <div id="main" class="lift:surround?with=default;at=body_content">
+
+    <div class="column span-6 sidebar">
+      <div class="lift:snippet?type=Dashboard.projects">
+        <div id="project_filter" class="box roundbox">
+          <h4 style="display:inline;">Projects</h4> <projects:all/><projects:none/>
+          <ol class="projects">
+            <projects:item>
+            <li>
+              <project:check/><project:name/>
+            </li>
+            </projects:item>
+          </ol>
+        </div>
+      </div>
+    </div>
 
     <div class="span-8 colborder">
       <lift:snippet type="Dashboard.log">
@@ -27,30 +42,7 @@
       <h3>Favourites</h3>
       <p class="quiet">Coming soon...</p>
     </div>
-  <lift:bind-at name="sidebar">
-    <div class="box roundbox">
-    <lift:snippet type="Dashboard.filter">
-      <div id="project_filter">
-        <h4 style="display:inline;">Projects</h4> <projects:all/><projects:none/>
-        <ol class="projects">
-          <projects:item>
-          <li>
-            <project:check/><project:name/>
-          </li>
-          </projects:item>
-        </ol>
-      </div>
-    </lift:snippet>
-    </div>
-  </lift:bind-at>
-  <lift:bind-at name="topbar">
-    <lift:snippet type="Dashboard.search">
-      <search:form type="post">
-        <search:text/><search:submit/>
-      </search:form>
-    </lift:snippet>
-  </lift:bind-at>
-  </div>
 
+    </div>
   </body>
 </html>

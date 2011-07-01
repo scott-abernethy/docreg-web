@@ -31,6 +31,7 @@ class Boot {
     // Build SiteMap
     val entries: List[ConvertableToMenu] = List(
       Menu.i("Home") / "index" >> loggedIn,
+      Menu.i("Search") / "search" >> loggedIn,
       Menu.i("Login") / "user" / "signin",
       Menu.i("Logout") / "user" / "signout" >> loggedIn,
       Menu.i("Register") / "user" / "register",
