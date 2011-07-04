@@ -30,9 +30,13 @@ class Search extends Loggable with ProjectSelection {
   def bindResults(in: NodeSeq): NodeSeq = {
     import vvv.docreg.util.StringUtil._
     // todo better parsing of search string, from 
-    val keyMatches = results(in, FilteredDocument.searchLike(Document.key, prePadTo(searchInput.is, 4, '0')))
-    val titleMatches = results(in, FilteredDocument.searchLike(Document.title, "%" + searchInput.is + "%"))
-    keyMatches ++ titleMatches
+    val titleMatches = results(in, FilteredDocument.searchLike(Document.title, formatSearch(searchInput.is)))
+    if (!in.isEmpty) {
+      val keyMatches = results(in, FilteredDocument.searchLike(Document.key, prePadTo(searchInput.is, 4, '0')))
+      keyMatches ++ titleMatches
+    } else {
+      titleMatches
+    }
   }
   var html: NodeSeq = NodeSeq.Empty
   def results(in: NodeSeq): NodeSeq = {
@@ -54,5 +58,13 @@ class Search extends Loggable with ProjectSelection {
   override def projectSelectionUpdate(): JsCmd = {
     CurrentLog.foreach(_ ! ReloadLog())
     Replace("search_results", bindResults(html))
+  }
+  def formatSearch(in: String): String = {
+    val out: Option[String] = for {
+      s <- Option(in)
+      surrounded = "%" + s + "%"
+    } yield surrounded.replaceAll("[ *]", "%").replaceAll("[%]+", "%")
+
+    out.getOrElse("%")
   }
 }
