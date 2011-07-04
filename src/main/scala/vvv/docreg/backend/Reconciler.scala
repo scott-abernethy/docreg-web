@@ -16,3 +16,11 @@ class Reconciler(private val backend: Backend) extends Actor {
     }
   }
 }
+
+// these can be done in parallel
+/*
+createDocument(ad)
+ - loadRevisions: List[ar]
+ - loadSubscribers: List[as]
+ - loadApprovals: List[aa]
+ */
