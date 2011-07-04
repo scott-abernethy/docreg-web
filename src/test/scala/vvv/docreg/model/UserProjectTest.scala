@@ -23,6 +23,8 @@ object UserProjectTestSpecs extends Specification {
       u.save
       val p = Project.create.name("p1")
       p.save
+      val p2 = Project.create.name("p2")
+      p2.save
       UserProject.create.user(otherU).project(p)
       val x = UserProject.userSelected(u)
       x must haveSize(0)

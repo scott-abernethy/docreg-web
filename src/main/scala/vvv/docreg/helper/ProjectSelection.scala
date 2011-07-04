@@ -70,7 +70,7 @@ trait ProjectSelection extends Loggable {
 object ProjectSelection {
   import scala.collection.immutable._
 
-  object showAll extends SessionVar[Boolean] (false)
+  object showAll extends SessionVar[Boolean] (true)
 
   object projects extends SessionVar[Set[Project]] (findSelected()) {
     def all() {  }
