@@ -15,6 +15,7 @@ import com.hstx.docregsx.{Document => AgentDocument, Revision => AgentRevision, 
 
 case class Connect()
 case class Reload(d: Document)
+case class Reconcile(document: AgentDocument, revisions: List[AgentRevision], approvals: List[AgentApproval], subscriptions: List[AgentSubscriber])
 case class ApprovalApproved(document: Document, revision: Revision, user: User, state: ApprovalState, comment: String)
 case class ApprovalRequested(document: Document, revision: Revision, users: Iterable[User])
 case class SubscribeRequested(document: Document, user: User)
@@ -36,6 +37,7 @@ trait BackendComponentImpl extends BackendComponent {
   val product = ProjectProps.get("project.name") openOr "drw"
   val version = ProjectProps.get("project.version") openOr "0.0"
   val reconciler = new Reconciler(this).start()
+  val priorityReconciler = new Reconciler(this).start()
   var agent: vvv.docreg.backend.Agent = _
   def act() {
     loop {
@@ -44,16 +46,14 @@ trait BackendComponentImpl extends BackendComponent {
           logger.info("Starting " + product + " v" + version + " " + java.util.TimeZone.getDefault.getDisplayName)
           agent = createAgent("dr+w " + version, Backend.server, product, self)
         case Loaded(ds) =>
-          ds.foreach(self ! Updated(_))
+          ds.foreach(reconciler ! Prepare(_, agent))
         case Updated(d) =>
+          priorityReconciler ! Prepare(d, agent)
+        case msg @ Reconcile(d, revisions, approvals, subscriptions) =>
           Document.forKey(d.getKey) match {
-            case Full(document) => updateDocument(document, d)
-            case _ => createDocument(d)
+            case Full(document) => updateDocument(document, msg)
+            case _ => createDocument(msg)
           }
-        case Reload(d) =>
-          updateRevisions(d)
-          updateSubscriptions(d)
-          applyApprovals(d, agent.loadApprovals(d.key))
         case ApprovalApproved(d, r, user, state, comment) =>
           val done = agent.approval(r.filename, 
             user.displayName, 
@@ -115,20 +115,19 @@ trait BackendComponentImpl extends BackendComponent {
     }
   }
 
-  private def createDocument(d: AgentDocument) {
+  private def createDocument(reconcile: Reconcile) {
     try {
       val document = Document.create
-      assignDocument(document, d)
+      assignDocument(document, reconcile.document)
       document.save
 
-      agent.loadRevisions(d).foreach{createRevision(document, _)}
-      applyApprovals(document, agent.loadApprovals(d))
-
-      agent.loadSubscribers(d).foreach{createSubscription(document, _)}
+      reconcile.revisions.foreach{createRevision(document, _)}
+      applyApprovals(document, reconcile.approvals)
+      reconcile.subscriptions.foreach{createSubscription(document, _)}
       
       documentServer ! DocumentAdded(document)
     } catch {
-      case e: java.lang.NullPointerException => logger.error("Exception " + e + " with " + d.getKey); e.printStackTrace
+      case e: java.lang.NullPointerException => logger.error("Exception " + e + " with " + reconcile.document.getKey); e.printStackTrace
     }
   }
 
@@ -166,15 +165,12 @@ trait BackendComponentImpl extends BackendComponent {
     subscription
   }
 
-  private def updateDocument(document: Document, d: AgentDocument) {
-    if (document.latest_?(d.getVersion.toLong)) {
-      reconciler ! PriorityReconcile(document)
-    } else {
-      updateRevisions(document)
-      updateSubscriptions(document)
-    }
+  private def updateDocument(document: Document, reconcile: Reconcile) {
+    updateRevisions(document, reconcile.revisions)
+    updateSubscriptions(document, reconcile.subscriptions)
+    applyApprovals(document, reconcile.approvals)
     
-    assignDocument(document, d)
+    assignDocument(document, reconcile.document)
     if (document.dirty_?) {
       document.save
       documentServer ! DocumentChanged(document)
@@ -207,8 +203,8 @@ trait BackendComponentImpl extends BackendComponent {
     }
   }
 
-  private def updateRevisions(document: Document) {
-    agent.loadRevisions(document.key).foreach { r =>
+  private def updateRevisions(document: Document, revisions: List[AgentRevision]) {
+    revisions.foreach { r =>
       document.revision(r.getVersion) match {
         case Full(revision) =>
           assignRevision(revision, r)
@@ -223,9 +219,13 @@ trait BackendComponentImpl extends BackendComponent {
     }
   }
 
-  private def updateSubscriptions(document: Document) {
-    agent.loadSubscribers(document.key).foreach { s =>
-      document.subscriber(User.forEmailOrCreate(s.getSubscriberEmail) openOr null) match {
+  private def updateSubscriptions(document: Document, subscriptions: List[AgentSubscriber]) {
+    subscriptions.foreach { s =>
+      val subscriber = for {
+        u <- User.forEmailOrCreate(s.getSubscriberEmail)
+        s <- document.subscriber(u)
+      } yield s 
+      subscriber match {
         case Full(subscription) =>
           assignSubscription(subscription, s)
           if (subscription.dirty_?) {
