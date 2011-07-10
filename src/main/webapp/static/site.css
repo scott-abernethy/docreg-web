@@ -102,3 +102,24 @@ a:hover {
 .border-top {
   border-top: 1px solid #ddd;
 }
+#lift__noticesContainer___notice {
+  color: #859900;
+}
+#lift__noticesContainer___warning {
+  color: #cb4b16;
+}
+#lift__noticesContainer___error {
+  color: #d33682;
+}
+#lift__noticesContainer__ {
+    margin-bottom: 1em;
+}
+#lift__noticesContainer__ ul {
+	margin:0;
+	padding:0;
+}
+#lift__noticesContainer__ ul li {
+	margin:0;
+	padding:0;
+	list-style:none;
+}
