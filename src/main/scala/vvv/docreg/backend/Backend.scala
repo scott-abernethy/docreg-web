@@ -12,6 +12,7 @@ import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
 import java.io.IOException
 import com.hstx.docregsx.{Document => AgentDocument, Revision => AgentRevision, Approval => AgentApproval, Subscriber => AgentSubscriber, ApprovalStatus => AgentApprovalState}
+import vvv.docreg.db.DbVendor
 
 case class Connect()
 case class Reload(d: Document)
@@ -117,6 +118,7 @@ trait BackendComponentImpl extends BackendComponent {
 
   private def createDocument(reconcile: Reconcile) {
     try {
+      DB.use(DefaultConnectionIdentifier) { c =>
       val document = Document.create
       assignDocument(document, reconcile.document)
       document.save
@@ -126,6 +128,7 @@ trait BackendComponentImpl extends BackendComponent {
       reconcile.subscriptions.foreach{createSubscription(document, _)}
       
       documentServer ! DocumentAdded(document)
+      }
     } catch {
       case e: java.lang.NullPointerException => logger.error("Exception " + e + " with " + reconcile.document.getKey); e.printStackTrace
     }
@@ -166,6 +169,7 @@ trait BackendComponentImpl extends BackendComponent {
   }
 
   private def updateDocument(document: Document, reconcile: Reconcile) {
+    DB.use(DefaultConnectionIdentifier) { c =>
     updateRevisions(document, reconcile.revisions)
     updateSubscriptions(document, reconcile.subscriptions)
     applyApprovals(document, reconcile.approvals)
@@ -174,6 +178,7 @@ trait BackendComponentImpl extends BackendComponent {
     if (document.dirty_?) {
       document.save
       documentServer ! DocumentChanged(document)
+    }
     }
   }
 
