@@ -39,8 +39,12 @@
       </lift:snippet>
     </div>
     <div class="span-8 last">
-      <h3>Favourites</h3>
-      <p class="quiet">Coming soon...</p>
+      <h3>Subscriptions</h3>
+      <div class="lift:snippet?type=User.subscriptions">
+        <ol>
+          <li class="subscription:item"><a href=""><span class="item:title">001-Foo</span></a></li>
+        </ol>
+      </div>
     </div>
 
     </div>
