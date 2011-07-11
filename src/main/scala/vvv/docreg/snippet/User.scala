@@ -99,7 +99,7 @@ class User extends Loggable {
   }
   def subscriptions = {
     User.loggedInUser.is match {
-      case Full(u) => ".subscription:item" #> bindSubscriptions(u) _
+      case Full(u) => ".subscription:item" #> bindSubscriptions(u.reload) _
       case _ => ClearClearable
     }
   }
