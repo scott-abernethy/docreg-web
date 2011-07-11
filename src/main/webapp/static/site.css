@@ -23,6 +23,7 @@ a:hover {
 #log {
   margin: 0;
   list-style: none;
+  padding: 0px;
 }
 #log li {
   padding: 8px 6px 8px 6px;
