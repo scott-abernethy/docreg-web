@@ -25,7 +25,7 @@ class Search extends Loggable with ProjectSelection {
   def form(xhtml: NodeSeq): NodeSeq = {
     bind("search", xhtml,
       "text" -> JsCmds.FocusOnLoad(SHtml.text(searchInput.is, s => searchInput(s)) % ("style" -> "width: 250px")),
-      "submit" -> SHtml.submit("Search", () => S.redirectTo("search")))
+      "submit" -> SHtml.submit("Search", () => S.redirectTo("/search")))
   }
   def bindResults(in: NodeSeq): NodeSeq = {
     import vvv.docreg.util.StringUtil._
