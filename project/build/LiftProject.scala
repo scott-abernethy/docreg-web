@@ -25,6 +25,4 @@ class LiftProject(info: ProjectInfo) extends DefaultWebProject(info) with IdeaPr
   ) ++ super.libraryDependencies
 
   override def jettyPort = 9333
-
-  override def extraWebappFiles: PathFinder = "project" / "build.properties"
 }
