@@ -3,6 +3,9 @@ package vvv.docreg.util
 import java.util.regex._
 
 object StringUtil {
+  val ValidEmail = """([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})""".r
+  val FileName = """.*\.(.+)""".r
+
   def nameFromEmail(email: String): String = {
     email indexOf '@' match {
       case -1 => ""
@@ -28,7 +31,6 @@ object StringUtil {
     List.range(x.size, 4).foreach((i) => x = "0" + x)
     x */
 
-  val FileName = """.*\.(.+)""".r
   def fileExtension(fileName: String): Option[String] = fileName match {
     case FileName(extension) => Some(extension)
     case _ => None

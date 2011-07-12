@@ -200,11 +200,22 @@ trait BackendComponentImpl extends BackendComponent {
   }
 
   private def assignSubscription(subscription: Subscription, s: AgentSubscriber) {
-    User.forEmail(s.getSubscriberEmail) match {
-      case Full(u) =>
-        subscription.user(u)
+    def doAssign(email: String) = User.forEmail(email).foreach { subscription.user(_) }
+
+    Option(s.getSubscriberEmail) match {
+      case Some(email) =>
+        UserMigration.migrateEmail(email.toLowerCase) match {
+          case Full(altered) =>
+            // todo resubscribe to document using altered email address.
+            doAssign(altered)
+          case Empty =>
+            doAssign(email)
+          case Failure(msg, _, _) =>
+            logger.error("Failed to assign subscription for " + email + " due to " + msg)
+        }
+
       case _ =>
-        Empty
+        logger.error("Failed to assign subscription as email missing")
     }
   }
 
