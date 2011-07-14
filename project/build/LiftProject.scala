@@ -13,6 +13,7 @@ class LiftProject(info: ProjectInfo) extends DefaultWebProject(info) with IdeaPr
   override def libraryDependencies = Set(
     "net.liftweb" %% "lift-webkit" % liftVersion % "compile",
     "net.liftweb" %% "lift-mapper" % liftVersion % "compile",
+    "net.liftweb" %% "lift-ldap" % liftVersion % "compile",
     "log4j" % "log4j" % "1.2.16",
     "org.slf4j" % "slf4j-log4j12" % "1.6.1",
     "org.mortbay.jetty" % "jetty" % "6.1.22" % "test",

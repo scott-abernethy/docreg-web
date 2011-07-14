@@ -191,9 +191,16 @@ trait BackendComponentImpl extends BackendComponent {
     // todo check that revision based info here, such as access, is correct in the AgentDocument object.
   }
 
+//  val directory = new Directory()
+//
   private def assignRevision(revision: Revision, r: AgentRevision) {
     revision.version(r.getVersion)
     revision.filename(r.getFilename)
+    // todo find user, not author string.
+//    Option(r.getUsername) match {
+//      case Some(user) if (user.length() > 0 && user != "???") => logger.info("### " + user + "  >>>  " + directory.findFromUserName(user))
+//      case _ => logger.info("### missing username, must use author = " + r.getAuthor + "  >>>  " + directory.findFromPartialName(r.getAuthor))
+//    }
     revision.author(r.getAuthor)
     revision.date(r.getDate)
     revision.comment(r.getComment)
@@ -201,7 +208,7 @@ trait BackendComponentImpl extends BackendComponent {
 
   private def assignSubscription(subscription: Subscription, s: AgentSubscriber) {
     def doAssign(email: String) = User.forEmail(email).foreach { subscription.user(_) }
-
+    // todo use username of subscriber rather than email address?
     Option(s.getSubscriberEmail) match {
       case Some(email) =>
         UserMigration.migrateEmail(email.toLowerCase) match {
