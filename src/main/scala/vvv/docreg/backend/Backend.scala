@@ -34,6 +34,7 @@ trait BackendComponent {
 trait BackendComponentImpl extends BackendComponent {
   this: DocumentServerComponent with AgentComponent =>
   val backend = new Backend with Loggable {
+  val directory = new DirectoryImpl()
 
   val product = ProjectProps.get("project.name") openOr "drw"
   val version = ProjectProps.get("project.version") openOr "0.0"
@@ -145,8 +146,8 @@ trait BackendComponentImpl extends BackendComponent {
   private def applyApprovals(document: Document, approvals: Iterable[AgentApproval]) = approvals foreach { a =>
     // The agent returns a single approval item per revision/user pair, so no need to cull.
     Revision.forDocument(document, a.getVersion) match {
-      case Full(revision) => 
-        val user = User.forEmailOrCreate(a.getApproverEmail) openOr null
+      case Full(revision) =>
+        val user = UserLookup.lookup(Some(a.getUsername()), Some(a.getApproverEmail), Some(a.getApproverName), directory) openOr null
         val approval = Approval.forRevisionBy(revision, user) match {
           case Full(a) => a
           case _ => Approval.create.revision(revision).by(user)
@@ -191,8 +192,6 @@ trait BackendComponentImpl extends BackendComponent {
     // todo check that revision based info here, such as access, is correct in the AgentDocument object.
   }
 
-//  val directory = new Directory()
-//
   private def assignRevision(revision: Revision, r: AgentRevision) {
     revision.version(r.getVersion)
     revision.filename(r.getFilename)
@@ -204,6 +203,7 @@ trait BackendComponentImpl extends BackendComponent {
     revision.author(r.getAuthor)
     revision.date(r.getDate)
     revision.comment(r.getComment)
+    val x = UserLookup.lookup(Some(r.getUsername), None, Some(r.getAuthor), directory)
   }
 
   private def assignSubscription(subscription: Subscription, s: AgentSubscriber) {
@@ -245,7 +245,7 @@ trait BackendComponentImpl extends BackendComponent {
   private def updateSubscriptions(document: Document, subscriptions: List[AgentSubscriber]) {
     subscriptions.foreach { s =>
       val subscriber = for {
-        u <- User.forEmailOrCreate(s.getSubscriberEmail)
+        u <- UserLookup.lookup(Some(s.getSubscriberUserName), Some(s.getSubscriberEmail), None, directory)
         s <- document.subscriber(u)
       } yield s 
       subscriber match {

@@ -17,6 +17,7 @@ import vvv.docreg.util.StringUtil
 class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
   def getSingleton = User
   object name extends MappedString(this, 64)
+  object username extends MappedString(this, 64)
   object email extends MappedEmail(this, 64) {
     override def apply(s: String) = super.apply(s.toLowerCase)
     override def apply(b: Box[String]) = super.apply(b map { _.toLowerCase })
@@ -34,13 +35,13 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
 object User extends User with LongKeyedMetaMapper[User] {
   val docRegUserCookie = "DocRegUser"
   object loggedInUser extends SessionVar[Box[User]](checkForUserCookie)
-  override def dbTableName = "users"
-  override def dbIndexes = UniqueIndex(email) :: super.dbIndexes
+  override def dbIndexes = UniqueIndex(email) :: UniqueIndex(username) :: super.dbIndexes
   override def fieldOrder = List(id, name, email)
   def loggedIn_? = !loggedInUser.is.isEmpty
   def login(user: User) = loggedInUser(Full(user))
   def logout() = loggedInUser(Empty)
-  def forEmail(email: String): Box[User] = find(By(User.email, email.toLowerCase)) 
+  def forEmail(email: String): Box[User] = find(By(User.email, email.toLowerCase))
+  // todo remove, and uses
   def forEmailOrCreate(email: String): Box[User] = forEmail(email) match {
     case existing @ Full(_) => existing 
     case _ => 

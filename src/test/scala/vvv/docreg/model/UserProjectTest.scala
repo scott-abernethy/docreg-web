@@ -17,9 +17,9 @@ object UserProjectTestSpecs extends Specification {
     "find none where no UserProject record exists for the user" >> {
       TestDbVendor.initAndClean
 
-      val otherU = User.create.name("other").email("other@msn.com")
+      val otherU = User.create.name("other").email("other@msn.com").username("aaa")
       otherU.save
-      val u = User.create.name("foo").email("foo@bar.com")
+      val u = User.create.name("foo").email("foo@bar.com").username("bbb")
       u.save
       val p = Project.create.name("p1")
       p.save
@@ -32,7 +32,7 @@ object UserProjectTestSpecs extends Specification {
     "find some, based on the selected field value" >> {
       TestDbVendor.initAndClean
 
-      val u = User.create.name("foo").email("foo@bar.com")
+      val u = User.create.name("foo").email("foo@bar.com").username("aaa")
       u.save
       val p1 = Project.create.name("p1")
       p1.save
@@ -51,7 +51,7 @@ object UserProjectTestSpecs extends Specification {
     "update existing user project, or create one" >> {
       TestDbVendor.initAndClean
 
-      val u = User.create.name("foo").email("foo@bar.com")
+      val u = User.create.name("foo").email("foo@bar.com").username("aaa")
       u.save
       val p1 = Project.create.name("p1")
       p1.save

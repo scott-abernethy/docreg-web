@@ -10,12 +10,13 @@ trait TestDbVendor extends DbVendor {
     UserProject.bulkDelete_!!()
     Document.bulkDelete_!!()
     Revision.bulkDelete_!!()
+    UserLookup.bulkDelete_!!()
   }
 
   def createUsers = {
-    val u = User.create.name("foo").email("foo@bar.com")
+    val u = User.create.name("foo").email("foo@bar.com").username("aaa")
     u.save
-    val other = User.create.name("other").email("other@msn.com")
+    val other = User.create.name("other").email("other@msn.com").username("bbb")
     other.save
     (u, other)
   }

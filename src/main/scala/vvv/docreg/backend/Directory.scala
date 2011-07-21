@@ -23,7 +23,13 @@ distinguishedName: CN=SAbernethy,OU=NZ,OU=People,OU=APAC,DC=GNET,DC=global,DC=vp
 
 case class UserAttributes(userName: String, mail: String, displayName: String)
 
-class Directory extends LDAPVendor {
+trait Directory {
+  def findFromMail(mailUserName: String): Box[UserAttributes]
+  def findFromUserName(userName: String): Box[UserAttributes]
+  def findFromPartialName(partialName: String): Box[UserAttributes]
+}
+
+class DirectoryImpl extends LDAPVendor with Directory {
   val ldapBase = "DC=GNET,DC=global,DC=vpn"
   configure(
     Map(
@@ -46,7 +52,7 @@ class Directory extends LDAPVendor {
   }
 
   def findFromPartialName(partialName: String): Box[UserAttributes] = {
-    find("displayName=*" + partialName.replaceAll(" ", "*") + "*")
+    find("displayName=" + partialName.replaceAll(" ", "*") + "")
   }
 
   def findFromMail(mailUserName: String): Box[UserAttributes] = {
@@ -66,13 +72,17 @@ class Directory extends LDAPVendor {
   }
 
   def findFromDn(dn: String): Box[UserAttributes] = {
+    def extractValue(attr: Attributes, key: String): Option[String] = Option(attr).map(_.get(key)).filter(_ != null).map(_.get()).filter(_ != null).map(_.toString)
     attributesFromDn(dn + "," + ldapBase) match {
       case null => Empty
-      case attr => Full(UserAttributes(
-        attr.get("userPrincipalName").toString,
-        attr.get("mail").toString,
-        attr.get("displayName").toString
-      ))
+      case attr => 
+        Box(
+          for {
+            userPrincipalName <- extractValue(attr, "userPrincipalName")
+            mail <- extractValue(attr, "mail")
+            displayName <- extractValue(attr, "displayName")
+          } yield UserAttributes(userPrincipalName, mail, displayName)
+        )
     }
   }
 }
