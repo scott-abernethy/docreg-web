@@ -72,7 +72,7 @@ class User extends Loggable {
       "email" -> u.email,
       //TODO get subscriptions working on profile page, with subscriptions snippet used on home page.
       "subscriptions" -> <ul>{ if (u.subscriptions.nonEmpty) u.subscriptions.sortWith((a, b) => a.key.is < b.key.is).map(s =>
-                                      <li><a href={ s.infoLink }>{s.key.is + ": " + s.title.is}</a></li>)
+                                      <li><a href={ s.infoLink }>{s.fullTitle}</a></li>)
                                 else "-"
                         }</ul>
     )} openOr {S.error("No such user found"); NodeSeq.Empty}
@@ -88,7 +88,7 @@ class User extends Loggable {
   def bindSubscriptions(user: vvv.docreg.model.User)(in: NodeSeq): NodeSeq = {
     user.subscriptions.flatMap( d =>
       (
-        ".item:title" #> d.latest.fullTitle &
+        ".item:title" #> d.fullTitle &
         "a [href]" #> d.infoLink
       ).apply(in)
     )

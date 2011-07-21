@@ -37,6 +37,8 @@ class Document extends LongKeyedMapper[Document] with IdPK with ManyToMany {
       title +
       "." +
       fileExtension(userFileName).getOrElse("")
+
+  def fullTitle: String = key.is + ": " + title.is
 }
 
 object Document extends Document with LongKeyedMetaMapper[Document] {
