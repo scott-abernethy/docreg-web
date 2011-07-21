@@ -49,7 +49,7 @@ class Log extends DocumentSubscriber {
       add(document, latest)
     case DocumentChanged(document) =>
       revisions = revisions map {r => if (r.document == document) r.reload else r}
-      val update = revisions filter {r => r.document == document} map {r => SetHtml(r.id.is.toString, bindRevision(revisionInnerPart, r, false))}
+      val update = revisions filter {r => r.document == document} map {r => JsCmds.Replace(r.id.is.toString, bindRevision(revisionPart, r, false))}
       partialUpdate(update)
     case ReloadLog() =>
       revisions = FilteredRevision.findRecent(limit)
