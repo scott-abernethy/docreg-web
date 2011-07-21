@@ -27,7 +27,9 @@ trait Agent {
 
     def unsubscribe(s: String, s1: String): Boolean
 
-    def approval(s: String, s1: String, s2: String, approvalStatus: com.hstx.docregsx.ApprovalStatus, s3: String, s4: String, s5: String): Boolean
+//    public boolean approval(String filename, String approverName, String approverEmail, ApprovalStatus status, String comment, String clientHost, String clientUsername)
+
+    def approval(filename: String, approverName: String, approverEmail: String, approvalStatus: com.hstx.docregsx.ApprovalStatus, comment: String, clientHost: String, clientUsername: String): Boolean
 
 //    public com.hstx.docregsx.ChangeReply getNextChangeRequest(int i) throws java.io.IOException { /* compiled code */ }
 //

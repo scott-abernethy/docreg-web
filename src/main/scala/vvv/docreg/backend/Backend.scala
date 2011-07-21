@@ -71,39 +71,49 @@ trait BackendComponentImpl extends BackendComponent {
             },
             comment,
             product,
-            user.email.is)
+            user.username.is)
           if (done) logger.info("Approval processed") else logger.warn("Approval rejected for " + r + " by " + user + " to " + state)
 
         case ApprovalRequested(d, r, users) =>
           users foreach (this ! ApprovalApproved(d, r, _, ApprovalState.pending, ""))
+
         case SubscribeRequested(d, user) =>
+          // todo subscribe needs to pass username
           if(agent.subscribe(d.latest.filename, user.email))
             logger.info(user + " has subscribed to " + d)
           else
             logger.warn("Subscribe request rejected for " + d + " by " + user)
+
         case UnsubscribeRequested(d, user) =>
+          // todo subscribe needs to pass username
           if(agent.unsubscribe(d.latest.filename, user.email))
             logger.info(user + " has unsubscribed from " + d)
           else
             logger.warn("Unsubscribe request rejected for " + d + " by " + user)
+
         case Edit(d, user) =>
+          // todo should this be username?
           agent.edit(d.latest.filename, user.displayName)
           logger.info("Edit request sent")
+
         case Unedit(d, user) =>
+          // todo should this be username?
           try {
             agent.unedit(d.latest.filename, user.displayName)
           } catch { /* An IOException means there was no reply from the sent request.
                        This is what we want since there is no reply from an UNEDIT_RQST. */
             case e: IOException => logger.info("Unedit request sent")
           }
+
         case Submit(d, localFile, userFileName, comment, user) =>
           // todo check revision is latest?
           try {
-            agent.registerCopySubmit(localFile, d.nextFileName(userFileName), d.projectName, d.access.is, user.displayName, user.host.is, comment)
+            agent.registerCopySubmit(localFile, d.nextFileName(userFileName), d.projectName, d.access.is, user.username, user.host.is, comment)
           } catch {
             case a => logger.warn("Submit failed " + a)
             a.printStackTrace()
           }
+
         case m @ _ => logger.warn("Unrecognised message " + m)
       }
     }
