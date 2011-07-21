@@ -40,7 +40,7 @@ object UserLookup extends UserLookup with LongKeyedMetaMapper[UserLookup] with L
       By(UserLookup.name, nameOption.getOrElse(""))
     ) match {
       case Full(record) =>
-        logger.info((usernameOption :: emailOption :: nameOption :: Nil) + " *** " + (record.user.map(_.username.is) :: record.user.map(_.email.is) :: record.user.map(_.name.is) :: Nil))
+        //logger.debug((usernameOption :: emailOption :: nameOption :: Nil) + " *** " + (record.user.map(_.username.is) :: record.user.map(_.email.is) :: record.user.map(_.name.is) :: Nil))
         record.user
       case _ =>
         val x = directoryLookup(usernameOption, emailOption, nameOption, directory) match {
@@ -56,7 +56,7 @@ object UserLookup extends UserLookup with LongKeyedMetaMapper[UserLookup] with L
     userOption.foreach { i =>
       try {
         UserLookup.create.username(usernameOption.getOrElse("")).email(emailOption.getOrElse("")).name(nameOption.getOrElse("")).user(i).save
-        logger.info((usernameOption :: emailOption :: nameOption :: Nil) + " ??? " + (i.username.is :: i.email.is :: i.name.is :: Nil))
+        //logger.debug((usernameOption :: emailOption :: nameOption :: Nil) + " ??? " + (i.username.is :: i.email.is :: i.name.is :: Nil))
       } catch {
         case _ =>
       }
