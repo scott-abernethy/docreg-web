@@ -30,7 +30,7 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
   def subscribed_?(d: Document) = Subscription.forDocumentBy(d, this).nonEmpty
 
   def displayName = name.is
-  def profileLink = "/user/" + id + "/profile"
+  def profileLink = <a href={"/user/" + id + "/profile"}>{displayName}</a>
 }
 
 object User extends User with LongKeyedMetaMapper[User] {

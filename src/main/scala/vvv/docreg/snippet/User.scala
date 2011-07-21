@@ -53,7 +53,7 @@ class User extends Loggable {
   def control(in: NodeSeq): NodeSeq = {
     if (User.loggedIn_?) {
       bind("user", in,
-        "id" -> (User.loggedInUser.map(o => <a href={o.profileLink}>{o.displayName}</a>) openOr Text("?")),
+        "id" -> (User.loggedInUser.map(o => o.profileLink) openOr Text("?")),
         "signOut" -> <a href="/user/signout">Sign out</a>
       )
     } else {

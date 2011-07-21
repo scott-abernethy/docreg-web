@@ -16,7 +16,7 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
   }
   object version extends MappedLong(this)
   object filename extends MappedString(this, 200)
-  object author extends MappedString(this, 100)
+  object author extends LongMappedMapper(this, User)
   object date extends MappedDateTime(this) {
     override def asHtml = Text(if (is != null) DatePresentation.dateTimeF format is else "?")
   }
@@ -25,6 +25,13 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
   def info: String = "/d/" + (document.obj.map(_.key.is) openOr "?") + "/v/" + version
   def link: String = "/d/" + (document.obj.map(_.key.is) openOr "?") + "/v/" + version + "/download"
   def fullTitle: String = (document.obj.map(_.key.is) openOr "?") + "-" + version.is + ": " + (document.obj.map(_.title.is) openOr "?")
+
+  def authorLink: NodeSeq = {
+    author.obj match {
+      case Full(a) => a.profileLink
+      case _ => Text("?")
+    }
+  }
 }
 
 object Revision extends Revision with LongKeyedMetaMapper[Revision] {
@@ -56,7 +63,7 @@ object EmptyRevision extends Revision {
   def EmptyRevision {
     version(0)
     date(new java.util.Date(0))
-    author("-")
+    author(UserLookup.unknownUser)
     filename("")
     comment("")
   }

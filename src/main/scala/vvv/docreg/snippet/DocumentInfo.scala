@@ -55,7 +55,7 @@ class DocumentSnippet extends Loggable {
       bind("doc", in,
         "key" -> d.key,
         "title" -> <a href={r.info}>{r.fullTitle}</a>,
-        "author" -> r.author,
+        "author" -> r.authorLink,
         "revised" -> r.date,
         "link" -> ((in: NodeSeq) => <a href={r.link}>{in}</a>),
         "version" -> r.version,
@@ -163,7 +163,7 @@ class DocumentSnippet extends Loggable {
         AttrBindParam("approve_attr", "/d/" + d.key + "/v/" + r.version + "/approve", "href"),
         AttrBindParam("request-approval_attr", "/d/" + d.key + "/v/" + r.version + "/request-approval", "href"),
         "version" -> r.version,
-        "author" -> r.author,
+        "author" -> r.authorLink,
         "date" -> r.date,
         "approvals" -> ((in: NodeSeq) => approvals(in, r)),
         "link" -> <a href={r.link}>{r.version.asHtml}</a>,
@@ -174,7 +174,7 @@ class DocumentSnippet extends Loggable {
   private def approvals(xhtml: NodeSeq, r: Revision): NodeSeq = {
     Approval.forRevision(r) flatMap {a =>
       bind("approval", xhtml,
-        "by" -> (a.by.obj.map (o => <a href={o.profileLink}>{o.displayName}</a>) openOr Text("?")),
+        "by" -> (a.by.obj.map(_.profileLink) openOr Text("?")),
         "state" -> <span style={ApprovalState.style(a.state.is)}>{a.state}</span>,
         "comment" -> <span>{ if (a.comment.is == "No Comment") "" else a.comment }</span>,
         "date" -> a.date)
@@ -185,7 +185,7 @@ class DocumentSnippet extends Loggable {
       bind("doc", in,
         "key" -> d.key,
         "title" -> <a href={r.info}>{r.fullTitle}</a>,
-        "author" -> r.author,
+        "author" -> r.authorLink,
         "revised" -> r.date,
         "link" -> ((in: NodeSeq) => <a href={r.link}>{in}</a>),
         "version" -> r.version,

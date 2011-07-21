@@ -24,7 +24,7 @@ class Log extends DocumentSubscriber {
   private val documentServer = Environment.env.documentServer
   private var revisions: List[Revision] = Nil
   private lazy val revisionPart: NodeSeq = deepFindKids(defaultHtml, "log", "item")
-  private lazy val revisionInnerPart: NodeSeq = revisionPart \ "div"
+  private lazy val revisionInnerPart: NodeSeq = revisionPart \ "li"
 
   CurrentLog.set(Full(this))
 
@@ -88,7 +88,7 @@ class Log extends DocumentSubscriber {
       "version" -> r.version,
       "project" -> d.projectName, 
       "title" -> <a href={d.infoLink}>{r.fullTitle}</a>, 
-      "author" -> r.author,
+      "author" -> r.authorLink,
       "date" -> r.date,
       "when" -> r.when,
       "comment" -> r.comment)

@@ -50,7 +50,7 @@ class Search extends Loggable with ProjectSelection {
   def items(in: NodeSeq, ds: List[Document]): NodeSeq = {
     ds.flatMap(d => bind("doc", in,
         "project" -> d.projectName,
-        "author" -> d.latest.author,
+        "author" -> d.latest.authorLink,
         "key_link" -> <a href={d.latest.link}>{d.key}</a>,
         "date" -> d.latest.date,
         "title" -> <a href={d.infoLink}>{d.title}</a>))

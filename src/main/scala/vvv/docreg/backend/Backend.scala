@@ -40,21 +40,26 @@ trait BackendComponentImpl extends BackendComponent {
   val reconciler = new Reconciler(this).start()
   val priorityReconciler = new Reconciler(this).start()
   var agent: vvv.docreg.backend.Agent = _
+
   def act() {
     loop {
       react {
         case Connect() => 
           logger.info("Starting " + product + " v" + version + " " + java.util.TimeZone.getDefault.getDisplayName)
           agent = createAgent("dr+w " + version, Backend.server, product, self)
+
         case Loaded(ds) =>
           ds.foreach(reconciler ! Prepare(_, agent))
+
         case Updated(d) =>
           priorityReconciler ! Prepare(d, agent)
+
         case msg @ Reconcile(d, revisions, approvals, subscriptions) =>
           Document.forKey(d.getKey) match {
             case Full(document) => updateDocument(document, msg)
             case _ => createDocument(msg)
           }
+
         case ApprovalApproved(d, r, user, state, comment) =>
           val done = agent.approval(r.filename, 
             user.displayName, 
@@ -68,6 +73,7 @@ trait BackendComponentImpl extends BackendComponent {
             product,
             user.email.is)
           if (done) logger.info("Approval processed") else logger.warn("Approval rejected for " + r + " by " + user + " to " + state)
+
         case ApprovalRequested(d, r, users) =>
           users foreach (this ! ApprovalApproved(d, r, _, ApprovalState.pending, ""))
         case SubscribeRequested(d, user) =>
@@ -192,17 +198,12 @@ trait BackendComponentImpl extends BackendComponent {
   }
 
   private def assignRevision(revision: Revision, r: AgentRevision) {
+    val author = UserLookup.lookup(Some(r.getUsername), None, Some(r.getAuthor), directory)
     revision.version(r.getVersion)
     revision.filename(r.getFilename)
-    // todo find user, not author string.
-//    Option(r.getUsername) match {
-//      case Some(user) if (user.length() > 0 && user != "???") => logger.info("### " + user + "  >>>  " + directory.findFromUserName(user))
-//      case _ => logger.info("### missing username, must use author = " + r.getAuthor + "  >>>  " + directory.findFromPartialName(r.getAuthor))
-//    }
-    revision.author(r.getAuthor)
+    revision.author(author)
     revision.date(r.getDate)
     revision.comment(r.getComment)
-    val x = UserLookup.lookup(Some(r.getUsername), None, Some(r.getAuthor), directory)
   }
 
   private def assignSubscription(subscription: Subscription, s: AgentSubscriber) {
