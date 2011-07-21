@@ -7,7 +7,7 @@ import common._
 import Helpers._
 import http._
 import provider.HTTPCookie
-import vvv.docreg.util.StringUtil
+import vvv.docreg.util.{Environment, StringUtil}
 
 // http://www.assembla.com/wiki/show/liftweb/How_to_use_Container_Managed_Security
 // http://wiki.eclipse.org/Jetty/Tutorial/JAAS#LdapLoginModule
@@ -23,6 +23,7 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
     override def apply(b: Box[String]) = super.apply(b map { _.toLowerCase })
     override def validations = valUnique(S.??("unique.email.address")) _ :: super.validations // Doesn't seem to work.
   }
+  object active extends MappedBoolean(this)
   object host extends MappedString(this, 64)
   object subscriptions extends MappedManyToMany(Subscription, Subscription.user, Subscription.document, Document)
 
@@ -34,20 +35,24 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
 
 object User extends User with LongKeyedMetaMapper[User] {
   val docRegUserCookie = "DocRegUser"
+  val domain = "@GNET.global.vpn"
+
   object loggedInUser extends SessionVar[Box[User]](checkForUserCookie)
   override def dbIndexes = UniqueIndex(email) :: UniqueIndex(username) :: super.dbIndexes
   override def fieldOrder = List(id, name, email)
   def loggedIn_? = !loggedInUser.is.isEmpty
   def login(user: User) = loggedInUser(Full(user))
   def logout() = loggedInUser(Empty)
-  def forEmail(email: String): Box[User] = find(By(User.email, email.toLowerCase))
+
+  @deprecated def forEmail(email: String): Box[User] = find(By(User.email, email.toLowerCase))
   // todo remove, and uses
-  def forEmailOrCreate(email: String): Box[User] = forEmail(email) match {
+  @deprecated def forEmailOrCreate(email: String): Box[User] = forEmail(email) match {
     case existing @ Full(_) => existing 
     case _ => 
       val placeholder = User.create
       placeholder.email(email)
       placeholder.name(StringUtil nameFromEmail email)
+      placeholder.active(true)
       placeholder asValid match {
         case Full(u) => 
           u.save
@@ -55,6 +60,16 @@ object User extends User with LongKeyedMetaMapper[User] {
         case _ => Empty // TODO if invalid email, use Unknown Author special user.
       }
   }
+
+  def forUsernameOrCreate(username: String): Box[User] = {
+    find(By(User.username, username + domain)) match {
+      case Full(user) =>
+        Full(user)
+      case _ =>
+        UserLookup.lookup(Some(username), None, None, Environment.env.directory)
+    }
+  }
+
   def saveUserCookie() {
     loggedInUser.is match {
       case Full(u) => S.addCookie(HTTPCookie(docRegUserCookie, u.id.is.toString).setMaxAge(3600 * 24 * 365).setPath("/"))

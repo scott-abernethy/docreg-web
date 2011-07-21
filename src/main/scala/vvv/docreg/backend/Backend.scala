@@ -32,9 +32,8 @@ trait BackendComponent {
 }
 
 trait BackendComponentImpl extends BackendComponent {
-  this: DocumentServerComponent with AgentComponent =>
+  this: DocumentServerComponent with AgentComponent with DirectoryComponent =>
   val backend = new Backend with Loggable {
-  val directory = new DirectoryImpl()
 
   val product = ProjectProps.get("project.name") openOr "drw"
   val version = ProjectProps.get("project.version") openOr "0.0"

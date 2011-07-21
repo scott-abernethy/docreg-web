@@ -18,14 +18,14 @@ object UserLookup extends UserLookup with LongKeyedMetaMapper[UserLookup] with L
 
   val unknownUserAttributes = UserAttributes("unknown.docreg", "unknown@docreg.x", "[Unknown]")
   val systemUserAttributes = UserAttributes("system.docreg", "system@docreg.x", "[System]")
-  lazy val unknownUser = fromAttributes(unknownUserAttributes)
+  lazy val unknownUser = fromAttributes(unknownUserAttributes, false)
 
   def installDefaults() {
     install(Some("smite"), None, Some("System"), systemUserAttributes)
   }
 
   def install(usernameOption: Option[String], emailOption: Option[String], nameOption: Option[String], userAttributes: UserAttributes) {
-    fromAttributes(userAttributes) match {
+    fromAttributes(userAttributes, false) match {
       case Full(user) => createLookup(usernameOption, emailOption, nameOption, Some(user))
       case _ => logger.error("Failed to install lookup")
     }
@@ -83,12 +83,12 @@ object UserLookup extends UserLookup with LongKeyedMetaMapper[UserLookup] with L
     for {
       input <- inputOption
       foundUserAttributes <- lookup(input)
-      user <- fromAttributes(foundUserAttributes)
+      user <- fromAttributes(foundUserAttributes, true)
     } yield user
   }
 
   // todo move to User?
-  def fromAttributes(attributes: UserAttributes): Box[User] = {
+  def fromAttributes(attributes: UserAttributes, active: Boolean): Box[User] = {
     // todo put back to find via username when other email dependant user creation tasks have gone.
     User.find(
       By(User.email, attributes.mail)
@@ -96,7 +96,7 @@ object UserLookup extends UserLookup with LongKeyedMetaMapper[UserLookup] with L
       case Full(existing) =>
         Full(existing)
       case _ =>
-        val created = User.create.name(attributes.displayName).email(attributes.mail).username(attributes.userName)
+        val created = User.create.name(attributes.displayName).email(attributes.mail).username(attributes.userName).active(active)
         created.save
         Full(created)
     }

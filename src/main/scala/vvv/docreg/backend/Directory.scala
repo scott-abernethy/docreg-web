@@ -3,6 +3,7 @@ package vvv.docreg.backend
 import net.liftweb.ldap._
 import javax.naming.directory._
 import net.liftweb.common.{Full, Failure, Empty, Box}
+import vvv.docreg.model.User
 
 /*
 https://wiki.shibboleth.net/confluence/display/SHIB2/IdPADConfigIssues
@@ -27,6 +28,10 @@ trait Directory {
   def findFromMail(mailUserName: String): Box[UserAttributes]
   def findFromUserName(userName: String): Box[UserAttributes]
   def findFromPartialName(partialName: String): Box[UserAttributes]
+}
+
+trait DirectoryComponent {
+  val directory: Directory
 }
 
 class DirectoryImpl extends LDAPVendor with Directory {
@@ -60,7 +65,7 @@ class DirectoryImpl extends LDAPVendor with Directory {
   }
 
   def findFromUserName(userName: String): Box[UserAttributes] = {
-    find("userPrincipalName=" + userName + "@GNET.global.vpn")
+    find("userPrincipalName=" + userName + User.domain)
   }
   
   def find(filter: String): Box[UserAttributes] = {
@@ -85,4 +90,8 @@ class DirectoryImpl extends LDAPVendor with Directory {
         )
     }
   }
+}
+
+trait DirectoryComponentImpl extends DirectoryComponent {
+  val directory = new DirectoryImpl
 }
