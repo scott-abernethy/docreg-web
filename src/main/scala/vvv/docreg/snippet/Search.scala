@@ -12,15 +12,18 @@ import js._
 import JsCmds._
 import _root_.net.liftweb.http.js.jquery.JqJsCmds._
 import _root_.net.liftweb.http.js.JE.JsRaw
-import vvv.docreg.model.{FilteredDocument,Document}
 import vvv.docreg.helper.ProjectSelection
 import vvv.docreg.comet._
+import vvv.docreg.model.{User, FilteredDocument, Document}
 
 class Search extends Loggable with ProjectSelection {
   object searchInput extends SessionVar("")
   def input(xhtml: NodeSeq): NodeSeq = {
-    bind("search", xhtml, 
-      "form" -> form _)
+    if (User.loggedIn_?) {
+      bind("search", xhtml, "form" -> form _)
+    } else {
+      NodeSeq.Empty
+    }
   }
   def form(xhtml: NodeSeq): NodeSeq = {
     bind("search", xhtml,
