@@ -39,9 +39,14 @@ class User extends Loggable {
   }
 
   def doSignIn(u: vvv.docreg.model.User) {
+    val uri = User.requestUri.is match {
+      case Some(x) => x
+      case _ => "/"
+    }
+    User.requestUri(None)
     User.login(u)
     S.notice("Welcome " + u.displayName)
-    S.redirectTo("/", () => (User.saveUserCookie))
+    S.redirectTo(uri, () => (User.saveUserCookie))
   }
 
   def signOut(in: NodeSeq): NodeSeq = {

@@ -38,6 +38,8 @@ object User extends User with LongKeyedMetaMapper[User] {
   val domain = "@GNET.global.vpn"
 
   object loggedInUser extends SessionVar[Box[User]](checkForUserCookie)
+  object requestUri extends SessionVar[Option[String]](None)
+  
   override def dbIndexes = UniqueIndex(email) :: UniqueIndex(username) :: super.dbIndexes
   override def fieldOrder = List(id, name, email)
   def loggedIn_? = !loggedInUser.is.isEmpty

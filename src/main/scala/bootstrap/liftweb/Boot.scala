@@ -26,7 +26,11 @@ class Boot {
     // where to search snippet
     LiftRules.addToPackages("vvv.docreg")
 
-    val loggedIn = If(() => User.loggedIn_?, () => RedirectResponse("/user/signin"))
+    def loginRedirect = {
+      User.requestUri(Some(S.uri))
+      RedirectResponse("/user/signin")
+    }
+    val loggedIn = If(() => User.loggedIn_?, loginRedirect _)
 
     // Build SiteMap
     val entries: List[ConvertableToMenu] = List(
