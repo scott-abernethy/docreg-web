@@ -19,9 +19,10 @@ object RevisionTestSpecs extends Specification {
     }
     "not dirty itself when comment set but not changed" >> {
       TestDbVendor.initAndClean()
+      val (u1, _) = TestDbVendor.createUsers
       val d = Document.create.key("0567").title("Foo bar 2")
       d.save
-      val x: Revision = Revision.create.document(d).version(1).filename("lalala.txt").author("me").date(new Date).comment("foobarbaz")
+      val x: Revision = Revision.create.document(d).version(1).filename("lalala.txt").author(u1).date(new Date).comment("foobarbaz")
       x.save
 
       x.dirty_? must beFalse

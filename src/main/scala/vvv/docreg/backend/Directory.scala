@@ -60,8 +60,8 @@ class DirectoryImpl extends LDAPVendor with Directory {
     find("displayName=" + partialName.replaceAll(" ", "*") + "")
   }
 
-  def findFromMail(mailUserName: String): Box[UserAttributes] = {
-    find("mail=" + mailUserName + "@aviatnet.com")
+  def findFromMail(mail: String): Box[UserAttributes] = {
+    find("mail=" + mail)
   }
 
   def findFromUserName(userName: String): Box[UserAttributes] = {

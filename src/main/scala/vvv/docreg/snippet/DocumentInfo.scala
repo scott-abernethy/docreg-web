@@ -250,7 +250,7 @@ class DocumentSnippet extends Loggable {
   }
 
   def processRequestApproval(d: Document, r: Revision) = {
-    selected.is.map(User.forEmailOrCreate(_) openOr null).filterNot(_ == null) match {
+    selected.is.map(s => UserLookup.lookup(None, Some(s), None, Environment.env.directory) openOr null).filterNot(_ == null) match {
       case Nil =>
         S.warning("Approval request with no users!")     
       case xs  =>

@@ -26,11 +26,12 @@ object DocumentTestSpecs extends Specification {
     }
     "create next version file name" in {
       TestDbVendor.initAndClean()
+      val (u1, u2) = TestDbVendor.createUsers
       val p = Project.create.name("Cthulhu")
       p.save
       val d: Document = Document.create.key("234").project(p).title("The Nameless City").editor("H P Lovecraft").access("Forbidden")
       d.save
-      val r4 = Revision.create.document(d).version(4).filename("foo.txt").author("Unknown").date(new Date()).comment("hmmm")
+      val r4 = Revision.create.document(d).version(4).filename("foo.txt").author(u2).date(new Date()).comment("hmmm")
       r4.save
 
       d.nextFileName("youyoui.odt") must be_==("0234-005-The Nameless City.odt")

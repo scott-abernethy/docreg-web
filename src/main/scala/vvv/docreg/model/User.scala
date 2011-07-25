@@ -44,23 +44,6 @@ object User extends User with LongKeyedMetaMapper[User] {
   def login(user: User) = loggedInUser(Full(user))
   def logout() = loggedInUser(Empty)
 
-  @deprecated def forEmail(email: String): Box[User] = find(By(User.email, email.toLowerCase))
-  // todo remove, and uses
-  @deprecated def forEmailOrCreate(email: String): Box[User] = forEmail(email) match {
-    case existing @ Full(_) => existing 
-    case _ => 
-      val placeholder = User.create
-      placeholder.email(email)
-      placeholder.name(StringUtil nameFromEmail email)
-      placeholder.active(true)
-      placeholder asValid match {
-        case Full(u) => 
-          u.save
-          Full(u)
-        case _ => Empty // TODO if invalid email, use Unknown Author special user.
-      }
-  }
-
   def forUsernameOrCreate(username: String): Box[User] = {
     find(By(User.username, username + domain)) match {
       case Full(user) =>
