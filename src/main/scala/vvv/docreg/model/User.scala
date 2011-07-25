@@ -34,7 +34,7 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
 }
 
 object User extends User with LongKeyedMetaMapper[User] {
-  val docRegUserCookie = "DocRegUser"
+  val docRegUserCookie = "DocRegWebUser"
   val domain = "@GNET.global.vpn"
 
   object loggedInUser extends SessionVar[Box[User]](checkForUserCookie)
