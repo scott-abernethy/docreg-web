@@ -5,13 +5,14 @@ import net.liftweb.util.Props
 import net.liftweb.http.LiftRules
 import net.liftweb.mapper._
 import vvv.docreg.model._
-import java.sql.Connection
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import net.liftweb.common.{Failure, Empty, Full, Box}
+import java.sql.{DriverManager, Connection}
 
 trait DbVendor {
   def init() {
-    val cm = new PooledConnectionManager
+//    val cm = new PooledConnectionManager
+    val cm = LiftWikiConnectionVendor
     DB.defineConnectionManager(DefaultConnectionIdentifier, cm)
     LiftRules.unloadHooks.append(cm.close _)
 
@@ -62,5 +63,64 @@ class PooledConnectionManager extends ConnectionManager {
   def close() {
     pool.close()
   }
+}
+
+// Stolen from http://www.assembla.com/spaces/liftweb/wiki/Mapper
+object LiftWikiConnectionVendor extends ConnectionManager {
+  private var pool: List[Connection] = Nil
+  private var poolSize = 0
+  private val maxPoolSize = 4
+  lazy val driver = Props.get("db.driver") openOr "org.h2.Driver"
+  lazy val url = Props.get("db.url") openOr "jdbc:h2:mem:random"
+
+  private def createOne: Box[Connection] = try {
+    Class.forName(driver)
+
+    val dm = (Props.get("db.user"), Props.get("db.password")) match {
+      case (Full(user), Full(pwd)) =>
+        DriverManager.getConnection(url, user, pwd)
+      case _ => DriverManager.getConnection(url)
+    }
+
+    Full(dm)
+  } catch {
+    case e: Exception => e.printStackTrace; Empty
+  }
+
+  def newConnection(name: ConnectionIdentifier): Box[Connection] =
+    synchronized {
+      pool match {
+        case Nil if poolSize < maxPoolSize =>
+          val ret = createOne
+          poolSize = poolSize + 1
+          ret.foreach(c => pool = c :: pool)
+          ret
+
+        case Nil => wait(1000L); newConnection(name)
+        case x :: xs => try {
+          x.setAutoCommit(false)
+          Full(x)
+        } catch {
+          case e => try {
+            pool = xs
+            poolSize = poolSize - 1
+            x.close
+            newConnection(name)
+          } catch {
+            case e => newConnection(name)
+          }
+        }
+      }
+    }
+
+  def releaseConnection(conn: Connection): Unit = synchronized {
+    pool = conn :: pool
+    notify
+  }
+
+  def close() {
+    // ?
+  }
+
 }
 
