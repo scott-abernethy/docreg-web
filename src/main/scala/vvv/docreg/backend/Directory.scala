@@ -4,7 +4,7 @@ import net.liftweb.ldap._
 import javax.naming.directory._
 import net.liftweb.common.{Full, Failure, Empty, Box}
 import vvv.docreg.model.User
-
+import vvv.docreg.util.StringUtil.ValidEmail
 /*
 https://wiki.shibboleth.net/confluence/display/SHIB2/IdPADConfigIssues
 http://download.oracle.com/javase/jndi/tutorial/ldap/referral/jndi.html
@@ -64,8 +64,14 @@ class DirectoryImpl extends LDAPVendor with Directory {
     find("mail=" + mail)
   }
 
-  def findFromUserName(userName: String): Box[UserAttributes] = {
-    find("userPrincipalName=" + userName + User.domain)
+  def findFromUserName(userName: String): Box[UserAttributes] =
+  {
+    val u = userName match
+    {
+      case ValidEmail(name) => name.replaceAll(".", "")
+      case other => other
+    }
+    find("userPrincipalName=" + u + User.domain)
   }
   
   def find(filter: String): Box[UserAttributes] = {
