@@ -8,6 +8,7 @@ import Helpers._
 import http._
 import provider.HTTPCookie
 import vvv.docreg.util.{Environment, StringUtil}
+import vvv.docreg.util.StringUtil.ValidEmail
 
 // http://www.assembla.com/wiki/show/liftweb/How_to_use_Container_Managed_Security
 // http://wiki.eclipse.org/Jetty/Tutorial/JAAS#LdapLoginModule
@@ -30,6 +31,15 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
   def subscribed_?(d: Document) = Subscription.forDocumentBy(d, this).nonEmpty
 
   def displayName = name.is
+
+  def shortUsername(): String =
+  {
+    username.is match {
+      case ValidEmail(name) => name
+      case other => other
+    }
+  }
+
   def profileLink = <a href={"/user/" + id + "/profile"}>{displayName}</a>
 }
 

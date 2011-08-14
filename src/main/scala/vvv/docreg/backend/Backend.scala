@@ -71,7 +71,7 @@ trait BackendComponentImpl extends BackendComponent {
             },
             comment,
             product,
-            user.username.is)
+            user.shortUsername())
           if (done) logger.info("Approval processed") else logger.warn("Approval rejected for " + r + " by " + user + " to " + state)
 
         case ApprovalRequested(d, r, users) =>
@@ -93,7 +93,7 @@ trait BackendComponentImpl extends BackendComponent {
 
         case Edit(d, user) =>
           // todo should this be username?
-          agent.edit(d.latest.filename, user.displayName)
+          agent.edit(d.latest.filename, user.shortUsername())
           logger.info("Edit request sent")
 
         case Unedit(d, user) =>
@@ -108,7 +108,7 @@ trait BackendComponentImpl extends BackendComponent {
         case Submit(d, localFile, userFileName, comment, user) =>
           // todo check revision is latest?
           try {
-            agent.registerCopySubmit(localFile, d.nextFileName(userFileName), d.projectName, d.access.is, user.username, user.host.is, comment)
+            agent.registerCopySubmit(localFile, d.nextFileName(userFileName), d.projectName, d.access.is, user.shortUsername(), user.host.is, comment)
           } catch {
             case a => logger.warn("Submit failed " + a)
             a.printStackTrace()
