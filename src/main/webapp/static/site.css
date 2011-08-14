@@ -12,6 +12,9 @@ a:hover {
   color: #fff;
   background-color: #369;
 }
+h1 sup {
+  font-size: 0.4em;
+}
 #loading {
   background-color: #f9e5ec;
   border-bottom-left-radius: 8px 8px;
