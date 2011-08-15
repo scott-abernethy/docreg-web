@@ -1,13 +1,8 @@
 package vvv.docreg.util
 
 import org.specs._
-import org.specs.runner.JUnit4
-import org.specs.runner.ConsoleRunner
 import org.specs.matcher._
 import org.specs.specification._
-
-class StringUtilTestSpecsAsTest extends JUnit4(StringUtilTestSpecs)
-object StringUtilTestSpecsRunner extends ConsoleRunner(StringUtilTestSpecs)
 
 object StringUtilTestSpecs extends Specification {
   "StringUtil" should {

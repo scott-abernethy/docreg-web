@@ -92,14 +92,12 @@ trait BackendComponentImpl extends BackendComponent {
             logger.warn("Unsubscribe request rejected for " + d + " by " + user)
 
         case Edit(d, user) =>
-          // todo should this be username?
           agent.edit(d.latest.filename, user.shortUsername())
           logger.info("Edit request sent")
 
         case Unedit(d, user) =>
-          // todo should this be username?
           try {
-            agent.unedit(d.latest.filename, user.displayName)
+            agent.unedit(d.latest.filename, user.shortUsername())
           } catch { /* An IOException means there was no reply from the sent request.
                        This is what we want since there is no reply from an UNEDIT_RQST. */
             case e: IOException => logger.info("Unedit request sent")
@@ -141,7 +139,7 @@ trait BackendComponentImpl extends BackendComponent {
 
       reconcile.revisions.foreach{createRevision(document, _)}
       applyApprovals(document, reconcile.approvals)
-      reconcile.subscriptions.foreach{createSubscription(document, _)}
+      updateSubscriptions(document, reconcile.subscriptions)
       
       documentServer ! DocumentAdded(document)
       }
@@ -176,14 +174,6 @@ trait BackendComponentImpl extends BackendComponent {
     }
   }
 
-  private def createSubscription(document: Document, s: AgentSubscriber): Subscription = {
-    val subscription = Subscription.create
-    subscription.document(document)
-    assignSubscription(subscription, s)
-    subscription.save
-    subscription
-  }
-
   private def updateDocument(document: Document, reconcile: Reconcile) {
     DB.use(DefaultConnectionIdentifier) { c =>
     updateRevisions(document, reconcile.revisions)
@@ -216,15 +206,6 @@ trait BackendComponentImpl extends BackendComponent {
     revision.comment(r.getComment)
   }
 
-  private def assignSubscription(subscription: Subscription, s: AgentSubscriber) {
-    val emailOption: Option[String] = Option(s.getSubscriberEmail).flatMap(e => UserMigration.migrateEmail(e.toLowerCase))
-
-    UserLookup.lookup(Some(s.getSubscriberUserName()), emailOption, None, directory) match {
-      case Full(u) => subscription.user(u)
-      case _ => logger.error("Failed to assign subscription for " + s)
-    }
-  }
-
   private def updateRevisions(document: Document, revisions: List[AgentRevision]) {
     revisions.foreach { r =>
       document.revision(r.getVersion) match {
@@ -241,21 +222,29 @@ trait BackendComponentImpl extends BackendComponent {
     }
   }
 
-  private def updateSubscriptions(document: Document, subscriptions: List[AgentSubscriber]) {
-    subscriptions.foreach { s =>
-      val subscriber = for {
-        u <- UserLookup.lookup(Some(s.getSubscriberUserName), Some(s.getSubscriberEmail), None, directory)
-        s <- document.subscriber(u)
-      } yield s 
-      subscriber match {
-        case Full(subscription) =>
-          assignSubscription(subscription, s)
-          if (subscription.dirty_?) {
-            subscription.save
-          }
-        case _ =>
-          val latest = createSubscription(document, s)
-      }
+  def updateSubscriptions(document: Document, subscriptions: List[AgentSubscriber])
+  {
+    val subscribers: List[User] = for {
+      s <- subscriptions
+      u <- UserLookup.lookup(Some(s.getSubscriberUserName), Some(s.getSubscriberEmail), None, directory)
+    } yield u
+
+    val listed = subscribers.distinct.toSet
+    val existing = document.subscribers.toSet
+    val remove = existing.diff(listed)
+    val create = listed.diff(existing)
+
+    for (u <- create)
+    {
+      val subscription = Subscription.create
+      subscription.document(document)
+      subscription.user(u)
+      subscription.save
+    }
+
+    for (u <- remove; s <- Subscription.find(By(Subscription.document, document), By(Subscription.user, u)))
+    {
+      s.delete_!
     }
   }
 

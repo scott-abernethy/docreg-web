@@ -34,11 +34,12 @@ object UserLookup extends UserLookup with LongKeyedMetaMapper[UserLookup] with L
   def lookup(usernameOption: Option[String], emailOption: Option[String], nameOption: Option[String], directory: Directory): Box[User] = {
     if (usernameOption.isEmpty && emailOption.isEmpty && nameOption.isEmpty) return Failure("Invalid input")
     
-    UserLookup.find(
+    val existing = UserLookup.find(
       By(UserLookup.username, usernameOption.getOrElse("")),
       By(UserLookup.email, emailOption.getOrElse("")),
       By(UserLookup.name, nameOption.getOrElse(""))
-    ) match {
+    )
+    existing match {
       case Full(record) =>
         //logger.debug((usernameOption :: emailOption :: nameOption :: Nil) + " *** " + (record.user.map(_.username.is) :: record.user.map(_.email.is) :: record.user.map(_.name.is) :: Nil))
         record.user

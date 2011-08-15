@@ -64,6 +64,7 @@ class Boot {
 //      new Html5Properties(r.userAgent))    
 
     // Make a transaction span the whole HTTP request
+    // todo
     S.addAround(DB.buildLoanWrapper)
 
     LiftRules.ajaxStart = Full( () => LiftRules.jsArtifacts.show("loading").cmd )
