@@ -35,7 +35,7 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
   def shortUsername(): String =
   {
     username.is match {
-      case ValidEmail(name) => name
+      case ValidEmail(name, domain) => name
       case other => other
     }
   }

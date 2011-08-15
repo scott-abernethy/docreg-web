@@ -1,10 +1,11 @@
 package vvv.docreg.util
 
 import java.util.regex._
+import util.matching.Regex
 
 object StringUtil {
-  val ValidEmail = """([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})""".r
-  val FileName = """.*\.(.+)""".r
+  val ValidEmail: Regex = """([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})""".r
+  val FileName: Regex = """.*\.(.+)""".r
 
   def nameFromEmail(email: String): String = {
     email indexOf '@' match {
