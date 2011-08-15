@@ -68,8 +68,10 @@ class DirectoryImpl extends LDAPVendor with Directory {
   {
     val u = userName match
     {
-      case ValidEmail(name, domain) => name.replaceAll(".", "")
-      case other => other
+      case ValidEmail(name, domain) =>
+        name.replaceAll("\\.", "")
+      case other =>
+        other
     }
     find("userPrincipalName=" + u + User.domain)
   }
