@@ -19,8 +19,10 @@ import vvv.docreg.db.DbVendor
  * A class that's instantiated early and run.  It allows the application
  * to modify lift's environment
  */
-class Boot {
-  def boot {
+class Boot
+{
+  def boot
+  {
     DbVendor.init()
 
     // where to search snippet
@@ -62,10 +64,6 @@ class Boot {
     // Use HTML5 for rendering
 //    LiftRules.htmlProperties.default.set((r: Req) =>
 //      new Html5Properties(r.userAgent))    
-
-    // Make a transaction span the whole HTTP request
-    // todo
-    S.addAround(DB.buildLoanWrapper)
 
     LiftRules.ajaxStart = Full( () => LiftRules.jsArtifacts.show("loading").cmd )
     LiftRules.ajaxEnd = Full( () => LiftRules.jsArtifacts.hide("loading").cmd )

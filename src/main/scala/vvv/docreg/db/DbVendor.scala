@@ -11,8 +11,8 @@ import java.sql.{DriverManager, Connection}
 
 trait DbVendor {
   def init() {
-//    val cm = new PooledConnectionManager
-    val cm = LiftWikiConnectionVendor
+    val cm = new PooledConnectionManager
+//    val cm = LiftWikiConnectionVendor
     DB.defineConnectionManager(DefaultConnectionIdentifier, cm)
     LiftRules.unloadHooks.append(cm.close _)
 
