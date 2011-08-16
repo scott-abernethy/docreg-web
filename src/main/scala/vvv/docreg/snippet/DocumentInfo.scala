@@ -83,7 +83,7 @@ class DocumentSnippet extends Loggable {
     if (d.editor.is == null)//If no one is editing, current user has the option to edit
       <li>{ SHtml.a(() => { processEdit(d, u); JsCmds.RedirectTo(d.latest.link) }, <span>Edit</span>)  }</li>
     else {
-      if (d.editor.is == u.displayName) {  //If current user is editing, they can either submit changes or cancel
+      if (d.editor.is == u.shortUsername()) {  //If current user is editing, they can either submit changes or cancel
         <li><a href={d.latest.info + "/submit"}>Submit...</a></li> ++
         <li>{ SHtml.a(() => { processUnedit(d, u); JsCmds._Noop }, <span>Cancel Edit</span>) }</li>
       }
