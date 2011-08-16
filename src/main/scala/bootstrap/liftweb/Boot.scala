@@ -65,6 +65,10 @@ class Boot
 //    LiftRules.htmlProperties.default.set((r: Req) =>
 //      new Html5Properties(r.userAgent))    
 
+    // Make a transaction span the whole HTTP request
+    // todo
+    S.addAround(DB.buildLoanWrapper)
+
     LiftRules.ajaxStart = Full( () => LiftRules.jsArtifacts.show("loading").cmd )
     LiftRules.ajaxEnd = Full( () => LiftRules.jsArtifacts.hide("loading").cmd )
 
