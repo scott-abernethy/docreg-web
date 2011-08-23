@@ -26,7 +26,14 @@ object DaemonProtocol extends Loggable
 
   def nextTransactionId(): Int =
   {
-    transactionId = transactionId + 1
+    if (transactionId < (Int.MaxValue - 1))
+    {
+      transactionId = transactionId + 1
+    }
+    else
+    {
+      transactionId = 0
+    }
     transactionId
   }
 
