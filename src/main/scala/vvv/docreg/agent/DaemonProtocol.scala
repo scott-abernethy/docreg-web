@@ -11,9 +11,17 @@ import org.jboss.netty.handler.codec.oneone.{OneToOneDecoder, OneToOneEncoder}
 import net.liftweb.common.Loggable
 import java.nio.charset.Charset
 import actors.Actor
+import com.hstx.docregsx.Document
+import java.text.DecimalFormat
 
 object DaemonProtocol extends Loggable
 {
+  implicit def documentInfoToAgentDocument(d: DocumentInfo): Document =
+  {
+    val line = new DecimalFormat("0000").format(d.key) :: new DecimalFormat("0000").format(d.version) :: d.fileName :: d.projectName :: d.title :: d.description :: d.access :: d.author :: d.date :: d.server :: d.client :: d.editor :: d.editorStart :: Nil
+    new Document(line.mkString("\t"))
+  }
+
   var transactionId: Int = 0
 
   def nextTransactionId(): Int =
