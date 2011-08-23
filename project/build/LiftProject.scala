@@ -14,6 +14,7 @@ class LiftProject(info: ProjectInfo) extends DefaultWebProject(info) with IdeaPr
     "net.liftweb" %% "lift-webkit" % liftVersion % "compile",
     "net.liftweb" %% "lift-mapper" % liftVersion % "compile",
     "net.liftweb" %% "lift-ldap" % liftVersion % "compile",
+    "org.jboss.netty" % "netty" % "3.2.3.Final",
     "log4j" % "log4j" % "1.2.16",
     "org.slf4j" % "slf4j-log4j12" % "1.6.1",
     "org.mortbay.jetty" % "jetty" % "6.1.22" % "test",
