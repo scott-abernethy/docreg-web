@@ -10,7 +10,7 @@ import js._
 import scala.xml.{NodeSeq, Text}
 import vvv.docreg.util.{Environment, StringUtil}
 
-class User extends Loggable {
+class UserSnippet extends Loggable {
   val signInHint = ""
   object username extends RequestVar(signInHint)
 
