@@ -55,7 +55,7 @@ class Search extends Loggable with ProjectSelection {
         "project" -> d.projectName,
         "author" -> d.latest.authorLink,
         "key_link" -> <a href={d.latest.link}>{d.key}</a>,
-        "date" -> d.latest.date,
+        "date" -> d.latest.dateOnly,
         "title" -> <a href={d.infoLink}>{d.title}</a>))
   }
   override def projectSelectionUpdate(): JsCmd = {

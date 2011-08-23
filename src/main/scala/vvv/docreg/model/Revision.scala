@@ -22,6 +22,12 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
   }
   object comment extends MappedTextarea(this, 512)
   def when: String = DatePresentation.short(date.is)
+
+  def dateOnly(): String =
+  {
+    DatePresentation.dayF.format(date.is)
+  }
+
   def info: String = "/d/" + (document.obj.map(_.key.is) openOr "?") + "/v/" + version
   def link: String = "/d/" + (document.obj.map(_.key.is) openOr "?") + "/v/" + version + "/download"
   def fullTitle: String = (document.obj.map(_.key.is) openOr "?") + "-" + version.is + ": " + (document.obj.map(_.title.is) openOr "?")

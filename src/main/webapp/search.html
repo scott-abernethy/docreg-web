@@ -22,24 +22,26 @@
       </div>
     </div>
 
-    <div class="span-16 last">
+    <div class="span-18 last">
       <lift:snippet type="Search.results">
         <div id="search_results">
-        <table>
+        <table class="baseline-align-cells" cellspacing="0" border-collapse="collapse">
+          <thead>
           <tr>
-            <th>Project</th>
-            <th>Doc</th>
+            <th class="span-3">Project</th>
+            <th class="span-1">Doc</th>
             <th>Title</th>
-            <th>Author</th>
-            <th>Date</th>
+            <th class="span-3">Author</th>
+            <th class="span-3">Revised</th>
           </tr>
+          </thead>
           <search:result>
             <tr>
-              <td><doc:project/></td>
-              <td class="nowrap"><doc:key_link/></td>
-              <td><doc:title/></td>
-              <td class="nowrap"><doc:author/></td>
-              <td class="nowrap"><doc:date/></td>
+              <td class="border-top"><doc:project/></td>
+              <td class="border-top"><doc:key_link/></td>
+              <td class="border-top"><doc:title/></td>
+              <td class="border-top"><doc:author/></td>
+              <td class="border-top"><doc:date/></td>
             </tr>
           </search:result>
         </table>
