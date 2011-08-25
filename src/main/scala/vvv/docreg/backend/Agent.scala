@@ -4,7 +4,7 @@ import actors.Actor
 import com.hstx.docregsx.{Document, UpdateListener, FileList}
 import scala.collection.JavaConversions._
 import java.io.File
-import vvv.docreg.agent.ChangePoller
+import vvv.docreg.agent.{DaemonAgentImpl, DaemonAgent, ChangePoller}
 
 case class Loaded(ds: List[Document])
 case class Updated(d: Document)
@@ -71,7 +71,7 @@ class WrappedAgent(version: String, val server: String, user: String, val backen
       // Do nothing, as change poller takes care of this now.
     }
   }
-  new ChangePoller(server, backend).start() ! 'Reset
+  new ChangePoller(server, backend, new DaemonAgentImpl().start).start() ! 'Reset
   val library = new FileList(server, this)
   library.addUpdateListener(updateListener)
 }

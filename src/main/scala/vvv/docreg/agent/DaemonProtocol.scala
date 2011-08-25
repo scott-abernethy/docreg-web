@@ -175,6 +175,8 @@ class DaemonProtocolHandler(consumer: Actor) extends SimpleChannelUpstreamHandle
   }
 }
 
+
+
 case class DownstreamMessage(message: Messages.Type, body: (ChannelBuffer) => Unit)
 
 case class Header(version: Int, message: Messages.Type, transactionId: Int, sequence: Int)

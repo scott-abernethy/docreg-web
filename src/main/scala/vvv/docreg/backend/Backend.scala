@@ -13,6 +13,8 @@ import _root_.net.liftweb.common._
 import java.io.IOException
 import com.hstx.docregsx.{Document => AgentDocument, Revision => AgentRevision, Approval => AgentApproval, Subscriber => AgentSubscriber, ApprovalStatus => AgentApprovalState}
 import vvv.docreg.db.DbVendor
+import vvv.docreg.agent.Changed
+import vvv.docreg.agent.DaemonProtocol.documentInfoToAgentDocument
 
 case class Connect()
 case class Reload(d: Document)
@@ -52,6 +54,9 @@ trait BackendComponentImpl extends BackendComponent {
           ds.foreach(reconciler ! Prepare(_, agent))
 
         case Updated(d) =>
+          priorityReconciler ! Prepare(d, agent)
+
+        case Changed(d) =>
           priorityReconciler ! Prepare(d, agent)
 
         case msg @ Reconcile(d, revisions, approvals, subscriptions) =>
