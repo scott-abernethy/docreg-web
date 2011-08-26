@@ -46,17 +46,26 @@ object ChangePollerTest extends Specification
       val x = new ChangePoller("1.2.3.4", Actor.self, Actor.actor())
       x.start()
 
-      val info: DocumentInfo = DocumentInfo(2, 1, "", "", "", "", "", "", "", "", "", "", "")
+      val a: DocumentInfo = DocumentInfo(5174,193,"5174-193-Performance Review Process Check List.xlsx","Eclipse","Performance Review Process Check List","updated for SC SP group","Everyone","RVann","2011-08-26 16:15:18 Z","boromir","10.15.153.122","","")
+      val a2: DocumentInfo = DocumentInfo(5174,193,"5174-193-Performance Review Process Check List.xlsx","Eclipse","Performance Review Process Check List","updated for SC SP group","Everyone","RVann","2011-08-26 16:15:18 Z","boromir","10.15.153.122","","")
 
-      x ! ChangeReply(null, 1, info)
+      x ! ChangeReply(null, 1, a)
       x !? 'Ping
       receiveWithin(1000)
       {
-        case Changed(d) => d must be_==(info)
+        case Changed(d) => d must be_==(a)
         case _ => fail("Changed msg expected")
       }
 
-      x ! ChangeReply(null, 2, info)
+      x ! ChangeReply(null, 2, a2)
+      x !? 'Ping
+      receiveWithin(1000)
+      {
+        case TIMEOUT =>
+        case other => fail("no msg expected " + other)
+      }
+
+      x ! ChangeReply(null, 2, a2)
       x !? 'Ping
       receiveWithin(1000)
       {

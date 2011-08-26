@@ -63,7 +63,6 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
           lastReply.mark()
           if (changeNumber != lastChangeNumber)
           {
-            logger.info("Change detected in " + documentInfo)
             lastChangeNumber = changeNumber
             lastPoll.zero()
             this ! 'Poll
@@ -71,6 +70,7 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
             // Daemon can repeat last changed document message, so ignore repeats
             if (!lastDocumentInfo.exists(_ == documentInfo))
             {
+              logger.info("Change detected in " + documentInfo)
               lastDocumentInfo = Some(documentInfo)
               consumer ! Changed(documentInfo)
             }
