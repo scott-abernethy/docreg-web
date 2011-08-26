@@ -43,7 +43,7 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
   def profileLink = <a href={"/user/" + id + "/profile"}>{displayName}</a>
 }
 
-object User extends User with LongKeyedMetaMapper[User] {
+object User extends User with LongKeyedMetaMapper[User] with Loggable {
   val docRegUserCookie = "DocRegWebUser"
   val domain = "@GNET.global.vpn"
 
@@ -74,10 +74,11 @@ object User extends User with LongKeyedMetaMapper[User] {
   def checkForUserCookie: Box[User] = {
     S.cookieValue(docRegUserCookie) match {
       case Full(id) =>
-        val existing = User.find(id)
+        val existing: Box[User] = User.find(id)
         existing.foreach { u =>
           u.host(User.parseHost)
           u.save
+          logger.info("User '" + u.displayName + "' started session " + host)
         }
         existing
       case _ =>
@@ -89,7 +90,6 @@ object User extends User with LongKeyedMetaMapper[User] {
       case Full(req: Req) => req.remoteAddr
       case _ => "?"
     }
-    println("????? " + host)
     host
   }
 
