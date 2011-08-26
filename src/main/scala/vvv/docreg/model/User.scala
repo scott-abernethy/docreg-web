@@ -92,4 +92,11 @@ object User extends User with LongKeyedMetaMapper[User] {
     println("????? " + host)
     host
   }
+
+  def sort(a: User, b: User): Boolean =
+  {
+    val x = a.displayName.split(" ").head
+    val y = b.displayName.split(" ").head
+    x.compareToIgnoreCase(y) < 0
+  }
 }

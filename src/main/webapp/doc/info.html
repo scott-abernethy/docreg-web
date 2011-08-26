@@ -5,10 +5,29 @@
     <title>?</title>
   </head>
   <body class="lift:content_id=main">
-    <div id="main" class="lift:surround?with=no-sidebar;at=content">
+    <div id="main" class="lift:surround?with=default;at=body_content">
 
-  <lift:snippet type="DocumentSnippet:info">
-    <script type="text/javascript">                                         
+      <lift:snippet type="DocumentSnippet:info">
+
+      <div class="column span-5 colborder">
+          <h4>Actions</h4>
+          <ul>
+            <li><doc:link>Download</doc:link></li>
+            <div id="submission"><doc:submissions/></div>
+            <li><doc:approve>Approve...</doc:approve></li>
+            <li><doc:request-approval>Request Approval...</doc:request-approval></li>
+            <li><doc:subscribe/></li>
+          </ul>
+          <hr class="space"/>
+          <h4>Subscribers</h4>
+          <ul id="subscribers">
+            <doc:subscriber/>
+          </ul>
+      </div>
+
+      <div class="column span-18 last">
+
+    <script type="text/javascript">
       $(document).ready(function() {
         $("#history tbody").hover(function() {
           $(this).addClass("row-highlight").find(".actions").show();
@@ -19,56 +38,36 @@
     </script>
     <h3><doc:title/></h3>
     <hr/>
-    <div class="span-12">
-      <h4>Information</h4>
-      <table cellpadding="0">
-        <tr><th class="span-3">Project:</th><td class="span-9"><doc:project/></td></tr>
-        <tr><th>Key:</th><td><doc:key/></td></tr>
-        <tr><th>Version:</th><td><doc:version/></td></tr>
-        <tr><th>Updated By:</th><td><doc:author/> @ <doc:revised/></td></tr>
-        <tr><th>Editor:</th><td><doc:editor/></td></tr>
-        <tr><th>Subscribers:</th><td id="subscribers"><doc:subscribers/></td></tr>
-      </table>
-    </div>
-    <div class="span-6 last">
-      <h4>Actions</h4>
-      <ul>
-        <li><doc:link>Download</doc:link></li>
-        <div id="submission"><doc:submissions/></div>
-        <li><doc:approve>Approve...</doc:approve></li>
-        <li><doc:request-approval>Request Approval...</doc:request-approval></li>
-        <li><doc:subscribe/></li>
-      </ul>
-    </div>
-    <hr/>
     <div class="span-18 last">
+      <h4>Project: <doc:project/></h4>
       <h4>Document History</h4>
       <table id="history" class="baseline-align-cells" cellspacing="0" border-collapse="collapse">
         <thead>
           <tr>
-            <th>Version</th>
-            <th>User</th>
-            <th>Action</th>
+            <th class="span-1">Version</th>
+            <th class="span-3">User</th>
+            <th class="span-2">Action</th>
             <th>Comment</th>
-            <th>Date</th>
+            <th class="span-4">Date</th>
           </tr>
         </thead>
+        <doc:editor/>
         <doc:revision>
           <tbody>
             <tr>
-              <td class="border-top nowrap"><rev:link/></td>
-              <td class="border-top nowrap"><rev:author/></td>
-              <td class="border-top nowrap"><span class="revision">Submit</span></td>
+              <td class="border-top"><rev:link/></td>
+              <td class="border-top"><rev:author/></td>
+              <td class="border-top"><span class="revision">Submit</span></td>
               <td class="border-top quiet"><rev:comment/></td>
-              <td class="border-top nowrap"><rev:date/></td>
+              <td class="border-top"><rev:date/></td>
             </tr>
             <rev:approvals>
               <tr>
-                <td class="nowrap"></td>
-                <td class="nowrap"><approval:by/></td>
-                <td class="nowrap"><approval:state/></td>
+                <td></td>
+                <td><approval:by/></td>
+                <td><approval:state/></td>
                 <td class="quiet"><approval:comment/></td>
-                <td class="nowrap"><approval:date/></td>
+                <td><approval:date/></td>
               </tr>
             </rev:approvals>
             <tr class="hide actions"><td colspan="5"><span class="quiet"><a rev:download_attr="">Download</a> | <a rev:approve_attr="">Approve...</a> | <a rev:request-approval_attr="">Request Approval...</a></span></td></tr>
@@ -76,7 +75,10 @@
         </doc:revision>
       </table>
     </div>
-  </lift:snippet>
+
+      </div>
+
+        </lift:snippet>
 
     </div>
   </body>

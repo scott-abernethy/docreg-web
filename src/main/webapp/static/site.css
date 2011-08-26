@@ -12,6 +12,7 @@ a:hover {
   color: #fff;
   background-color: #369;
 }
+tbody tr:nth-child(even) td, tbody tr.even td {background-color:transparent;}
 h1 sup {
   font-size: 0.4em;
 }
@@ -96,6 +97,9 @@ h1 sup {
 }
 .revision {
   color: #c62;
+}
+.edit {
+  color: #f31;
 }
 .smalltextarea {
   height: 100px;

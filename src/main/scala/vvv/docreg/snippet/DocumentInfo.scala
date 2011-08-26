@@ -38,7 +38,7 @@ class DocumentSnippet extends Loggable {
     document match {
       case Full(d) => revision match {
         case Full(r) =>
-          // TODO warning if document is being editted!
+          if (d.editor.is != null) S.notice("Document is currently being editted")
           if (!d.latest_?(r.version.is)) S.warning("Not the most recent version of this document")
           op(in, d, r)
         case _ => 
@@ -60,9 +60,9 @@ class DocumentSnippet extends Loggable {
         "link" -> ((in: NodeSeq) => <a href={r.link}>{in}</a>),
         "version" -> r.version,
         "project" -> d.projectName,
-        "editor" -> (if (d.editor.is == null) Text("-") else <span class="highlight">{d.editor.asHtml}</span>),
+        "editor" -> (if (d.editor.is == null) NodeSeq.Empty else <tbody><tr><td class="border-top"><span class="quiet">(Next)</span></td><td class="border-top"><span class="edit">{ d.editor }</span></td><td class="border-top"><span class="edit">Edit</span></td><td class="border-top quiet">(User edit in progress)</td><td class="border-top">-</td></tr></tbody>),
         "submissions" -> submissionLinks(d),
-        "subscribers" -> subscribers(d),
+        "subscriber" -> subscribers(d),
         "revision" -> ((in: NodeSeq) => revisions(in, d, r)),
         "approve" -> ((in: NodeSeq) => <a href={"/d/" + d.key + "/v/" + r.version + "/approve"}>{in}</a>),
         "request-approval" -> ((in: NodeSeq) => <a href={"/d/" + d.key + "/v/" + r.version + "/request-approval"}>{in}</a>),
@@ -129,8 +129,6 @@ class DocumentSnippet extends Loggable {
     }
   }
 
-
-
   private def processSubscribe(d: Document, u: vvv.docreg.model.User) = {
     if (!u.subscribed_?(d)) {
       Subscription.subscribe(d, u)
@@ -144,15 +142,20 @@ class DocumentSnippet extends Loggable {
     }
   }
 
-  private def subscribers(d: Document): NodeSeq = {
-    val subscribers = Subscription.forDocument(d).map(_.user.obj.openOr(null)).filterNot(_ == null)
-    if (subscribers.isEmpty)
-      <span>-</span>
-    else {
-      //sort subscribers by last name before creating list of links
-      val sortedSubscribers = subscribers.sortWith((a, b) => a.displayName.split(" ").last < b.displayName.split(" ").last)
-                                          //must treat this bit as a NodeSeq otherwise the reduceRight doesn't work
-      <span>{ sortedSubscribers.map(s => <a href={ s.profileLink }>{ s.displayName }</a>: NodeSeq).reduceRight((a, b) => a ++ <span>&#44;&nbsp;</span> ++ b) }</span>
+  private def subscribers(d: Document): NodeSeq =
+  {
+    val users: List[User] = d.subscribers.toList
+    users match
+    {
+      case Nil =>
+      {
+        <li>No subscribers</li>
+      }
+      case list =>
+      {
+        for (u <- list.sortWith(User.sort))
+        yield <li><a href={ u.profileLink }>{ u.displayName }</a></li>
+      }
     }
   }
 
