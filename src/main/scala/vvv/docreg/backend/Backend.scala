@@ -14,7 +14,7 @@ import java.io.IOException
 import com.hstx.docregsx.{Document => AgentDocument, Revision => AgentRevision, Approval => AgentApproval, Subscriber => AgentSubscriber, ApprovalStatus => AgentApprovalState}
 import vvv.docreg.db.DbVendor
 import vvv.docreg.agent.Changed
-import vvv.docreg.agent.DaemonProtocol.documentInfoToAgentDocument
+import vvv.docreg.agent.DaemonProtocol
 
 case class Connect()
 case class Reload(d: Document)
@@ -33,39 +33,53 @@ trait BackendComponent {
   val backend: Backend
 }
 
-trait BackendComponentImpl extends BackendComponent {
+trait BackendComponentImpl extends BackendComponent
+{
   this: DocumentServerComponent with AgentComponent with DirectoryComponent =>
-  val backend = new Backend with Loggable {
 
+  val backend = new Backend with Loggable
+  {
   val product = ProjectProps.get("project.name") openOr "drw"
   val version = ProjectProps.get("project.version") openOr "0.0"
   val reconciler = new Reconciler(this).start()
   val priorityReconciler = new Reconciler(this).start()
   var agent: vvv.docreg.backend.Agent = _
 
-  def act() {
-    loop {
-      react {
-        case Connect() => 
+  def act()
+  {
+    loop
+    {
+      react
+      {
+        case Connect() =>
+        {
           logger.info("Starting " + product + " v" + version + " " + java.util.TimeZone.getDefault.getDisplayName)
           agent = createAgent("dr+w " + version, Backend.server, product, self)
-
+        }
         case Loaded(ds) =>
+        {
           ds.foreach(reconciler ! Prepare(_, agent))
-
+        }
         case Updated(d) =>
+        {
           priorityReconciler ! Prepare(d, agent)
-
+        }
         case Changed(d) =>
-          priorityReconciler ! Prepare(d, agent)
-
+        {
+          logger.info("Change received, sending to reconcile " + d.key)
+          priorityReconciler ! Prepare(DaemonProtocol.documentInfoToAgentDocument(d), agent)
+        }
         case msg @ Reconcile(d, revisions, approvals, subscriptions) =>
-          Document.forKey(d.getKey) match {
+        {
+          logger.info("Reconcile " + d.getKey)
+          Document.forKey(d.getKey) match
+          {
             case Full(document) => updateDocument(document, msg)
             case _ => createDocument(msg)
           }
-
+        }
         case ApprovalApproved(d, r, user, state, comment) =>
+        {
           val done = agent.approval(r.filename, 
             user.displayName, 
             user.email.is,
@@ -78,37 +92,43 @@ trait BackendComponentImpl extends BackendComponent {
             product,
             user.shortUsername())
           if (done) logger.info("Approval processed") else logger.warn("Approval rejected for " + r + " by " + user + " to " + state)
-
+        }
         case ApprovalRequested(d, r, users) =>
+        {
           users foreach (this ! ApprovalApproved(d, r, _, ApprovalState.pending, ""))
-
+        }
         case SubscribeRequested(d, user) =>
+        {
           // todo subscribe needs to pass username
           if(agent.subscribe(d.latest.filename, user.email))
             logger.info(user + " has subscribed to " + d)
           else
             logger.warn("Subscribe request rejected for " + d + " by " + user)
-
+        }
         case UnsubscribeRequested(d, user) =>
+        {
           // todo subscribe needs to pass username
           if(agent.unsubscribe(d.latest.filename, user.email))
             logger.info(user + " has unsubscribed from " + d)
           else
             logger.warn("Unsubscribe request rejected for " + d + " by " + user)
-
+        }
         case Edit(d, user) =>
+        {
           agent.edit(d.latest.filename, user.shortUsername())
           logger.info("Edit request sent")
-
+        }
         case Unedit(d, user) =>
+        {
           try {
             agent.unedit(d.latest.filename, user.shortUsername())
           } catch { /* An IOException means there was no reply from the sent request.
                        This is what we want since there is no reply from an UNEDIT_RQST. */
             case e: IOException => logger.info("Unedit request sent")
           }
-
+        }
         case Submit(d, localFile, userFileName, comment, user) =>
+        {
           // todo check revision is latest?
           try {
             agent.registerCopySubmit(localFile, d.nextFileName(userFileName), d.projectName, d.access.is, user.shortUsername(), user.host.is, comment)
@@ -116,8 +136,11 @@ trait BackendComponentImpl extends BackendComponent {
             case a => logger.warn("Submit failed " + a)
             a.printStackTrace()
           }
-
-        case m @ _ => logger.warn("Unrecognised message " + m)
+        }
+        case other =>
+        {
+          logger.warn("Unrecognised message " + other)
+        }
       }
     }
   }

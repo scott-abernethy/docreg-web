@@ -6,18 +6,21 @@ import vvv.docreg.model._
 import com.hstx.docregsx.{Document => AgentDocument, Revision => AgentRevision, Approval => AgentApproval, Subscriber => AgentSubscriber, ApprovalStatus => AgentApprovalState}
 import scala.collection.JavaConversions._
 import scala.actors.Futures._
+import net.liftweb.common.Loggable
 
 case class Prepare(d: AgentDocument, a: Agent)
 
-class Reconciler(private val backend: Backend) extends Actor {
+class Reconciler(private val backend: Backend) extends Actor with Loggable {
   def act() {
     loop {
       receive {
         case Prepare(document, agent) =>
+          logger.info("Preparing " + document.getKey)
           val key = document.getKey
           val revisions = future { agent.loadRevisions(key).toList }
           val approvals = future { agent.loadApprovals(key).toList }
           val subscriptions = future { agent.loadSubscribers(key).toList }
+          // todo what if one of these futures never finishes? react within?
           backend ! Reconcile(document, revisions(), approvals(), subscriptions())
         case _ =>
       }
