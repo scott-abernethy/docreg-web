@@ -37,6 +37,6 @@ object Subscription extends Subscription with LongKeyedMetaMapper[Subscription] 
 
 class Subscription extends LongKeyedMapper[Subscription] with IdPK {
   def getSingleton = Subscription
-  object document extends LongMappedMapper(this, Document)
-  object user extends LongMappedMapper(this, User)
+  object document extends MappedLongForeignKey(this, Document)
+  object user extends MappedLongForeignKey(this, User)
 }

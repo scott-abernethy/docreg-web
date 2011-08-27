@@ -10,7 +10,7 @@ class UserLookup extends LongKeyedMapper[UserLookup] with IdPK {
   object username extends MappedString(this, 64)
   object email extends MappedString(this, 64)
   object name extends MappedString(this, 64)
-  object user extends LongMappedMapper(this, User)
+  object user extends MappedLongForeignKey(this, User)
 }
 
 object UserLookup extends UserLookup with LongKeyedMetaMapper[UserLookup] with Loggable {

@@ -17,7 +17,7 @@ class Dashboard extends Loggable
   def log(in: NodeSeq): NodeSeq = {
     in
   }
-  lazy val indexXhtml = TemplateFinder.findAnyTemplate("index" :: Nil) openOr <div/>
+  lazy val indexXhtml = Templates("index" :: Nil) openOr <div/>
   //lazy val logXhtml = indexXhtml \\ "snippet" filter ( _.attribute("type") == Some(Text("Dashboard.log")) )
   lazy val logXhtml = indexXhtml \\ "surround" \ "div"
   override def projectSelectionUpdate(): JsCmd = {

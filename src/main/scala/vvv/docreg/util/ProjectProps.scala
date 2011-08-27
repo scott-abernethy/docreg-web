@@ -10,7 +10,7 @@ import java.util.Properties
 import scala.collection.JavaConversions._
 
 object ProjectProps {
-  def get(key: String): Box[String] = Box(props.getProperty(key)) 
+  def get(key: String): Box[String] = Box.legacyNullTest(props.getProperty(key))
   lazy val props: Properties = {
     val p = new Properties
     p.setProperty("project.name", "DocReg+Web")

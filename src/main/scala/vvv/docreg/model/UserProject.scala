@@ -7,10 +7,10 @@ import _root_.net.liftweb.common._
 class UserProject extends LongKeyedMapper[UserProject] with IdPK {
   def getSingleton = UserProject
 
-  object user extends LongMappedMapper(this, User) {
+  object user extends MappedLongForeignKey(this, User) {
     override def dbIndexed_? = true
   }
-  object project extends LongMappedMapper(this, Project) {
+  object project extends MappedLongForeignKey(this, Project) {
     override def dbIndexed_? = true
   }
   object selected extends MappedBoolean(this)
