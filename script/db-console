@@ -1,0 +1,2 @@
+#!/bin/bash
+java -cp lib_managed/scala_2.8.1/compile/h2-1.2.147.jar org.h2.tools.Console &

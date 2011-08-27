@@ -1,0 +1,13 @@
+#!/bin/bash
+server_host="webapp-vm01"
+service_name="docreg"
+set -o nounset
+
+abort_check() {
+  if [ $1 != 0 ] ; then
+    echo "Aborted"
+    exit $1
+  fi
+}
+
+ssh $server_host touch /etc/jetty/contexts/$service_name.xml
