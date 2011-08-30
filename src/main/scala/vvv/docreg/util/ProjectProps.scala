@@ -14,7 +14,7 @@ object ProjectProps {
   lazy val props: Properties = {
     val p = new Properties
     p.setProperty("project.name", "DocReg+Web")
-    p.setProperty("project.version", "0.5.1")
+    p.setProperty("project.version", "0.5.2")
     p
   }
 }
