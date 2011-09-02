@@ -11,12 +11,12 @@ import net.liftweb.util._
 class Revision extends LongKeyedMapper[Revision] with IdPK {
   def getSingleton = Revision
 
-  object document extends LongMappedMapper(this, Document) {
+  object document extends MappedLongForeignKey(this, Document) {
     override def dbIndexed_? = true
   }
   object version extends MappedLong(this)
   object filename extends MappedString(this, 200)
-  object author extends LongMappedMapper(this, User)
+  object author extends MappedLongForeignKey(this, User)
   object date extends MappedDateTime(this) {
     override def asHtml = Text(if (is != null) DatePresentation.dateTimeF format is else "?")
   }

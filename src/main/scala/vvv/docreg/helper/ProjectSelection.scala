@@ -53,7 +53,7 @@ trait ProjectSelection extends Loggable {
         JsCmds.Noop
     }
   }
-  lazy val projectFilterXhtml = TemplateParse.parseDiv(TemplateFinder.findAnyTemplate("index" :: Nil), "project_filter")
+  lazy val projectFilterXhtml = TemplateParse.parseDiv(Templates("index" :: Nil), "project_filter")
   private def updateProjects: JsCmd = {
     SetHtml("project_filter", projects(projectFilterXhtml))
   }

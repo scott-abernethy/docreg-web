@@ -21,7 +21,6 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
   object username extends MappedString(this, 64)
   object email extends MappedEmail(this, 64) {
     override def apply(s: String) = super.apply(s.toLowerCase)
-    override def apply(b: Box[String]) = super.apply(b map { _.toLowerCase })
     override def validations = valUnique(S.??("unique.email.address")) _ :: super.validations // Doesn't seem to work.
   }
   object active extends MappedBoolean(this)

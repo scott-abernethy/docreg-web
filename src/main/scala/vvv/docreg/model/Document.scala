@@ -10,7 +10,7 @@ class Document extends LongKeyedMapper[Document] with IdPK with ManyToMany {
   def getSingleton = Document
 
   object key extends MappedString(this, 20)
-  object project extends LongMappedMapper(this, Project)
+  object project extends MappedLongForeignKey(this, Project)
   object title extends MappedString(this, 200)
   object editor extends MappedString(this, 100)
   object access extends MappedString(this, 128)

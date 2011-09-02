@@ -144,8 +144,16 @@ trait BackendComponentImpl extends BackendComponent
       }
     }
   }
-  
-  private def projectWithName(name: String) = {
+
+    override def exceptionHandler =
+    {
+      case e: Exception =>
+      {
+        logger.error("Backend exception " + e.getMessage, e)
+      }
+    }
+
+    private def projectWithName(name: String) = {
     val existing = Project.forName(name) 
     if (existing == null) {
       val project = Project.create

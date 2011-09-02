@@ -8,8 +8,8 @@ import vvv.docreg.util.DatePresentation
 
 class Approval extends LongKeyedMapper[Approval] with IdPK {
   def getSingleton = Approval
-  object revision extends LongMappedMapper(this, Revision)
-  object by extends LongMappedMapper(this, User)
+  object revision extends MappedLongForeignKey(this, Revision)
+  object by extends MappedLongForeignKey(this, User)
   object state extends MappedEnum(this, ApprovalState)
   object date extends MappedDateTime(this) {
     override def asHtml = Text(if (is != null) DatePresentation.dateTimeF format is else "?")

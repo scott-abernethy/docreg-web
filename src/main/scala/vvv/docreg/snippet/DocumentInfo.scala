@@ -225,7 +225,7 @@ class DocumentSnippet extends Loggable {
     S.redirectTo(r.info)
   }
 
-  lazy val approverPartial = TemplateFinder.findAnyTemplate("doc" :: "request-approval" :: Nil) match {
+  lazy val approverPartial = Templates("doc" :: "request-approval" :: Nil) match {
     case Full(in) => in \\ "tr" filter (x => (x \ "@class").text.contains("approval:approver"))
     case _ => NodeSeq.Empty
   }

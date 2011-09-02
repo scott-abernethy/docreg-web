@@ -8,16 +8,12 @@ import net.liftweb.common.Loggable
 import vvv.docreg.util.Millis
 import com.hstx.docregsx.Document
 
-/*
-wait 1 sec between polls
-if no response, watch dog will poll every 10 secs
- */
 class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Actor with Loggable
 {
   // todo use akka watchdog
-  val pollInterval = 2000L
-  val wakeInterval: Long = pollInterval * 10
-  val pollReplyTimeout: Long = pollInterval * 60
+  val pollInterval = 5000L
+  val wakeInterval: Long = pollInterval * 5
+  val pollReplyTimeout: Long = pollInterval * 20
 
   var lastChangeNumber: Int = -1
   var lastPoll = Millis.zero()
@@ -40,10 +36,12 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
           this ! 'Poll
         }
 
-        case 'Poll if lastPoll.elapsed_?(pollInterval) =>
+        case 'Poll if lastPoll.elapsed_?(0.9 * pollInterval toLong) =>
         {
+          logger.debug("Poll, next change request {" + lastChangeNumber + "}")
           lastPoll.mark()
           agent ! NextChange(Actor.self, hostname, lastChangeNumber)
+          schedulePoll
           scheduleWake
         }
 
@@ -54,6 +52,10 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
             logger.warn("Change reply not received in a timely fashion")
             this ! 'Reset
             // todo warn consumer to resync
+          }
+          else
+          {
+            schedulePoll
           }
           scheduleWake
         }
@@ -75,13 +77,15 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
               consumer ! Changed(documentInfo)
             }
           }
-          else
-          {
-            schedulePoll
-          }
         }
 
         case 'Ping => reply('Pong)
+
+        case 'Die =>
+        {
+          logger.info("ChangePoller killed")
+          exit()
+        }
 
         case other =>
       }
@@ -90,7 +94,7 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
   
   def scheduleWake
   {
-    if (wakeFuture.exists(_.isDone))
+    if (wakeFuture.isEmpty || wakeFuture.exists(_.isDone))
     {
       val thiz = Actor.self
       wakeFuture = Some(Schedule.schedule(() => thiz ! 'Wake, wakeInterval))

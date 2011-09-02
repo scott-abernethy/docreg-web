@@ -10,9 +10,10 @@ import org.jboss.netty.buffer.{ChannelBuffers, ChannelBuffer}
 import org.jboss.netty.handler.codec.oneone.{OneToOneDecoder, OneToOneEncoder}
 import net.liftweb.common.Loggable
 import java.nio.charset.Charset
-import actors.Actor
 import com.hstx.docregsx.Document
 import java.text.DecimalFormat
+import actors.{TIMEOUT, Actor}
+import collection.immutable.HashSet
 
 object DaemonProtocol extends Loggable
 {
@@ -23,6 +24,7 @@ object DaemonProtocol extends Loggable
   }
 
   var transactionId: Int = 0
+  var consumers: Set[Actor] = new HashSet[Actor]()
 
   def nextTransactionId(): Int =
   {
@@ -45,30 +47,35 @@ object DaemonProtocol extends Loggable
     }
   }
 
+  val factory = new NioDatagramChannelFactory(Executors.newCachedThreadPool)
+  val bootstrap = new ConnectionlessBootstrap(factory)
+  bootstrap.setPipelineFactory(new ChannelPipelineFactory {
+    def getPipeline = Channels.pipeline(
+      new DaemonProtocolEncoder,
+      new DaemonProtocolDecoder,
+      new DaemonProtocolHandler(m => consumers.foreach(_ ! m))
+    )
+  })
+  bootstrap.setOption("receiveBufferSizePredictorFactory", new FixedReceiveBufferSizePredictorFactory(1522))
+
+  val channel: DatagramChannel = bootstrap.bind(new InetSocketAddress(0)).asInstanceOf[DatagramChannel]
+  
   def getNextChange(consumer: Actor, hostname: String, changeNumber: Int)
   {
-    val factory = new NioDatagramChannelFactory(Executors.newCachedThreadPool)
-    val bootstrap = new ConnectionlessBootstrap(factory)
-    bootstrap.setPipelineFactory(new ChannelPipelineFactory {
-      def getPipeline = Channels.pipeline(
-        new DaemonProtocolEncoder,
-        new DaemonProtocolDecoder,
-        new DaemonProtocolHandler(consumer)
-      )
-    })
-    bootstrap.setOption("receiveBufferSizePredictorFactory", new FixedReceiveBufferSizePredictorFactory(1522))
-
-    val channel: DatagramChannel = bootstrap.bind(new InetSocketAddress(0)).asInstanceOf[DatagramChannel]
-
+    registerConsumer(consumer)
     channel.write(new DownstreamMessage(Messages.nextChange, buffer => buffer.writeInt(changeNumber)), new InetSocketAddress(hostname, 5436))
+  }
 
-    if (!channel.getCloseFuture.awaitUninterruptibly(5000))
-    {
-      logger.error("Protocol reply not received in a timely fashion")
-      channel.close.awaitUninterruptibly(5000)
-    }
+  def close()
+  {
+    channel.close.awaitUninterruptibly(5000)
+    factory.releaseExternalResources()
+  }
 
-    factory.releaseExternalResources
+  def registerConsumer(consumer: Actor)
+  {
+    // todo lame and not thread safe
+    consumers = consumers + consumer
   }
 }
 
@@ -78,8 +85,8 @@ class DaemonProtocolEncoder extends OneToOneEncoder with Loggable
   {
     msg match {
       case DownstreamMessage(message, body) =>
-        logger.debug("Protocol downstream " + message)
         val transactionId: Int = DaemonProtocol.nextTransactionId
+        logger.debug("Protocol downstream " + message + " transaction=" + transactionId)
         val buffer = ChannelBuffers.dynamicBuffer();
 
         // header
@@ -160,18 +167,16 @@ class DaemonProtocolDecoder extends OneToOneDecoder
   }
 }
 
-class DaemonProtocolHandler(consumer: Actor) extends SimpleChannelUpstreamHandler with Loggable
+class DaemonProtocolHandler(consume: (Any) => Unit) extends SimpleChannelUpstreamHandler with Loggable
 {
   override def messageReceived(ctx: ChannelHandlerContext, e: MessageEvent)
   {
-    consumer ! e.getMessage
-    e.getChannel.close
+    consume(e.getMessage)
   }
 
   override def exceptionCaught(ctx: ChannelHandlerContext, e: ExceptionEvent)
   {
     logger.warn("Protocol exception " + e.getCause)
-    e.getChannel.close
   }
 }
 
