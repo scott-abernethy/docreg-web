@@ -38,9 +38,9 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
 
         case 'Poll if lastPoll.elapsed_?(pollInterval) =>
         {
+          logger.debug("Poll, next change request {" + lastChangeNumber + "}")
           lastPoll.mark()
           agent ! NextChange(Actor.self, hostname, lastChangeNumber)
-          logger.debug("Next change request {" + lastChangeNumber + "}")
           schedulePoll
           scheduleWake
         }
@@ -52,6 +52,10 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
             logger.warn("Change reply not received in a timely fashion")
             this ! 'Reset
             // todo warn consumer to resync
+          }
+          else
+          {
+            schedulePoll
           }
           scheduleWake
         }
@@ -77,6 +81,12 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
 
         case 'Ping => reply('Pong)
 
+        case 'Die =>
+        {
+          logger.info("ChangePoller killed")
+          exit()
+        }
+
         case other =>
       }
     }
@@ -84,7 +94,7 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
   
   def scheduleWake
   {
-    if (wakeFuture.exists(_.isDone))
+    if (wakeFuture.isEmpty || wakeFuture.exists(_.isDone))
     {
       val thiz = Actor.self
       wakeFuture = Some(Schedule.schedule(() => thiz ! 'Wake, wakeInterval))
