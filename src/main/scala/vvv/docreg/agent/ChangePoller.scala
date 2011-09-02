@@ -12,7 +12,7 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
 {
   // todo use akka watchdog
   val pollInterval = 5000L
-  val wakeInterval: Long = pollInterval * 10
+  val wakeInterval: Long = pollInterval * 5
   val pollReplyTimeout: Long = pollInterval * 20
 
   var lastChangeNumber: Int = -1
@@ -36,7 +36,7 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
           this ! 'Poll
         }
 
-        case 'Poll if lastPoll.elapsed_?(pollInterval) =>
+        case 'Poll if lastPoll.elapsed_?(0.9 * pollInterval toLong) =>
         {
           logger.debug("Poll, next change request {" + lastChangeNumber + "}")
           lastPoll.mark()
