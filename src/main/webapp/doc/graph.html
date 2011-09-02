@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+    <title>?</title>
+</head>
+<body class="lift:content_id=main">
+<div id="main" class="lift:surround?with=no-sidebar;at=content">
+
+    <h2>Graph Monthly</h2>
+<lift:lazy-load>
+    <div id="graph_area" style="width:400px;height:400px;"></div>
+   <lift:Graph.sine></lift:Graph.sine>
+                </lift:lazy-load>
+    <h2>Graph Yearly</h2>
+
+    <lift:lazy-load>
+    <div id="graph_area2" style="width:400px;height:400px;"></div>
+  <lift:GraphY.sine></lift:GraphY.sine>
+                                 </lift:lazy-load>
+    <h2>Graph Ten Years</h2>
+
+    <div class="lift:lazy-load">
+    <div id="graph_area3" style="width:400px;height:400px;"></div>
+   <lift:Graphtenyears.sine></lift:Graphtenyears.sine>
+                                                  </div>
+
+</div>
+</body>
+</html>

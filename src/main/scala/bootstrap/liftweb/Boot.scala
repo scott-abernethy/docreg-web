@@ -14,6 +14,8 @@ import _root_.vvv.docreg.model._
 import _root_.vvv.docreg.util._
 import vvv.docreg.backend._
 import vvv.docreg.db.DbVendor
+import net.liftweb.widgets.flot._
+
 
 /**
  * A class that's instantiated early and run.  It allows the application
@@ -41,6 +43,7 @@ class Boot
       Menu.i("Login") / "user" / "signin",
       Menu.i("Logout") / "user" / "signout" >> loggedIn,
       Menu.i("Register") / "user" / "register",
+      Menu.i("Graph") / "doc" / "graph",
       Menu.i("Profile") / "user" / "profile" >> loggedIn,
       Menu.i("Info") / "doc" / "info" >> loggedIn,
       Menu.i("Approve") / "doc" / "approve" >> loggedIn,
@@ -60,6 +63,8 @@ class Boot
 
     // What is the function to test if a user is logged in?
     LiftRules.loggedInTest = Full(() => User.loggedIn_?)
+    Flot.init
+
 
     // Use HTML5 for rendering
 //    LiftRules.htmlProperties.default.set((r: Req) =>
