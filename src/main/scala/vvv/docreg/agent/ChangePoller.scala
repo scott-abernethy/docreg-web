@@ -8,16 +8,12 @@ import net.liftweb.common.Loggable
 import vvv.docreg.util.Millis
 import com.hstx.docregsx.Document
 
-/*
-wait 1 sec between polls
-if no response, watch dog will poll every 10 secs
- */
 class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Actor with Loggable
 {
   // todo use akka watchdog
-  val pollInterval = 2000L
+  val pollInterval = 5000L
   val wakeInterval: Long = pollInterval * 10
-  val pollReplyTimeout: Long = pollInterval * 60
+  val pollReplyTimeout: Long = pollInterval * 20
 
   var lastChangeNumber: Int = -1
   var lastPoll = Millis.zero()
@@ -44,6 +40,8 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
         {
           lastPoll.mark()
           agent ! NextChange(Actor.self, hostname, lastChangeNumber)
+          logger.debug("Next change request {" + lastChangeNumber + "}")
+          schedulePoll
           scheduleWake
         }
 
@@ -74,10 +72,6 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
               lastDocumentInfo = Some(documentInfo)
               consumer ! Changed(documentInfo)
             }
-          }
-          else
-          {
-            schedulePoll
           }
         }
 
