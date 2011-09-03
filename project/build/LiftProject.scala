@@ -16,7 +16,7 @@ class LiftProject(info: ProjectInfo) extends DefaultWebProject(info) with IdeaPr
     "net.liftweb" %% "lift-webkit" % liftVersion.value.toString % "compile",
     "net.liftweb" %% "lift-mapper" % liftVersion.value.toString % "compile",
     "net.liftweb" %% "lift-ldap" % liftVersion.value.toString % "compile",
-    "net.liftweb" %% "lift-widgets" % liftVersion % "compile",
+    "net.liftweb" %% "lift-widgets" % liftVersion.value.toString % "compile",
     "org.mortbay.jetty" % "jetty" % "6.1.26" % "test",
     "junit" % "junit" % "4.7" % "test",
     "org.scala-tools.testing" %% "specs" % "1.6.8" % "test",
