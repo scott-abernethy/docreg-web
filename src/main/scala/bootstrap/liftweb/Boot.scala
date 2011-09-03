@@ -43,7 +43,7 @@ class Boot
       Menu.i("Login") / "user" / "signin",
       Menu.i("Logout") / "user" / "signout" >> loggedIn,
       Menu.i("Register") / "user" / "register",
-      Menu.i("Graph") / "doc" / "graph",
+      Menu.i("History") / "doc" / "history" >> loggedIn,
       Menu.i("Profile") / "user" / "profile" >> loggedIn,
       Menu.i("Info") / "doc" / "info" >> loggedIn,
       Menu.i("Approve") / "doc" / "approve" >> loggedIn,
