@@ -54,14 +54,15 @@ object MonthHistory
   def data(): scala.List[(Double, Double)] =
   {
     val cal: Calendar = Calendar.getInstance()
-    cal.set(Calendar.DAY_OF_MONTH, 0)
-    val endDate = cal.getTime
-    cal.add(Calendar.MONTH, -1)
+    cal.set(Calendar.SECOND, 0)
+    cal.set(Calendar.MINUTE, 0)
+    cal.set(Calendar.HOUR_OF_DAY, 1)
+    cal.getTime
+    cal.add(Calendar.DAY_OF_YEAR, -30)
     val startDate = cal.getTime
 
     val rs = Revision.findAll(
       BySql("DATE_C >= ?", IHaveValidatedThisSQL("me", "now"), startDate),
-      BySql("DATE_C < ?", IHaveValidatedThisSQL("me", "now"), endDate),
       OrderBy(Revision.date, Ascending)
     )
 
@@ -73,7 +74,7 @@ object MonthHistory
     }
 
     for (i <- List.range(1, 32))
-    yield (i.toDouble, graphlist.getOrElse(i, 0).toDouble)
+    yield (i.toDouble - 31, graphlist.getOrElse(i, 0).toDouble)
   }
 }
 
@@ -82,14 +83,16 @@ object YearHistory
   def data(): scala.List[(Double, Double)] =
   {
     val cal: Calendar = Calendar.getInstance()
-    cal.add(Calendar.MONTH,0)
-    val endDate = cal.getTime
+    cal.set(Calendar.SECOND, 0)
+    cal.set(Calendar.MINUTE, 0)
+    cal.set(Calendar.HOUR_OF_DAY, 0)
+    cal.set(Calendar.DAY_OF_MONTH, 1)
+    cal.getTime
     cal.add(Calendar.YEAR,-1)
     val startDate = cal.getTime
 
     val rs = Revision.findAll(
       BySql("DATE_C >= ?", IHaveValidatedThisSQL("me", "now"), startDate),
-      BySql("DATE_C < ?", IHaveValidatedThisSQL("me", "now"), endDate),
       OrderBy(Revision.date, Ascending)
     )
 
@@ -101,7 +104,7 @@ object YearHistory
     }
 
     for (i <- List.range(1, 13))
-    yield (i.toDouble, graphlist.getOrElse(i, 0).toDouble)
+    yield (i.toDouble - 12, graphlist.getOrElse(i, 0).toDouble)
   }
 }
 
@@ -110,14 +113,16 @@ object TenYearHistory
   def data(): scala.List[(Double, Double)] =
   {
     val cal: Calendar = Calendar.getInstance()
-    cal.add(Calendar.YEAR,0)
-    val endDate = cal.getTime
-    cal.add(Calendar.YEAR,-12)
+    cal.set(Calendar.SECOND, 0)
+    cal.set(Calendar.MINUTE, 0)
+    cal.set(Calendar.HOUR_OF_DAY, 0)
+    cal.set(Calendar.DAY_OF_YEAR, 1)
+    cal.getTime
+    cal.add(Calendar.YEAR,-10)
     val startDate = cal.getTime
 
     val rs = Revision.findAll(
       BySql("DATE_C >= ?", IHaveValidatedThisSQL("me", "now"), startDate),
-      BySql("DATE_C < ?", IHaveValidatedThisSQL("me", "now"), endDate),
       OrderBy(Revision.date, Ascending)
     )
 
@@ -129,7 +134,7 @@ object TenYearHistory
     }
 
     // todo hardcoded years
-    for (i <- List.range(1999, 2012))
+    for (i <- List.range(2001, 2012))
     yield (i.toDouble, graphlist.getOrElse(i, 0).toDouble)
   }
 }
