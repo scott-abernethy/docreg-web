@@ -15,13 +15,17 @@ class History
     val data_to_plot = new FlotSerie() {
       override val data = MonthHistory.data()
       override def color = Full(Right(1))
+
+      override def bars = Full(new FlotBarsOptions {
+        override def show = Full(true)
+      })
     }
     graph(in, data_to_plot)
   }
 
   def month(in: NodeSeq) =
   {
-    val data_to_plot = new LineAndPointSerie() {
+    val data_to_plot = new HistorySerie() {
       override val data = MonthHistory.data()
       override def label = Full("Revisions")
       override def color = Full(Right(1))
@@ -31,7 +35,7 @@ class History
 
   def year(in: NodeSeq) =
   {
-    val data_to_plot = new LineAndPointSerie() {
+    val data_to_plot = new HistorySerie() {
       override val data = YearHistory.data()
       override def label = Full("Revisions")
       override def color = Full(Right(2))
@@ -41,7 +45,7 @@ class History
 
   def tenYears(in: NodeSeq) =
   {
-    val data_to_plot = new LineAndPointSerie() {
+    val data_to_plot = new HistorySerie() {
       override val data = TenYearHistory.data()
       override def label = Full("Revisions")
       override def color = Full(Right(3))
@@ -148,14 +152,9 @@ object TenYearHistory
   }
 }
 
-trait LineAndPointSerie extends FlotSerie
+trait HistorySerie extends FlotSerie
 {
-  override def lines = Full(new FlotLinesOptions
-  {
-    override def show = Full(true)
-  })
-  override def points = Full(new FlotPointsOptions
-  {
+  override def bars = Full(new FlotBarsOptions {
     override def show = Full(true)
   })
 }
