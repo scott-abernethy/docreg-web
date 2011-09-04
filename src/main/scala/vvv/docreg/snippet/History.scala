@@ -6,10 +6,19 @@ import vvv.docreg.model.Revision
 import net.liftweb.mapper._
 import java.util.{Calendar}
 import collection.mutable.HashMap
-import net.liftweb.common.Full
+import net.liftweb.common.{Empty, Full}
 
 class History
 {
+  def mini(in: NodeSeq) =
+  {
+    val data_to_plot = new FlotSerie() {
+      override val data = MonthHistory.data()
+      override def color = Full(Right(1))
+    }
+    graph(in, data_to_plot)
+  }
+
   def month(in: NodeSeq) =
   {
     val data_to_plot = new LineAndPointSerie() {
