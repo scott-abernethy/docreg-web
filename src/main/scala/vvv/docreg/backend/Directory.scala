@@ -39,8 +39,6 @@ class DirectoryImpl extends LDAPVendor with Directory {
   configure(
     Map(
       "ldap.url" -> "ldap://dcgnetnz1.gnet.global.vpn:3268",
-//      "ldap.userName" -> "gnet\\sabernethy",
-//      "ldap.password" -> "***REMOVED***",
       "ldap.userName" -> "gnet\\***REMOVED***",
       "ldap.password" -> "***REMOVED***",
       "ldap.base" -> ldapBase
