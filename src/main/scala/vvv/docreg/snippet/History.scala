@@ -71,7 +71,16 @@ class History
     val graphDiv = in \\ "div" filter (_.attribute("class").exists(_.text contains "graph")) headOption
     val graphDivId = graphDiv.flatMap(_.attribute("id").map(_.text))
 
-    in ++ Flot.render(graphDivId.getOrElse("foo"), List(data_to_plot), new FlotOptions {}, Flot.script(in))
+    val flotOptions: FlotOptions = new FlotOptions {
+      override def yaxis = Full(new FlotAxisOptions {
+        override def min = Full(0)
+      })
+
+      override def legend = Full(new FlotLegendOptions {
+        override def position = Full("nw")
+      })
+    }
+    in ++ Flot.render(graphDivId.getOrElse("foo"), List(data_to_plot), flotOptions, Flot.script(in))
   }
 }
 
@@ -135,7 +144,7 @@ object YearHistory
     cal.set(Calendar.HOUR_OF_DAY, 0)
     cal.set(Calendar.DAY_OF_MONTH, 1)
     cal.getTime
-    cal.add(Calendar.YEAR,-1)
+    cal.add(Calendar.MONTH,-11)
     val startDate = cal.getTime
 
     val rs = Revision.findAll(
