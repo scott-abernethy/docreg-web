@@ -7,37 +7,35 @@
   <body class="lift:content_id=main">
     <div id="main" class="lift:surround?with=no-sidebar;at=content">
 
-  <lift:snippet type="DocumentSnippet:submit" form="post" multipart="true" >
-    <h3><doc:title/></h3>
+  <div class="lift:snippet?type=DocumentSnippet.submit&form=post&multipart=true">
+    <h3><span class="doc-title"></span></h3>
     <hr/>
-    <div class="span-18 last">
-        <doc:submission>
+    <div>
         <h4>Document Submission</h4>
-        <table class="baseline-align-cells" cellpadding="0">
+        <table>
           <tr>
             <th>New Version:</th>
-            <td><submission:version/></td>
+            <td><span class="submission-version"></span></td>
           </tr>
           <tr>
             <th>Select File: </th>
-            <td><submission:file/></td>
+            <td><span class="submission-file"></span></td>
           </tr>
           <tr>
             <th>By:</th>
-            <td class="loud"><submission:by/></td>
+            <td class="loud"><span class="submission-by"></span></td>
           </tr>
           <tr>
             <th>Comment:</th>
-            <td><submission:comment/></td>
+            <td><span class="submission-comment"></span></td>
           </tr>
           <tr>
-            <td></td>
-            <td><submission:submit/><submission:cancel/></td>
+            <th></th>
+            <td><span class="submission-submit"></span> <span class="submission-cancel"></span></td>
           </tr>
         </table>
-      </doc:submission>
     </div>
-  </lift:snippet>
+  </div>
 
     </div>
   </body>

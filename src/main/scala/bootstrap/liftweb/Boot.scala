@@ -65,10 +65,9 @@ class Boot
     LiftRules.loggedInTest = Full(() => User.loggedIn_?)
     Flot.init
 
-
     // Use HTML5 for rendering
-//    LiftRules.htmlProperties.default.set((r: Req) =>
-//      new Html5Properties(r.userAgent))    
+    LiftRules.htmlProperties.default.set((r: Req) =>
+      new Html5Properties(r.userAgent))
 
     // Make a transaction span the whole HTTP request
     // todo

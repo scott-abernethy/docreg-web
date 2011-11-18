@@ -7,40 +7,40 @@
   <body class="lift:content_id=main">
     <div id="main" class="lift:surround?with=default;at=body_content">
 
-    <div class="column span-6 sidebar">
-      <div class="lift:snippet?type=Dashboard.projects">
-        <div id="project_filter" class="box roundbox">
-          <h4 style="display:inline;">Projects</h4> <projects:all/><projects:none/>
-          <ol class="projects">
-            <projects:item>
-            <li>
-              <project:check/><project:name/>
-            </li>
-            </projects:item>
-          </ol>
+    <div class="row">
+    <div class="span4">
+      <div class="lift:snippet?type=Dashboard.projects well">
+        <div id="project_filter">
+          <h4>Projects <small>Filter</small></h4>
+            <ul class="tabs">
+              <li id="projects-all"><a href="#">All</a></li>
+              <li id="projects-sel"><a href="#">Selected</a></li>
+            </ul>
+          <div class="input projects">
+            <ul class="inputs-list">
+              <li class="project-item"><span class="project-check"></span> <span class="project-name"></span></li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="span-8 colborder">
-      <lift:snippet type="Dashboard.log">
+    <div class="span6">
+      <div class="lift:snippet?type=Dashboard.log">
       <h3>Recent Activity</h3>
-      <lift:comet type="Log">
+      <div class="lift:comet?type=Log">
         <ol id="log">
-          <log:item>
-            <li class="border-top" doc:id_attr="" doc:style_attr="" onmouseover="$(this).addClass('row-highlight').find('.actions').show();" onmouseout="$(this).removeClass('row-highlight').find('.actions').hide();">
-              <span><b><doc:title/></b></span><br/>
-              <span><doc:author/> </span><span class="quiet">&quot;</span><doc:comment/><span class="quiet">&quot;</span><br/>
-              <span class="quiet"><doc:when/><span class="hide actions"> | <a doc:info_attr="">More...</a></span></span>
+            <li class="log-item border-top" id="">
+              <b><span class="doc-title"></span></b><br/>
+              <span><span class="doc-author"></span> </span><span class="quiet">&quot;</span><span class="doc-comment"></span><span class="quiet">&quot;</span><br/>
+              <span class="quiet"><span class="doc-when"></span><span> | <a class="doc-info" href="#">More...</a></span></span>
             </li>
-          </log:item>
         </ol>
-      </lift:comet>
-      </lift:snippet>
+      </div>
+      </div>
     </div>
-    <div class="span-8 last">
-      <h3>Recent History</h3>
-      <span>Revision activity for last 30 days. <a href="/doc/history">More...</a></span>
+    <div class="span6">
+      <h3>Recent History <small>Last 30 days | <a href="/doc/history">More...</a></small></h3>
       <!--<div class="lift:lazy-load">-->
         <div class="lift:snippet?type=History.mini">
           <div id="g0" class="graph" style="width:340px;height:80px;"></div>
@@ -54,6 +54,7 @@
           <li class="subscription:item"><a href=""><span class="item:title">001-Foo</span></a></li>
         </ul>
       </div>
+    </div>
     </div>
 
     </div>

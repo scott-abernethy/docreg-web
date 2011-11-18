@@ -33,10 +33,18 @@ object UserProject extends UserProject with LongKeyedMetaMapper[UserProject] {
     }
   }
 
-  def listFor(user: User): List[(Project, Boolean)] = {
-    val selectedProjects = userSelected(user).toSet
-    for {
-      project <- Project.findAll(OrderBy(Project.name, Ascending))
-    } yield (project, selectedProjects.contains(project))
+  def listFor(usero: Option[User]): List[(Project, Boolean)] = {
+    usero match {
+      case None => {
+        Nil
+      }
+      case Some(user) => {
+        val selectedProjects = userSelected(user).toSet
+        for {
+          project <- Project.findAll(OrderBy(Project.name, Ascending))
+        } yield (project, selectedProjects.contains(project))
+      }
+    }
+
   }
 }

@@ -52,53 +52,98 @@ class DocumentSnippet extends Loggable {
   }
 
   def info(in: NodeSeq): NodeSeq = forRequest(in, (in, d, r) => {
-      bind("doc", in,
+      val out = bind("doc", in,
         "key" -> d.key,
-        "title" -> <a href={r.info}>{r.fullTitle}</a>,
-        "author" -> r.authorLink,
         "revised" -> r.date,
         "link" -> ((in: NodeSeq) => <a href={r.link}>{in}</a>),
         "version" -> r.version,
-        "project" -> d.projectName,
-        "editor" -> (if (d.editor.is == null) NodeSeq.Empty else <tbody><tr><td class="border-top"><span class="quiet">(Next)</span></td><td class="border-top"><span class="edit">{ d.editor }</span></td><td class="border-top"><span class="edit">Edit</span></td><td class="border-top quiet">(User edit in progress)</td><td class="border-top">-</td></tr></tbody>),
-        "submissions" -> submissionLinks(d),
-        "subscriber" -> subscribers(d),
-        "revision" -> ((in: NodeSeq) => revisions(in, d, r)),
-        "approve" -> ((in: NodeSeq) => <a href={"/d/" + d.key + "/v/" + r.version + "/approve"}>{in}</a>),
-        "request-approval" -> ((in: NodeSeq) => <a href={"/d/" + d.key + "/v/" + r.version + "/request-approval"}>{in}</a>),
-        "subscribe" -> subscribe(d)
+        "subscriber" -> subscribers(d)
       )
+      (
+        ".doc-title" #> <a href={r.info}>{d.title}</a> &
+        ".doc-number" #> r.number &
+        ".doc-next" #> d.nextVersion &
+        ".doc-project" #> d.projectName &
+        ".doc-link [href]" #> r.link &
+        ".doc-subscribe" #> subscribe(d) &
+        ".doc-edit" #> edit(d, User.loggedInUser.is) &
+        ".doc-submit" #> submit(d, User.loggedInUser.is) &
+        ".doc-approve [href]" #> ("/d/" + d.key + "/v/" + r.version + "/approve") &
+        ".doc-request-approval [href]" #> ("/d/" + d.key + "/v/" + r.version + "/request-approval") &
+        ".doc-editing" #> (if (d.editor.is == null) "tr" #> NodeSeq.Empty else (".doc-editor" #> d.editor & ".doc-next" #> d.nextVersion)) &
+        ".doc-revision" #> d.revisions.map { r =>
+          ".rev-link" #> <a href={r.link}>{r.version.asHtml}</a> &
+          ".rev-author" #> r.authorLink &
+          ".rev-comment" #> r.comment &
+          ".rev-date" #> r.date & // TODO date only, hover for time
+          ".rev-approval" #> Approval.forRevision(r).map { a =>
+            ".approval-by" #> (a.by.obj.map(_.profileLink) openOr Text("?")) &
+            ".approval-state" #> <span class={ApprovalState.style(a.state.is)}>{a.state}</span> &
+            ".approval-comment" #> <span>{ if (a.comment.is == "No Comment") "" else a.comment }</span> &
+            ".approval-date" #> a.date
+          }
+        } &
+        ".doc-subscriber" #> d.subscribers.toList.sortWith(User.sort).map { s =>
+          ".subscriber-info" #> <a href={ s.profileLink }>{ s.displayName }</a>
+        }
+      ).apply(in)
     })
 
-  private def submissionLinks(d: Document) = {
-    User.loggedInUser.is match {
-      case Full(u) =>
-        processSubmissionLinks(d, u)
-      case _ =>
-        NodeSeq.Empty
-    }
-  }
-
-  private def processSubmissionLinks(d: Document, u: vvv.docreg.model.User): NodeSeq = {
-    if (d.editor.is == null)//If no one is editing, current user has the option to edit
-      <li>{ SHtml.a(() => { processEdit(d, u); JsCmds.RedirectTo(d.latest.link) }, <span>Edit</span>)  }</li>
-    else {
-      if (d.editor.is == u.shortUsername()) {  //If current user is editing, they can either submit changes or cancel
-        <li><a href={d.latest.info + "/submit"}>Submit...</a></li> ++
-        <li>{ SHtml.a(() => { processUnedit(d, u); JsCmds._Noop }, <span>Cancel Edit</span>) }</li>
+  private def subscribers(d: Document): NodeSeq =
+  {
+    val users: List[User] = d.subscribers.toList
+    users match
+    {
+      case Nil =>
+      {
+        <li>No subscribers</li>
       }
-      else { //otherwise, someone else is editing, so current user has no options
-        NodeSeq.Empty
+      case list =>
+      {
+        for (u <- list.sortWith(User.sort))
+        yield <li><a href={ u.profileLink }>{ u.displayName }</a></li>
       }
     }
   }
 
-  // TODO this method is only here to make testing the submission sysem easier.
-  // Delete when done and change submissionLinks method to call processSubmissionLinks
-  private def processSubmissionLinksAll(d: Document, u: vvv.docreg.model.User): NodeSeq = {
-      <li>{ SHtml.a(() => { processEdit(d, u); JsCmds.RedirectTo(d.latest.link) }, <span>Edit</span>)  }</li> ++
-      <li><a href={d.latest.info + "/submit"}>Submit...</a></li> ++
-      <li>{ SHtml.a(() => { processUnedit(d, u); JsCmds._Noop }, <span>Cancel Edit</span>) }</li>
+//  private def revisions(xhtml: NodeSeq, d: Document, revisionInRequest: Revision): NodeSeq = {
+//    d.revisions flatMap { r =>
+//      bind("rev", xhtml,
+//        AttrBindParam("download_attr", "/d/" + d.key + "/v/" + r.version + "/download", "href"),
+//        AttrBindParam("approve_attr", "/d/" + d.key + "/v/" + r.version + "/approve", "href"),
+//        AttrBindParam("request-approval_attr", "/d/" + d.key + "/v/" + r.version + "/request-approval", "href"),
+//        "version" -> r.version,
+//        "author" -> r.authorLink,
+//        "date" -> r.date,
+//        "approvals" -> ((in: NodeSeq) => approvals(in, r)),
+//        "link" -> <a href={r.link}>{r.version.asHtml}</a>,
+//        "comment" -> r.comment)
+//    }
+//  }
+
+  private def edit(d: Document, u: Box[User]): NodeSeq = {
+    u match {
+      case Full(user) if (user.shortUsername() == d.editor.is) => {
+        SHtml.a(() => { processUnedit(d, user); JsCmds._Noop }, <span>Cancel Edit</span>, "class" -> "btn danger")
+      }
+      case Full(user) => {
+        SHtml.a(() => { processEdit(d, user); JsCmds.RedirectTo(d.latest.link) }, <span>Edit</span>, "class" -> "btn danger")
+      }
+      case _ => {
+        NodeSeq.Empty
+      }
+    }
+  }
+
+  private def submit(d: Document, u: Box[User]): NodeSeq = {
+    u match {
+      case Full(user) if (user.shortUsername() == d.editor.is) => {
+        <a class="btn success" href={d.latest.info + "/submit"}>Submit...</a>
+      }
+      case _ => {
+        NodeSeq.Empty
+      }
+    }
   }
 
   private def processEdit(d: Document, u: vvv.docreg.model.User) = {
@@ -123,7 +168,7 @@ class DocumentSnippet extends Loggable {
         SHtml.a(() => { processSubscribe(d, u)
                         (JsCmds.SetHtml("subscribers", subscribers(d)) &
                          JsCmds.SetHtml("subscribe", Text( if (u.subscribed_?(d)) "Unsubscribe" else "Subscribe" ))) },
-                                   <span id="subscribe">{ if (u.subscribed_?(d)) "Unsubscribe" else "Subscribe" }</span> )
+                                   <span id="subscribe">{ if (u.subscribed_?(d)) "Unsubscribe" else "Subscribe" }</span> , "class" -> "btn")
       case _ =>
         NodeSeq.Empty
     }
@@ -142,74 +187,20 @@ class DocumentSnippet extends Loggable {
     }
   }
 
-  private def subscribers(d: Document): NodeSeq =
-  {
-    val users: List[User] = d.subscribers.toList
-    users match
-    {
-      case Nil =>
-      {
-        <li>No subscribers</li>
-      }
-      case list =>
-      {
-        for (u <- list.sortWith(User.sort))
-        yield <li><a href={ u.profileLink }>{ u.displayName }</a></li>
-      }
-    }
-  }
-
-  private def revisions(xhtml: NodeSeq, d: Document, revisionInRequest: Revision): NodeSeq = {
-    d.revisions flatMap { r =>
-      bind("rev", xhtml,
-        AttrBindParam("download_attr", "/d/" + d.key + "/v/" + r.version + "/download", "href"),
-        AttrBindParam("approve_attr", "/d/" + d.key + "/v/" + r.version + "/approve", "href"),
-        AttrBindParam("request-approval_attr", "/d/" + d.key + "/v/" + r.version + "/request-approval", "href"),
-        "version" -> r.version,
-        "author" -> r.authorLink,
-        "date" -> r.date,
-        "approvals" -> ((in: NodeSeq) => approvals(in, r)),
-        "link" -> <a href={r.link}>{r.version.asHtml}</a>,
-        "comment" -> r.comment)
-    }
-  }
-
-  private def approvals(xhtml: NodeSeq, r: Revision): NodeSeq = {
-    Approval.forRevision(r) flatMap {a =>
-      bind("approval", xhtml,
-        "by" -> (a.by.obj.map(_.profileLink) openOr Text("?")),
-        "state" -> <span style={ApprovalState.style(a.state.is)}>{a.state}</span>,
-        "comment" -> <span>{ if (a.comment.is == "No Comment") "" else a.comment }</span>,
-        "date" -> a.date)
-    }
-  }
-
   def approve(in: NodeSeq): NodeSeq = forRequest(in, (in, d, r) => {
-      bind("doc", in,
-        "key" -> d.key,
-        "title" -> <a href={r.info}>{r.fullTitle}</a>,
-        "author" -> r.authorLink,
-        "revised" -> r.date,
-        "link" -> ((in: NodeSeq) => <a href={r.link}>{in}</a>),
-        "version" -> r.version,
-        "project" -> d.projectName,
-        "edit" -> (if (d.editor.is == null) Text("-") else <span class="highlight">{d.editor.asHtml}</span>),
-        "approval" -> ((in: NodeSeq) => approvalForm(in, d, r)))
-  })
-
-  private def approvalForm(in: NodeSeq, d: Document, r: Revision): NodeSeq = {
     val states = List(ApprovalState.approved, ApprovalState.notApproved) map (state => (state.toString, state.toString))
     var comment = ""
     var state = ApprovalState.approved
-    bind("approval", in,
-      "version" -> r.version,
-      "by" -> Text(User.loggedInUser map (_.displayName) openOr "?"),
-      "state" -> SHtml.select(states, Full(state.toString), (selected) => (state = ApprovalState parse selected)),
-      "comment" -> SHtml.textarea(comment, comment = _) % ("class" -> "smalltextarea"),
-      "submit" -> SHtml.submit("Submit", () => processApprove(d, r, state, comment)),
-      "cancel" -> SHtml.submit("Cancel", () => S.redirectTo(r.info))
-    )
-  }
+    (
+      ".doc-title" #> <a href={r.info}>{r.fullTitle}</a> &
+      ".approval-version" #> r.version &
+      ".approval-by" #> Text(User.loggedInUser map (_.displayName) openOr "?") &
+      ".approval-state" #> SHtml.select(states, Full(state.toString), (selected) => (state = ApprovalState parse selected)) &
+      ".approval-comment" #> SHtml.textarea(comment, comment = _) &
+      ".approval-submit" #> SHtml.submit("Submit", () => processApprove(d, r, state, comment), "class" -> "btn primary") &
+      ".approval-cancel" #> SHtml.submit("Cancel", () => S.redirectTo(r.info), "class" -> "btn")
+    ).apply(in)
+  })
   
   def processApprove(d: Document, r: Revision, state: ApprovalState, comment: String): JsCmd = {
     val user = User.loggedInUser.is openOr null
@@ -234,9 +225,9 @@ class DocumentSnippet extends Loggable {
       ("#doc:title *" #> <a href={r.info}>{r.fullTitle}</a> &
        "#doc:version" #> r.version &
        ".approval:approver" #> approver &
-       ".approver:add" #> SHtml.ajaxButton("Add", () => {JqJsCmds.AppendHtml("addTo", approver(approverPartial))}) &
-       "#submit" #> SHtml.submit("Submit", () => (processRequestApproval(d, r))) &
-       "#cancel" #> SHtml.submit("Cancel", () => S.redirectTo(r.info)) &
+       ".approver:add" #> SHtml.ajaxButton("Add", () => {JqJsCmds.AppendHtml("addTo", approver(approverPartial))}, "class" -> "btn") &
+       "#submit" #> SHtml.submit("Submit", () => (processRequestApproval(d, r)), "class" -> "btn primary") &
+       "#cancel" #> SHtml.submit("Cancel", () => S.redirectTo(r.info), "class" -> "btn") &
        ClearClearable) apply in
   })
 
@@ -249,7 +240,7 @@ class DocumentSnippet extends Loggable {
     var approver = ""
     ".approval:approver [id]" #> id &
     ".approver:email" #> (SHtml.text(approver, s => selected(s :: selected.is)) % ("style" -> "width: 250px")) &
-    ".approver:remove" #> SHtml.ajaxButton("Remove", () => {JsCmds.Replace(id, NodeSeq.Empty)})
+    ".approver:remove" #> SHtml.ajaxButton("Remove", () => {JsCmds.Replace(id, NodeSeq.Empty)}, "class" -> "btn danger")
   }
 
   def processRequestApproval(d: Document, r: Revision) = {
@@ -264,25 +255,33 @@ class DocumentSnippet extends Loggable {
   }
 
   def submit(in: NodeSeq) = forRequest(in, (in, d, r) => {
-    bind("doc", in,
-        "title" -> <a href={r.info}>{r.fullTitle}</a>,
-        "submission" -> ((in: NodeSeq) => submissionForm(in, d, r))
-    )})
+    var comment = ""
+    var file: Option[FileParamHolder] = None
+    (
+      ".doc-title" #> <a href={r.info}>{r.fullTitle}</a> &
+      ".submission-version" #> d.nextVersion &
+      ".submission-file" #> SHtml.fileUpload(ul => file = Some(ul)) &
+      ".submission-by" #> Text(User.loggedInUser map (_.displayName) openOr "?") &
+      ".submission-comment" #> SHtml.textarea(comment, comment = _) &
+      ".submission-submit" #> SHtml.submit("Submit", () => processSubmit(d, comment, file), "class" -> "btn primary") &
+      ".submission-cancel" #> SHtml.submit("Cancel", () => S.redirectTo(r.info), "class" -> "btn")
+    ).apply(in)
+  })
 
   private object submitFile extends RequestVar[Box[FileParamHolder]](Empty)
 
-   private def submissionForm(in: NodeSeq, d: Document, r: Revision): NodeSeq = {
-     var comment = ""
-     var file: Option[FileParamHolder] = None
-      bind("submission", in,
-      "version" -> d.nextVersion,
-      "by" -> Text(User.loggedInUser map (_.displayName) openOr "?"),
-      "file" -> SHtml.fileUpload(ul => file = Some(ul)),
-      "comment" -> SHtml.textarea(comment, comment = _) % ("class" -> "smalltextarea"),
-      "submit" -> SHtml.submit("Submit", () => processSubmit(d, comment, file)),
-      "cancel" -> SHtml.submit("Cancel", () => S.redirectTo(r.info))
-    )
-  }
+//   private def submissionForm(in: NodeSeq, d: Document, r: Revision): NodeSeq = {
+//     var comment = ""
+//     var file: Option[FileParamHolder] = None
+//      bind("submission", in,
+//      "version" -> d.nextVersion,
+//      "by" -> Text(User.loggedInUser map (_.displayName) openOr "?"),
+//      "file" -> SHtml.fileUpload(ul => file = Some(ul)),
+//      "comment" -> SHtml.textarea(comment, comment = _) % ("class" -> "smalltextarea"),
+//      "submit" -> SHtml.submit("Submit", () => processSubmit(d, comment, file)),
+//      "cancel" -> SHtml.submit("Cancel", () => S.redirectTo(r.info))
+//    )
+//  }
 
   private def processSubmit(d: Document, comment: String, file: Option[FileParamHolder]) {
     file match {

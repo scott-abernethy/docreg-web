@@ -7,78 +7,74 @@
   <body class="lift:content_id=main">
     <div id="main" class="lift:surround?with=default;at=body_content">
 
-      <lift:snippet type="DocumentSnippet:info">
+      <div class="lift:snippet?type=DocumentSnippet.info">
 
-      <div class="column span-5 colborder">
-          <h4>Actions</h4>
-          <ul>
-            <li><doc:link>Download</doc:link></li>
-            <div id="submission"><doc:submissions/></div>
-            <li><doc:approve>Approve...</doc:approve></li>
-            <li><doc:request-approval>Request Approval...</doc:request-approval></li>
-            <li><doc:subscribe/></li>
-          </ul>
-          <hr class="space"/>
-          <h4>Subscribers</h4>
-          <ul id="subscribers">
-            <doc:subscriber/>
-          </ul>
+
+
+      <div class="row">
+         <div class="span16">
+          <h2><span class="doc-title">Title</span> <small><span class="doc-number">Number</span></small></h2>
+          <h4>Project: <span class="doc-project">Foo</span></h4>
+             <div class="well">
+                 <a class="btn primary doc-link" href="#">Download</a>
+               <a class="btn danger doc-edit" href="#">Edit</a>
+               <a class="btn success doc-submit" href="#">Submit</a>
+               <a class="btn doc-approve " href="#">Approve...</a>
+               <a class="btn doc-request-approval" href="#">Request Approval...</a>
+             </div>
+
+         </div>
       </div>
+          
+      <div class="row">
 
-      <div class="column span-18 last">
+      <div class="span12">
 
-    <script type="text/javascript">
-      $(document).ready(function() {
-        $("#history tbody").hover(function() {
-          $(this).addClass("row-highlight").find(".actions").show();
-          },function(){
-          $(this).removeClass("row-highlight").find(".actions").hide();
-          });
-        });
-    </script>
-    <h3><doc:title/></h3>
-    <hr/>
     <div class="span-18 last">
-      <h4>Project: <doc:project/></h4>
+
       <h4>Document History</h4>
-      <table id="history" class="baseline-align-cells" cellspacing="0" border-collapse="collapse">
+      <table id="history" class="zebra-striped">
         <thead>
           <tr>
-            <th class="span-1">Version</th>
-            <th class="span-3">User</th>
-            <th class="span-2">Action</th>
+            <th>#</th>
+            <th>User</th>
             <th>Comment</th>
-            <th class="span-4">Date</th>
+            <th>Date</th>
           </tr>
         </thead>
-        <doc:editor/>
-        <doc:revision>
-          <tbody>
-            <tr>
-              <td class="border-top"><rev:link/></td>
-              <td class="border-top"><rev:author/></td>
-              <td class="border-top"><span class="revision">Submit</span></td>
-              <td class="border-top quiet"><rev:comment/></td>
-              <td class="border-top"><rev:date/></td>
-            </tr>
-            <rev:approvals>
-              <tr>
-                <td></td>
-                <td><approval:by/></td>
-                <td><approval:state/></td>
-                <td class="quiet"><approval:comment/></td>
-                <td><approval:date/></td>
-              </tr>
-            </rev:approvals>
-            <tr class="hide actions"><td colspan="5"><span class="quiet"><a rev:download_attr="">Download</a> | <a rev:approve_attr="">Approve...</a> | <a rev:request-approval_attr="">Request Approval...</a></span></td></tr>
-          </tbody>
-        </doc:revision>
+        <tr class="doc-editing">
+              <td><span class="doc-next">+</span></td>
+              <td class="nowrap"><span class="doc-editor">Editor</span></td>
+              <td><span class="label important">Editing</span></td>
+              <td class="nowrap">-</td>
+        </tr>
+        <tr class="doc-revision">
+          <td><span class="rev-link"></span></td>
+          <td class="nowrap"><span class="rev-author"></span></td>
+          <td>
+              <span class="rev-comment"></span><br>
+              <blockquote class="rev-approval">
+                <p><span class="approval-state"></span> <span class="approval-comment"></span></p>
+                <small><span class="approval-by"></span> @ <span class="approval-date"></span></small>
+              </blockquote>
+          </td>
+          <td class="nowrap"><span class="rev-date"></span></td>
+        </tr>
       </table>
     </div>
+      </div>
+
+      <div class="span4">
+          <h4>Subscribers</h4>
+          <ul id="subscribers">
+            <li class="doc-subscriber"><span class="subscriber-info"></span></li>
+          </ul>
+          <a class="btn small doc-subscribe" href="#">Subscribe</a>
+      </div>
 
       </div>
 
-        </lift:snippet>
+        </div>
 
     </div>
   </body>

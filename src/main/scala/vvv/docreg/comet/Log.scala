@@ -9,6 +9,7 @@ import http._
 import actor._
 import common._
 import mapper._
+import util._
 import util.Helpers._
 import net.liftweb.http.js._
 import net.liftweb.http.js.JsCmds._
@@ -23,8 +24,7 @@ class Log extends DocumentSubscriber {
   val limit = 20
   private val documentServer = Environment.env.documentServer
   private var revisions: List[Revision] = Nil
-  private lazy val revisionPart: NodeSeq = deepFindKids(defaultHtml, "log", "item")
-  private lazy val revisionInnerPart: NodeSeq = revisionPart \ "li"
+  private lazy val revisionPart: NodeSeq = (".log-item ^^" #> "foo").apply(defaultHtml)
 
   CurrentLog.set(Full(this))
 
@@ -49,7 +49,7 @@ class Log extends DocumentSubscriber {
       add(document, latest)
     case DocumentChanged(document) =>
       revisions = revisions map {r => if (r.document == document) r.reload else r}
-      val update = revisions filter {r => r.document == document} map {r => JsCmds.Replace(r.id.is.toString, bindRevision(revisionPart, r, false))}
+      val update = revisions filter {r => r.document == document} map {r => JsCmds.Replace(r.id.is.toString, bindRevision(r, false))}
       partialUpdate(update)
     case ReloadLog() =>
       revisions = FilteredRevision.findRecent(limit)
@@ -62,37 +62,56 @@ class Log extends DocumentSubscriber {
       revisions.lastOption match {
         case Some(remove) if revisions.size > limit =>
           revisions = r :: revisions.dropRight(1)
-          partialUpdate(PrependHtml("log", bindRevision(revisionPart, r, true)) & FadeIn(r.id.is.toString) & Replace(remove.id.is.toString, Text("")))
+          partialUpdate(PrependHtml("log", bindRevision(r, true)) & FadeIn(r.id.is.toString) & Replace(remove.id.is.toString, Text("")))
         case _ => 
           revisions = r :: revisions
-          partialUpdate(PrependHtml("log", bindRevision(revisionPart, r, true)) & FadeIn(r.id.is.toString))
+          partialUpdate(PrependHtml("log", bindRevision(r, true)) & FadeIn(r.id.is.toString))
       }
     }
   }
 
-  def render = bind("log", "item" -> bindRevisions _)
-
-  private def bindRevisions(xml: NodeSeq): NodeSeq =
-    revisions.flatMap(bindRevision(xml, _, false))
-
-  private def bindRevision(xml: NodeSeq, r: Revision, hidden: Boolean): NodeSeq = {
-    r.document.obj match {
-      case Full(d: Document) =>
-    bind("doc", xml, 
-      AttrBindParam("id_attr", r.id.is.toString, "id"),
-      AttrBindParam("style_attr", if (hidden) "display:none" else "", "style"),
-      AttrBindParam("info_attr", r.info, "href"),
-      "link" -> <span><a href={d.latest.link}>{d.key}</a></span><span class="quiet">v<a href={r.link}>{r.version}</a></span>,
-      "info" -> <span><a href={d.infoLink}>more</a></span>,
-      "key" -> d.key,
-      "version" -> r.version,
-      "project" -> d.projectName, 
-      "title" -> <a href={d.infoLink}>{r.fullTitle}</a>, 
-      "author" -> r.authorLink,
-      "date" -> r.date,
-      "when" -> r.when,
-      "comment" -> r.comment)
-      case _ => NodeSeq.Empty
-    }
+  def render = {
+    ".log-item" #> revisions.map { transformRevision(false) _ }
   }
+
+  private def bindRevision(r: Revision, hidden: Boolean): NodeSeq = {
+    transformRevision(hidden)(r).apply(revisionPart)
+  }
+
+  private def transformRevision(hidden: Boolean)(r: Revision): CssBindFunc = {
+    r.document.obj match {
+      case Full(d) => {
+        ".doc-title"  #> <a href={d.infoLink}>{r.fullTitle}</a> &
+        ".doc-author" #> r.authorLink &
+        ".doc-comment" #> r.comment &
+        ".doc-when" #> r.when &
+        ".doc-info [href]" #> d.infoLink
+      }
+      case _ => {
+        "*" #> NodeSeq.Empty
+      }
+    }
+
+  }
+//
+//  private def bindRevision(xml: NodeSeq, r: Revision, hidden: Boolean): NodeSeq = {
+//    r.document.obj match {
+//      case Full(d: Document) =>
+//    bind("doc", xml,
+//      AttrBindParam("id_attr", r.id.is.toString, "id"),
+//      AttrBindParam("style_attr", if (hidden) "display:none" else "", "style"),
+//      AttrBindParam("info_attr", r.info, "href"),
+//      "link" -> <span><a href={d.latest.link}>{d.key}</a></span><span class="quiet">v<a href={r.link}>{r.version}</a></span>,
+//      "info" -> <span><a href={d.infoLink}>more</a></span>,
+//      "key" -> d.key,
+//      "version" -> r.version,
+//      "project" -> d.projectName,
+//      "title" -> <a href={d.infoLink}>{r.fullTitle}</a>,
+//      "author" -> r.authorLink,
+//      "date" -> r.date,
+//      "when" -> r.when,
+//      "comment" -> r.comment)
+//      case _ => NodeSeq.Empty
+//    }
+//  }
 }

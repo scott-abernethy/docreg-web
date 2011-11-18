@@ -6,6 +6,8 @@ import util._
 import Helpers._
 import http._
 import js._
+import js.JE.JsRaw
+import net.liftweb.http.js.jquery.JqJsCmds
 import js.JsCmds._
 import js.jquery.JqJsCmds.{Show, Hide}
 import scala.xml.{NodeSeq, Text}
@@ -13,34 +15,25 @@ import vvv.docreg.model._
 import vvv.docreg.util._
 
 trait ProjectSelection extends Loggable {
-  def projects(in: NodeSeq): NodeSeq = {
-    val map = Map("All" -> (() => showAll(true)),
-                  "Selected" -> (() => showAll(false)))
-    val default = if (ProjectSelection.showAll.is) Full("All") else Full("Selected")
-    val choices = SHtml.ajaxRadio(map.keys.toSeq, default, (selected: String) => map(selected).apply())
 
-    bind("projects", in,
-      "all" -> <label>{choices("All")}All</label>,
-      "none" -> <label>{choices("Selected")}Selected</label>,
-      "item" -> bindProjects _)
-  }
-  private def bindProjects(in: NodeSeq): NodeSeq = {
-    val showAll = ProjectSelection.showAll.is
-    User.loggedInUser.is match {
-      case Full(user) =>
-        UserProject.listFor(user).flatMap { i =>
-          val project = i._1
-          val selected = i._2
-          bind("project", in, 
-            "name" -> Text(project.name),
-            "check" -> createProjectCheck(project, selected, !showAll))
-        }
-      case _ => NodeSeq.Empty
+  def projects = {
+    val all = ProjectSelection.showAll.is
+    "#projects-all *" #> SHtml.a(() => showAll(true), Text("All")) &
+    "#projects-sel *" #> SHtml.a(() => showAll(false), Text("Selected")) &
+    "#projects-all [class]" #> (if (all) "active" else "inactive") &
+    "#projects-sel [class]" #> (if (!all) "active" else "inactive") &
+    ".project-item" #> UserProject.listFor(User.loggedInUser.is.toOption).map { i =>
+      val project = i._1
+      val selected = i._2
+      ".project-name" #> Text(project.name) &
+      ".project-check" #> createProjectCheck(project, selected, !all)
     }
   }
-  private def createProjectCheck(p: Project, initial: Boolean, show: Boolean) = {
+  
+  private def createProjectCheck(p: Project, initial: Boolean, show: Boolean): NodeSeq = {
     SHtml.ajaxCheckbox(initial, checked => projectChecked(p, checked)).%("style" -> (if (show) "" else "display:none"))
   }
+
   private def projectChecked(project: Project, checked: Boolean): JsCmd = {
     //logger.info("checked " + project.name.is)
     User.loggedInUser.is match {
@@ -58,12 +51,15 @@ trait ProjectSelection extends Loggable {
     SetHtml("project_filter", projects(projectFilterXhtml))
   }
     
-  def projectSelectionUpdate: JsCmd = Noop
+  def projectSelectionUpdate: JsCmd = {
+    Noop
+  }
 
   def showAll(s: Boolean): JsCmd = {
     ProjectSelection.showAll(s)
     val toggleCheckboxes: JsCmd = if (s) Hide(".projects input") else Show(".projects input")
-    projectSelectionUpdate & toggleCheckboxes
+    val toggleTabs: JsCmd = if (s) JsRaw("$('#projects-all').addClass('active');$('#projects-sel').removeClass('active')").cmd else JsRaw("$('#projects-all').removeClass('active');$('#projects-sel').addClass('active')").cmd
+    projectSelectionUpdate & toggleTabs & toggleCheckboxes
   }
 }
 

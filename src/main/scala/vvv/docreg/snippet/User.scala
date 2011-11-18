@@ -14,11 +14,9 @@ class UserSnippet extends Loggable {
   val signInHint = ""
   object username extends RequestVar(signInHint)
 
-  def signIn(in: NodeSeq): NodeSeq = {
-    bind("signIn", in,
-      "username" -> JsCmds.FocusOnLoad(SHtml.text(username.is, s => username(s)) % ("style" -> "width: 250px")),
-      "submit" -> SHtml.submit("Sign In", processLogin _)
-    )
+  def signIn = {
+    ".username" #> JsCmds.FocusOnLoad(SHtml.text(username.is, s => username(s)) % ("style" -> "width: 250px")) &
+    ".submit" #> SHtml.submit("Sign In", processLogin _, "class" -> "btn primary")
   }
 
   def processLogin() {
@@ -55,14 +53,13 @@ class UserSnippet extends Loggable {
     S.redirectTo("signin", () => (User.saveUserCookie))
   }
 
-  def control(in: NodeSeq): NodeSeq = {
+  def control = {
     if (User.loggedIn_?) {
-      bind("user", in,
-        "id" -> (User.loggedInUser.map(o => o.profileLink) openOr Text("?")),
-        "signOut" -> <a href="/user/signout">Sign out</a>
-      )
+      ".user-id *" #> (User.loggedInUser.map(o => o.profileLink) openOr Text("?")) &
+      ".user-action *" #> <a href="/user/signout">Sign out</a>
     } else {
-      <a href="/user/signin">Sign in</a>
+      ".user-id" #> NodeSeq.Empty &
+      ".user-action *" #> <a href="/user/signin">Sign in</a>
     }
   }
 

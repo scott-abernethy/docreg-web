@@ -83,7 +83,7 @@ object UserProjectTestSpecs extends Specification {
       UserProject.create.user(other).project(p3).selected(true).save
       UserProject.create.user(u).project(p1).selected(false).save
 
-      val x = UserProject.listFor(u)
+      val x = UserProject.listFor(Some(u))
       x must haveSize(3)
       x(0)._1 must be_==(p1)
       x(0)._2 must beFalse

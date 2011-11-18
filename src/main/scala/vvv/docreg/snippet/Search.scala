@@ -18,50 +18,53 @@ import vvv.docreg.model.{User, FilteredDocument, Document}
 
 class Search extends Loggable with ProjectSelection {
   object searchInput extends SessionVar("")
-  def input(xhtml: NodeSeq): NodeSeq = {
+
+  def input = {
     if (User.loggedIn_?) {
-      bind("search", xhtml, "form" -> form _)
+      ".search-input" #> SHtml.text(searchInput.is, s => searchInput(s), "class" -> "input-small span5") &
+      ".search-submit" #> SHtml.submit("Search", () => S.redirectTo("/search"), "class" -> "btn info")
     } else {
-      NodeSeq.Empty
+      ".all" #> NodeSeq.Empty
     }
   }
-  def form(xhtml: NodeSeq): NodeSeq = {
-    bind("search", xhtml,
-      "text" -> JsCmds.FocusOnLoad(SHtml.text(searchInput.is, s => searchInput(s)) % ("style" -> "width: 250px")),
-      "submit" -> SHtml.submit("Search", () => S.redirectTo("/search")))
-  }
+
   def bindResults(in: NodeSeq): NodeSeq = {
     import vvv.docreg.util.StringUtil._
     // todo better parsing of search string, from 
-    val titleMatches = results(in, FilteredDocument.searchLike(Document.title, formatSearch(searchInput.is)))
+    var found: List[Document] = FilteredDocument.searchLike(Document.title, formatSearch(searchInput.is))
     if (!in.isEmpty) {
-      val keyMatches = results(in, FilteredDocument.searchLike(Document.key, prePadTo(searchInput.is, 4, '0')))
-      keyMatches ++ titleMatches
-    } else {
-      titleMatches
+      found = FilteredDocument.searchLike(Document.key, prePadTo(searchInput.is, 4, '0')) ::: found
     }
+    results(in, found)
   }
+
   var html: NodeSeq = NodeSeq.Empty
+
   def results(in: NodeSeq): NodeSeq = {
     html = in
     bindResults(in)
   }
+
   def results(in: NodeSeq, ds: List[Document]): NodeSeq = ds match {
-    case Nil => Text("")
-    case xs => bind("search", in, "result" -> (n => items(n, xs)))
+    case Nil => NodeSeq.Empty
+    case xs => items(in, xs)
   }
+
   def items(in: NodeSeq, ds: List[Document]): NodeSeq = {
-    ds.flatMap(d => bind("doc", in,
-        "project" -> d.projectName,
-        "author" -> d.latest.authorLink,
-        "key_link" -> <a href={d.latest.link}>{d.key}</a>,
-        "date" -> d.latest.dateOnly,
-        "title" -> <a href={d.infoLink}>{d.title}</a>))
+    (".search-item" #> ds.map { d =>
+      ".doc-project" #> d.projectName &
+        ".doc-author" #> d.latest.authorLink &
+        ".doc-key_link" #> <a href={d.latest.link}>{d.key}</a> &
+        ".doc-date" #> d.latest.dateOnly &
+        ".doc-title" #> <a href={d.infoLink}>{d.title}</a>
+    }).apply(in)
   }
+
   override def projectSelectionUpdate(): JsCmd = {
     CurrentLog.foreach(_ ! ReloadLog())
     Replace("search_results", bindResults(html))
   }
+
   def formatSearch(in: String): String = {
     val out: Option[String] = for {
       s <- Option(in)

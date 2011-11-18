@@ -7,46 +7,51 @@
   <body class="lift:content_id=main">
     <div id="main" class="lift:surround?with=default;at=body_content">
 
-    <div class="column span-6 sidebar">
-      <div class="lift:snippet?type=Search.projects">
-        <div id="project_filter" class="box roundbox">
-          <h4 style="display:inline;">Projects</h4> <projects:all/><projects:none/>
-          <ol class="projects">
-            <projects:item>
-            <li>
-              <project:check/><project:name/>
-            </li>
-            </projects:item>
-          </ol>
+    <div class="row">
+    <div class="span4">
+      <div class="lift:snippet?type=Search.projects well">
+        <div id="project_filter">
+          <h4>Projects <small>Filter</small></h4>
+            <ul class="tabs">
+              <li id="projects-all"><a href="#">All</a></li>
+              <li id="projects-sel"><a href="#">Selected</a></li>
+            </ul>
+          <div class="input projects">
+            <ul class="inputs-list">
+              <li class="project-item"><span class="project-check"></span> <span class="project-name"></span></li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="span-18 last">
-      <lift:snippet type="Search.results">
+    <div class="span12">
+
+      <h2>Search Results</h2>
+
+      <div class="lift:snippet?type=Search.results">
         <div id="search_results">
-        <table class="baseline-align-cells" cellspacing="0" border-collapse="collapse">
-          <thead>
-          <tr>
-            <th class="span-3">Project</th>
-            <th class="span-1">Doc</th>
-            <th>Title</th>
-            <th class="span-3">Author</th>
-            <th class="span-3">Revised</th>
-          </tr>
-          </thead>
-          <search:result>
-            <tr>
-              <td class="border-top"><doc:project/></td>
-              <td class="border-top"><doc:key_link/></td>
-              <td class="border-top"><doc:title/></td>
-              <td class="border-top"><doc:author/></td>
-              <td class="border-top"><doc:date/></td>
-            </tr>
-          </search:result>
-        </table>
+          <table class="zebra-striped">
+              <thead>
+              <tr>
+                <th>Project</th>
+                <th>Doc</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Revised</th>
+              </tr>
+              </thead>
+                <tr class="search-item">
+                  <td><span class="doc-project"></span></td>
+                  <td><span class="doc-key_link"></span></td>
+                  <td><span class="doc-title"></span></td>
+                  <td><span class="doc-author"></span></td>
+                  <td><span class="doc-date"></span></td>
+                </tr>
+            </table>
         </div>
-      </lift:snippet>
+      </div>
+    </div>
     </div>
 
     </div>
