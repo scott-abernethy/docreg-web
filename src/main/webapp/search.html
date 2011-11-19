@@ -30,24 +30,41 @@
       <h2>Search Results</h2>
 
       <div class="lift:snippet?type=Search.results">
+        <script  type="text/javascript">
+            $(function() {
+    $.tablesorter.addParser({
+    id: "customDate",
+        is: function (s) {
+            return s.match(new RegExp(/^[A-Za-z]{3,10}\.? [0-9]{1,2}, ([0-9]{4}|'?[0-9]{2})$/));
+        }, format: function (s) {
+            return $.tablesorter.formatFloat(new Date(s).getTime());
+        }, type: "numeric"
+});
+    $("#search-table").tablesorter({ headers: {
+            4: { sorter:'customDate' }
+        }, sortList: [[4,1]] });
+  });
+</script>
         <div id="search_results">
-          <table class="zebra-striped">
+          <table id="search-table" class="zebra-striped">
               <thead>
               <tr>
-                <th>Project</th>
-                <th>Doc</th>
-                <th>Title</th>
-                <th>Author</th>
-                <th>Revised</th>
+                <th class="header nowrap">Project</th>
+                <th class="header nowrap">Doc</th>
+                <th class="header nowrap">Title</th>
+                <th class="header nowrap">Author</th>
+                <th class="header nowrap">Revised</th>
               </tr>
               </thead>
+              <tbody>
                 <tr class="search-item">
                   <td><span class="doc-project"></span></td>
                   <td><span class="doc-key_link"></span></td>
                   <td><span class="doc-title"></span></td>
                   <td><span class="doc-author"></span></td>
-                  <td><span class="doc-date"></span></td>
+                  <td class="nowrap"><span class="doc-date"></span></td>
                 </tr>
+              </tbody>
             </table>
         </div>
       </div>

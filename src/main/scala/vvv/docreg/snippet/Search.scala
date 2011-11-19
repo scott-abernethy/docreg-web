@@ -42,12 +42,11 @@ class Search extends Loggable with ProjectSelection {
 
   def results(in: NodeSeq): NodeSeq = {
     html = in
-    bindResults(in)
+    bindResults(html)
   }
 
-  def results(in: NodeSeq, ds: List[Document]): NodeSeq = ds match {
-    case Nil => NodeSeq.Empty
-    case xs => items(in, xs)
+  def results(in: NodeSeq, ds: List[Document]): NodeSeq = {
+    items(in, ds)
   }
 
   def items(in: NodeSeq, ds: List[Document]): NodeSeq = {

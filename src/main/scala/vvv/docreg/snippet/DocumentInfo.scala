@@ -60,7 +60,7 @@ class DocumentSnippet extends Loggable {
         "subscriber" -> subscribers(d)
       )
       (
-        ".doc-title" #> <a href={r.info}>{d.title}</a> &
+        ".doc-title" #> <a href={r.info}>{r.fullTitle}</a> &
         ".doc-number" #> r.number &
         ".doc-next" #> d.nextVersion &
         ".doc-project" #> d.projectName &

@@ -34,7 +34,7 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
 
   def number: String = (document.obj.map(_.key.is) openOr "?") + "-" + version.is
 
-  def fullTitle: String = (document.obj.map(_.key.is) openOr "?") + "-" + version.is + ": " + (document.obj.map(_.title.is) openOr "?")
+  def fullTitle: String = (document.obj.map(_.key.is) openOr "?") + ": " + (document.obj.map(_.title.is) openOr "?")
 
   def authorLink: NodeSeq = {
     author.obj match {

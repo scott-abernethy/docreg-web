@@ -58,7 +58,7 @@ object FilteredDocument {
       Document.findAll(
         Like(field, value),
         OrderBy(Document.id, Descending),
-        MaxRows(100)
+        MaxRows(200)
       )
     } else {
       val checked = ProjectSelection.projects.is.toList
@@ -66,7 +66,7 @@ object FilteredDocument {
         Like(field, value),
         In(Document.project, Project.id, ByList(Project.id, checked.map( _.id.is))),
         OrderBy(Document.id, Descending),
-        MaxRows(100)
+        MaxRows(200)
       )
     }
   }

@@ -7,7 +7,7 @@ import java.util.TimeZone
 object DatePresentation {
   val dateTimeF = new SimpleDateFormat("d MMM yyyy, h:mm a")
   dateTimeF.setTimeZone(TimeZone.getDefault)
-  val dayF = new SimpleDateFormat("dd-MMM-yyyy")
+  val dayF = new SimpleDateFormat("MMM dd, yyyy")
   dayF.setTimeZone(TimeZone.getDefault)
   val timeF = new SimpleDateFormat("h:mm a")
   timeF.setTimeZone(TimeZone.getDefault)
