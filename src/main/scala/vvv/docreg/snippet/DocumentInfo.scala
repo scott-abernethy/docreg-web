@@ -38,16 +38,14 @@ class DocumentSnippet extends Loggable {
     document match {
       case Full(d) => revision match {
         case Full(r) =>
-          if (d.editor.is != null) S.notice("Document is currently being editted")
-          if (!d.latest_?(r.version.is)) S.warning("Not the most recent version of this document")
+          if (d.editor.is != null) S.notice(<div class="alert-message info"><p>Document is currently being editted</p></div>)
+          if (!d.latest_?(r.version.is)) S.warning(<p>Not the most recent version of this document</p>)
           op(in, d, r)
         case _ => 
-          S.error("Invalid version '" + version + "' for document '" + key + "'")
-          NodeSeq.Empty
+          <div class="alert-message error"><p><strong>Invalid</strong>{" version '" + version + "' for document '" + key + "'"}</p></div>
       }
-      case _ => 
-        S.error("Invalid document '" + key + "'")
-        NodeSeq.Empty
+      case _ =>
+        <div class="alert-message error"><p><strong>Invalid</strong>{" document '" + key + "'"}</p></div>
     }
   }
 
@@ -123,7 +121,7 @@ class DocumentSnippet extends Loggable {
 
   private def edit(d: Document, u: Box[User]): NodeSeq = {
     u match {
-      case Full(user) if (user.shortUsername() == d.editor.is) => {
+      case Full(user) if (user.shortUsername().equalsIgnoreCase(d.editor.is)) => {
         SHtml.a(() => { processUnedit(d, user); JsCmds._Noop }, <span>Cancel Edit</span>, "class" -> "btn danger")
       }
       case Full(user) => {
@@ -137,7 +135,7 @@ class DocumentSnippet extends Loggable {
 
   private def submit(d: Document, u: Box[User]): NodeSeq = {
     u match {
-      case Full(user) if (user.shortUsername() == d.editor.is) => {
+      case Full(user) if (user.shortUsername().equalsIgnoreCase(d.editor.is)) => {
         <a class="btn success" href={d.latest.info + "/submit"}>Submit...</a>
       }
       case _ => {

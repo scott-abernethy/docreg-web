@@ -23,7 +23,7 @@ class UserSnippet extends Loggable {
     var submittedUsername = username.is.toLowerCase
 
     if (submittedUsername == signInHint) {
-      S.error("Please enter your account username")
+      loginError(<p>Please enter <strong>your</strong> account username</p>)
     } else {
       User.forUsernameOrCreate(submittedUsername) match {
         case Full(u) if u.active.is =>
@@ -31,9 +31,13 @@ class UserSnippet extends Loggable {
           u.save
           doSignIn(u)
         case _ =>
-          S.error("Failed to login as user '" + submittedUsername + User.domain + "'")
+          loginError(<p><strong>Failed</strong>{" to login as user '" + submittedUsername + User.domain + "'"}</p>)
       }
     }
+  }
+
+  private def loginError(msg: NodeSeq) {
+    S.error(<div class="alert-message error">{ msg }</div>)
   }
 
   def doSignIn(u: vvv.docreg.model.User) {
@@ -43,13 +47,11 @@ class UserSnippet extends Loggable {
     }
     User.requestUri(None)
     User.login(u)
-    S.notice("Welcome " + u.displayName)
     S.redirectTo(uri, () => (User.saveUserCookie))
   }
 
   def signOut(in: NodeSeq): NodeSeq = {
     User.logout()
-    S.notice("User signed out")
     S.redirectTo("signin", () => (User.saveUserCookie))
   }
 
@@ -77,7 +79,7 @@ class UserSnippet extends Loggable {
                                       <li><a href={ s.infoLink }>{s.fullTitle}</a></li>)
                                 else "-"
                         }</ul>
-    )} openOr {S.error("No such user found"); NodeSeq.Empty}
+    )} openOr {<div class="alert-message error"><p>No such user found</p></div>}
   }
 
   def subscriptions = {
