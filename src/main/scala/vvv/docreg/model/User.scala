@@ -9,6 +9,7 @@ import http._
 import provider.HTTPCookie
 import vvv.docreg.util.{Environment, StringUtil}
 import vvv.docreg.util.StringUtil.ValidEmail
+import java.util.Date
 
 // http://www.assembla.com/wiki/show/liftweb/How_to_use_Container_Managed_Security
 // http://wiki.eclipse.org/Jetty/Tutorial/JAAS#LdapLoginModule
@@ -25,6 +26,8 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
   }
   object active extends MappedBoolean(this)
   object host extends MappedString(this, 64)
+  object lastSession extends MappedDateTime(this)
+  object sessionCount extends MappedLong(this)
   object subscriptions extends MappedManyToMany(Subscription, Subscription.user, Subscription.document, Document)
 
   def subscribed_?(d: Document) = Subscription.forDocumentBy(d, this).nonEmpty
@@ -75,6 +78,8 @@ object User extends User with LongKeyedMetaMapper[User] with Loggable {
       case Full(id) =>
         val existing: Box[User] = User.find(id)
         existing.foreach { u =>
+          u.lastSession(new Date)
+          u.sessionCount(u.sessionCount.is + 1L)
           u.host(User.parseHost)
           u.save
           logger.info("User '" + u.displayName + "' started session " + host)
