@@ -79,8 +79,11 @@ class Log extends DocumentSubscriber {
   }
 
   private def transformRevision(hidden: Boolean)(r: Revision): CssBindFunc = {
+    val blank: Option[String] = None
     r.document.obj match {
       case Full(d) => {
+        ".log-item [id]" #> r.id.is.toString &
+        ".log-item [class+]" #> (if (hidden) Some("hide") else blank) &
         ".doc-title"  #> <a href={d.infoLink}>{r.fullTitle}</a> &
         ".doc-author" #> r.authorLink &
         ".doc-comment" #> r.comment &
