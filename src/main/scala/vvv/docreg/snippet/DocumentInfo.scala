@@ -80,8 +80,8 @@ class DocumentSnippet extends Loggable {
             ".approval-date" #> a.date
           }
         } &
-        ".doc-subscriber" #> d.subscribers.toList.sortWith(User.sort).map { s =>
-          ".subscriber-info" #> <a href={ s.profileLink }>{ s.displayName }</a>
+        ".doc-subscriber" #> d.subscribers.toList.sortWith(User.sort).map { u =>
+          ".subscriber-info" #> u.profileLink
         }
       ).apply(in)
     })
