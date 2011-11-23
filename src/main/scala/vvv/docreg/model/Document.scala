@@ -29,6 +29,7 @@ class Document extends LongKeyedMapper[Document] with IdPK with ManyToMany {
   def projectName: String = project.obj.map(_.name.is) openOr "?"
   def infoLink: String = "/d/" + key.is
   def nextVersion: Long = latest.version.toLong + 1L
+
   def nextFileName(userFileName: String): String =
     prePadTo(key, 4, '0') +
       "-" +
@@ -37,6 +38,21 @@ class Document extends LongKeyedMapper[Document] with IdPK with ManyToMany {
       title +
       "." +
       fileExtension(userFileName).getOrElse("")
+
+  def editingFileName(username: String): String = {
+    prePadTo(key, 4, '0') +
+      "-" +
+      prePadTo(nextVersion.toString, 3, '0') +
+      "#" + username +
+      "-" +
+      title +
+      "." +
+      fileExtension(latest.filename.is).getOrElse("")
+  }
+
+  def linkForEditing(username: String): String = {
+    infoLink + "/download/editing/" + username
+  }
 
   def fullTitle: String = key.is + ": " + title.is
 }

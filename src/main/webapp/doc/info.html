@@ -15,8 +15,8 @@
          <div class="span16">
           <h2><span class="doc-title">Title</span></h2>
           <h4>Project: <span class="doc-project">Foo</span></h4>
-             <div class="well">
-                 <a class="btn primary doc-link" href="#">Download</a>
+             <div id="doc-actions" class="well">
+               <a class="btn primary doc-link" href="#">Download</a>
                <a class="btn danger doc-edit" href="#">Edit</a>
                <a class="btn success doc-submit" href="#">Submit</a>
                <a class="btn doc-approve " href="#">Approve...</a>
@@ -36,16 +36,19 @@
           <tr>
             <th>#</th>
             <th>User</th>
-            <th>Comment</th>
+            <th>Description</th>
             <th>Date</th>
           </tr>
         </thead>
+        <tbody id="history-body">
+
         <tr class="doc-editing">
               <td><span class="doc-next">+</span></td>
               <td class="nowrap"><span class="doc-editor">Editor</span></td>
               <td><span class="label important">Editing</span></td>
               <td class="nowrap">...</td>
         </tr>
+
         <tr class="doc-revision">
           <td><span class="rev-link"></span></td>
           <td class="nowrap"><span class="rev-author"></span></td>
@@ -58,6 +61,7 @@
           </td>
           <td class="nowrap"><span class="rev-date"></span></td>
         </tr>
+        </tbody>
       </table>
     </div>
 

@@ -81,6 +81,8 @@ class Boot
         () => Download.download(key)
       case Req("d" :: key :: "v" :: version :: "download" :: Nil, _, GetRequest) => 
         () => Download.download(key, version)
+      case Req("d" :: key :: "download" :: "editing" :: user :: Nil, _, GetRequest) =>
+        () => Download.downloadForEditing(key, user)
     }
 
     def uploadViaDisk(fieldName: String, contentType: String, fileName: String, stream: java.io.InputStream): FileParamHolder = OnDiskFileParamHolder(fieldName, contentType, fileName, stream)

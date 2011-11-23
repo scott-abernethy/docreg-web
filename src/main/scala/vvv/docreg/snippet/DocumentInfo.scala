@@ -4,16 +4,18 @@ import vvv.docreg.backend._
 import vvv.docreg.model._
 import vvv.docreg.model.ApprovalState._
 import net.liftweb._
+import mapper._
 import util._
 import common._
 import Helpers._
 import http._
+import js.jquery.JqJE._
 import js._
 import js.jquery._
-import JE._
 import scala.xml.{NodeSeq, Text, Elem}
 import vvv.docreg.util.{Environment, TemplateParse}
-
+import net.liftweb.http.js.JsCmds._
+import java.util.Date
 
 class DocumentSnippet extends Loggable {
   val backend = Environment.env.backend
@@ -62,12 +64,8 @@ class DocumentSnippet extends Loggable {
         ".doc-number" #> r.number &
         ".doc-next" #> d.nextVersion &
         ".doc-project" #> d.projectName &
-        ".doc-link [href]" #> r.link &
+        docActions(d, r) &
         ".doc-subscribe" #> subscribe(d) &
-        ".doc-edit" #> edit(d, User.loggedInUser.is) &
-        ".doc-submit" #> submit(d, User.loggedInUser.is) &
-        ".doc-approve [href]" #> ("/d/" + d.key + "/v/" + r.version + "/approve") &
-        ".doc-request-approval [href]" #> ("/d/" + d.key + "/v/" + r.version + "/request-approval") &
         ".doc-editing" #> (if (d.editor.is == null) "tr" #> NodeSeq.Empty else (".doc-editor" #> d.editor & ".doc-next" #> d.nextVersion)) &
         ".doc-revision" #> d.revisions.map { r =>
           ".rev-link" #> <a href={r.link}>{r.version.asHtml}</a> &
@@ -86,6 +84,14 @@ class DocumentSnippet extends Loggable {
         }
       ).apply(in)
     })
+
+  private def docActions(d: Document, r: Revision): CssBindFunc = {
+    ".doc-link [href]" #> r.link &
+    ".doc-edit" #> edit(d, User.loggedInUser.is) &
+    ".doc-submit" #> submit(d, User.loggedInUser.is) &
+    ".doc-approve [href]" #> ("/d/" + d.key + "/v/" + r.version + "/approve") &
+    ".doc-request-approval [href]" #> ("/d/" + d.key + "/v/" + r.version + "/request-approval")
+  }
 
   private def subscribers(d: Document): NodeSeq =
   {
@@ -122,10 +128,10 @@ class DocumentSnippet extends Loggable {
   private def edit(d: Document, u: Box[User]): NodeSeq = {
     u match {
       case Full(user) if (user.shortUsername().equalsIgnoreCase(d.editor.is)) => {
-        SHtml.a(() => { processUnedit(d, user); JsCmds._Noop }, <span>Cancel Edit</span>, "class" -> "btn danger")
+        SHtml.a(() => { processUnedit(d, user) }, <span>Cancel Edit</span>, "class" -> "btn danger")
       }
       case Full(user) => {
-        SHtml.a(() => { processEdit(d, user); JsCmds.RedirectTo(d.latest.link) }, <span>Edit</span>, "class" -> "btn danger")
+        SHtml.a(() => { processEdit(d, user) }, <span>Edit</span>, "class" -> "btn danger")
       }
       case _ => {
         NodeSeq.Empty
@@ -144,21 +150,23 @@ class DocumentSnippet extends Loggable {
     }
   }
 
-  private def processEdit(d: Document, u: vvv.docreg.model.User) = {
+  private def processEdit(d: Document, u: vvv.docreg.model.User): JsCmd = {
+    DB.use(DefaultConnectionIdentifier) { c =>
+      d.editor(u.shortUsername())
+      d.save
+    }
     backend ! Edit(d, u)
-    S.notice("Edit request sent")
+    JsCmds.RedirectTo(d.linkForEditing(u.shortUsername()))
   }
 
-  private def processUnedit(d: Document, u: vvv.docreg.model.User) = {
+  private def processUnedit(d: Document, u: vvv.docreg.model.User): JsCmd = {
+    DB.use(DefaultConnectionIdentifier) { c =>
+      d.editor(null)
+      d.save
+    }
     backend ! Unedit(d, u)
-    S.notice("Cancel edit request sent")
+    JsCmds.RedirectTo(d.infoLink)
   }
-
-  private def processSubmit(d: Document, u: vvv.docreg.model.User) = {
-    S.notice("Document submitted")
-  }
-
-
 
   private def subscribe(d: Document) = {
     User.loggedInUser.is match {
@@ -218,6 +226,10 @@ class DocumentSnippet extends Loggable {
     case Full(in) => in \\ "tr" filter (x => (x \ "@class").text.contains("approval:approver"))
     case _ => NodeSeq.Empty
   }
+  lazy val docActionsPartial = Templates("doc" :: "info" :: Nil) match {
+    case Full(in) => ("#doc-actions ^*" #> "ignored").apply(in)
+    case _ => NodeSeq.Empty
+  }
 
   def requestApproval(in: NodeSeq): NodeSeq = forRequest(in, (in, d, r) => {
       ("#doc:title *" #> <a href={r.info}>{r.fullTitle}</a> &
@@ -262,7 +274,7 @@ class DocumentSnippet extends Loggable {
       ".submission-by" #> Text(User.loggedInUser map (_.displayName) openOr "?") &
       ".submission-comment" #> SHtml.textarea(comment, comment = _) &
       ".submission-submit" #> SHtml.submit("Submit", () => processSubmit(d, comment, file), "class" -> "btn primary") &
-      ".submission-cancel" #> SHtml.submit("Cancel", () => S.redirectTo(r.info), "class" -> "btn")
+      ".submission-cancel" #> SHtml.submit("Cancel", () => S.redirectTo("/"), "class" -> "btn")
     ).apply(in)
   })
 
@@ -286,12 +298,16 @@ class DocumentSnippet extends Loggable {
       case Some(f: OnDiskFileParamHolder) if f.mimeType == null =>
         S.error("No file uploaded!")
       case Some(f: OnDiskFileParamHolder) =>
-        S.notice("File uploaded")
         User.loggedInUser.is match {
           case Full(user) =>
             println("send " + f.localFile + " as " + f.fileName + " to " + d.key + " ")
+//            DB.use(DefaultConnectionIdentifier){ c =>
+//              d.editor(null)
+//              d.save
+//              Revision.create.document(d).version(d.nextVersion).filename("#").author(user).comment(comment).date(new Date).save
+//            }
             Environment.env.backend ! Submit(d, f.localFile, f.fileName, comment, user)
-            S.notice("Submit processing...")
+            S.notice("Document submitted, waiting for system to update...")
           case _ =>
             S.error("Unable to submit, no user logged in!")
         }
