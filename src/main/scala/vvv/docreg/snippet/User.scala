@@ -75,7 +75,7 @@ class UserSnippet extends Loggable {
       "username" -> u.username,
       "email" -> u.email,
       //TODO get subscriptions working on profile page, with subscriptions snippet used on home page.
-      "subscriptions" -> <ul>{ if (u.subscriptions.nonEmpty) u.subscriptions.sortWith((a, b) => a.key.is < b.key.is).map(s =>
+      "subscriptions" -> <ul>{ if (u.subscriptions.nonEmpty) u.subscriptions.sortWith(Document.sort).map(s =>
                                       <li><a href={ s.infoLink }>{s.fullTitle}</a></li>)
                                 else "-"
                         }</ul>
@@ -90,7 +90,7 @@ class UserSnippet extends Loggable {
   }
 
   def bindSubscriptions(user: vvv.docreg.model.User)(in: NodeSeq): NodeSeq = {
-    user.subscriptions.flatMap( d =>
+    user.subscriptions.sortWith(Document.sort).flatMap( d =>
       (
         ".item:title" #> d.fullTitle &
         "a [href]" #> d.infoLink

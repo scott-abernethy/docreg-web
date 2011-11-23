@@ -69,6 +69,10 @@ object Document extends Document with LongKeyedMetaMapper[Document] {
   }
 
   val ValidIdentifier: Regex = """^([0-9]+)(-[0-9]+)?$""".r
+
+  def sort(a: Document, b: Document): Boolean = {
+    a.key.is < b.key.is
+  }
 }
 
 object FilteredDocument {
