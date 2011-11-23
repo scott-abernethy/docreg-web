@@ -1,15 +1,14 @@
 package vvv.docreg.util
 
 import org.specs._
-import org.specs.matcher._
-import org.specs.specification._
 
-object StringUtilTestSpecs extends Specification {
+object StringUtilTest extends Specification {
   "StringUtil" should {
     "parse valid email" >> {
       StringUtil.ValidEmail.findFirstIn("scott.abernethy@aviatnet.com") must beSome("scott.abernethy@aviatnet.com")
       StringUtil.ValidEmail.findFirstIn("sabernethy@GNET.global.vpn") must beSome("sabernethy@GNET.global.vpn")
     }
+
     "convert email to name" >> {
       StringUtil.nameFromEmail("foo@bar.com") must be equalTo("Foo")
       StringUtil.nameFromEmail("scott.abernethy@aviatnet.com") must be equalTo("Scott Abernethy")

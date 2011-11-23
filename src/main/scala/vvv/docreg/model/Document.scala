@@ -5,6 +5,7 @@ import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
 import scala.xml._
 import vvv.docreg.util.StringUtil.{prePadTo, fileExtension}
+import util.matching.Regex
 
 class Document extends LongKeyedMapper[Document] with IdPK with ManyToMany {
   def getSingleton = Document
@@ -59,11 +60,15 @@ class Document extends LongKeyedMapper[Document] with IdPK with ManyToMany {
 
 object Document extends Document with LongKeyedMetaMapper[Document] {
   override def dbIndexes = UniqueIndex(key) :: super.dbIndexes
+
   override def fieldOrder = List(key, project, title)
+
   def forKey(key: String): Box[Document] = {
     val xs = findAll(By(Document.key, key))
     if (xs isEmpty) Empty else Full(xs head)
   }
+
+  val ValidIdentifier: Regex = """^([0-9]+)$""".r
 }
 
 object FilteredDocument {

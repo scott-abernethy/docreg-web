@@ -1,6 +1,7 @@
 package bootstrap.liftweb
 
 import net.liftweb._
+import http.RewriteResponse._
 import util._
 import Helpers._
 
@@ -93,6 +94,8 @@ class Boot
     LiftRules.handleMimeFile = uploadViaDisk
 
     LiftRules.statelessRewrite.append {
+      case RewriteRequest(ParsePath(Document.ValidIdentifier(key) :: Nil, _, _, _), _, _) =>
+        RewriteResponse("doc" :: "info" :: Nil, Map("key" -> key))
       case RewriteRequest(ParsePath("d" :: key :: Nil, _, _, _), _, _) =>
         RewriteResponse("doc" :: "info" :: Nil, Map("key" -> key))
       case RewriteRequest(ParsePath("d" :: key :: "v" :: version :: Nil, _, _, _), _, _) =>
