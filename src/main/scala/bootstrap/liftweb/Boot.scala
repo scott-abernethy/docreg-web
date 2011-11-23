@@ -77,13 +77,6 @@ class Boot
     LiftRules.ajaxStart = Full( () => LiftRules.jsArtifacts.show("loading").cmd )
     LiftRules.ajaxEnd = Full( () => LiftRules.jsArtifacts.hide("loading").cmd )
 
-    LiftRules.dispatch.append {
-      case Req(Document.ValidIdentifier(key, version) :: "download" :: Nil, _, GetRequest) =>
-        () => Download.download(key, Option(version).map(_.substring(1)))
-      case Req(Document.ValidIdentifier(key, version) :: "download" :: "editing" :: user :: Nil, _, GetRequest) =>
-        () => Download.downloadForEditing(key, user)
-    }
-
     def uploadViaDisk(fieldName: String, contentType: String, fileName: String, stream: java.io.InputStream): FileParamHolder = OnDiskFileParamHolder(fieldName, contentType, fileName, stream)
 
     val maxSize = 500 * 1024 * 1024
@@ -122,6 +115,13 @@ class Boot
       case RewriteRequest(ParsePath("user" :: user :: "profile" :: Nil, _, _, _), _, _) => {
         RewriteResponse("user" :: "profile" :: Nil, Map("user" -> user))
       }
+    }
+
+    LiftRules.dispatch.append {
+      case Req(Document.ValidIdentifier(key, version) :: "download" :: Nil, _, GetRequest) =>
+        () => Download.download(key, Option(version).map(_.substring(1)))
+      case Req(Document.ValidIdentifier(key, version) :: "download" :: "editing" :: user :: Nil, _, GetRequest) =>
+        () => Download.downloadForEditing(key, user)
     }
 
     val env = new Environment with BackendComponentImpl with DocumentServerComponentImpl with AgentComponentImpl with DirectoryComponentImpl {
