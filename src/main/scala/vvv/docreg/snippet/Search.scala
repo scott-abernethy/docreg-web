@@ -53,7 +53,7 @@ class Search extends Loggable with ProjectSelection {
     (".search-item" #> ds.map { d =>
       ".doc-project" #> d.projectName &
         ".doc-author" #> d.latest.authorLink &
-        ".doc-key_link" #> <a href={d.latest.link}>{d.key}</a> &
+        ".doc-key" #> <a href={d.infoLink}>{d.key}</a> &
         ".doc-date" #> d.latest.dateOnly &
         ".doc-title" #> <a href={d.infoLink}>{d.title}</a>
     }).apply(in)

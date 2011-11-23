@@ -62,13 +62,14 @@ class DocumentSnippet extends Loggable {
       (
         ".doc-title" #> <a href={r.info}>{r.fullTitle}</a> &
         ".doc-number" #> r.number &
+        ".doc-version" #> r.version &
         ".doc-next" #> d.nextVersion &
         ".doc-project" #> d.projectName &
         docActions(d, r) &
         ".doc-subscribe" #> subscribe(d) &
         ".doc-editing" #> (if (d.editor.is == null) "tr" #> NodeSeq.Empty else (".doc-editor" #> d.editor & ".doc-next" #> d.nextVersion)) &
         ".doc-revision" #> d.revisions.map { r =>
-          ".rev-link" #> <a href={r.link}>{r.version.asHtml}</a> &
+          ".rev-link" #> <a href={r.info}>{r.version.asHtml}</a> &
           ".rev-author" #> r.authorLink &
           ".rev-comment" #> r.comment &
           ".rev-date" #> r.date & // TODO date only, hover for time
