@@ -31,14 +31,37 @@ object DocumentTest extends Specification {
 
     "check valid identifiers" >> {
       Document.ValidIdentifier.findFirstIn("") must beNone
-      Document.ValidIdentifier.findFirstIn("1") must beSome("1")
-      Document.ValidIdentifier.findFirstIn("987") must beSome("987")
-      Document.ValidIdentifier.findFirstIn("0002") must beSome("0002")
-      Document.ValidIdentifier.findFirstIn("9999") must beSome("9999")
       Document.ValidIdentifier.findFirstIn("index") must beNone
       Document.ValidIdentifier.findFirstIn("d/987") must beNone
       Document.ValidIdentifier.findFirstIn("user/1234") must beNone
       Document.ValidIdentifier.findFirstIn("user/1234/profile") must beNone
+
+      def checkValidId(in: String, expectedKey: String, expectedVersion: String) = {
+        in match {
+          case Document.ValidIdentifier(key, version) => {
+            key must be_==(expectedKey)
+            if (expectedVersion == null) {
+              version must beNull[String]
+            }
+            else {
+              version must be_==(expectedVersion)
+            }
+          }
+          case _ => {
+            fail()
+          }
+        }
+      }
+
+      checkValidId("0", "0", null)
+      checkValidId("1", "1", null)
+      checkValidId("0002", "0002", null)
+      checkValidId("987", "987", null)
+      checkValidId("9999", "9999", null)
+      checkValidId("12345", "12345", null)
+
+      checkValidId("12-4", "12", "-4")
+      checkValidId("9999-999", "9999", "-999")
     }
   }
 }

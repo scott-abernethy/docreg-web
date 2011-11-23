@@ -68,7 +68,7 @@ object Document extends Document with LongKeyedMetaMapper[Document] {
     if (xs isEmpty) Empty else Full(xs head)
   }
 
-  val ValidIdentifier: Regex = """^([0-9]+)$""".r
+  val ValidIdentifier: Regex = """^([0-9]+)(-[0-9]+)?$""".r
 }
 
 object FilteredDocument {

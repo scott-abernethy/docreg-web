@@ -94,8 +94,12 @@ class Boot
     LiftRules.handleMimeFile = uploadViaDisk
 
     LiftRules.statelessRewrite.append {
-      case RewriteRequest(ParsePath(Document.ValidIdentifier(key) :: Nil, _, _, _), _, _) =>
+      case RewriteRequest(ParsePath(Document.ValidIdentifier(key, null) :: Nil, _, _, _), _, _) => {
         RewriteResponse("doc" :: "info" :: Nil, Map("key" -> key))
+      }
+      case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: Nil, _, _, _), _, _) => {
+        RewriteResponse("doc" :: "info" :: Nil, Map("key" -> key, "version" -> version.substring(1)))
+      }
       case RewriteRequest(ParsePath("d" :: key :: Nil, _, _, _), _, _) =>
         RewriteResponse("doc" :: "info" :: Nil, Map("key" -> key))
       case RewriteRequest(ParsePath("d" :: key :: "v" :: version :: Nil, _, _, _), _, _) =>
