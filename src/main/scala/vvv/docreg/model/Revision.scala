@@ -28,11 +28,17 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
     DatePresentation.dayF.format(date.is)
   }
 
-  def info: String = "/d/" + (document.obj.map(_.key.is) openOr "?") + "/v/" + version
-  def link: String = "/d/" + (document.obj.map(_.key.is) openOr "?") + "/v/" + version + "/download"
+  def number: String = {
+    (document.obj.map(_.key.is) openOr "?") + "-" + version.is
+  }
 
+  def info: String = {
+    "/" + number
+  }
 
-  def number: String = (document.obj.map(_.key.is) openOr "?") + "-" + version.is
+  def link: String = {
+    info + "/download"
+  }
 
   def fullTitle: String = (document.obj.map(_.key.is) openOr "?") + ": " + (document.obj.map(_.title.is) openOr "?")
 

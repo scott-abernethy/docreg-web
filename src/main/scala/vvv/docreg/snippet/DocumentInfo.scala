@@ -89,8 +89,8 @@ class DocumentSnippet extends Loggable {
     ".doc-link [href]" #> r.link &
     ".doc-edit" #> edit(d, User.loggedInUser.is) &
     ".doc-submit" #> submit(d, User.loggedInUser.is) &
-    ".doc-approve [href]" #> ("/d/" + d.key + "/v/" + r.version + "/approve") &
-    ".doc-request-approval [href]" #> ("/d/" + d.key + "/v/" + r.version + "/request-approval")
+    ".doc-approve [href]" #> (r.info + "/approve") &
+    ".doc-request-approval [href]" #> (r.info + "/request-approval")
   }
 
   private def subscribers(d: Document): NodeSeq =

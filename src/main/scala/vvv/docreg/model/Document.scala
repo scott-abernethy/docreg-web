@@ -28,7 +28,7 @@ class Document extends LongKeyedMapper[Document] with IdPK with ManyToMany {
     r != null && r.version.is == version
   }
   def projectName: String = project.obj.map(_.name.is) openOr "?"
-  def infoLink: String = "/d/" + key.is
+  def infoLink: String = "/" + key.is
   def nextVersion: Long = latest.version.toLong + 1L
 
   def nextFileName(userFileName: String): String =

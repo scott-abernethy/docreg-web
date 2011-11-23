@@ -13,17 +13,12 @@ import org.apache.http.client.methods.HttpGet
 
 object Download extends Loggable
 {
-  def download(key: String): Box[LiftResponse] =
+  def download(key: String, version: Option[String]): Box[LiftResponse] =
   {
     log(key)
-    Document.forKey(key) map (d => RedirectResponse("http://"+Backend.server+"/docreg/release/" + d.latest.filename))
-  }
-
-  def download(key: String, version: String): Box[LiftResponse] =
-  {
-    log(key)
-    Document.forKey(key) match {
-      case Full(d) => d.revision(version.toLong) map (r => RedirectResponse("http://"+Backend.server+"/docreg/release/" + r.filename))
+    (Document.forKey(key), version) match {
+      case (Full(d), None) => Document.forKey(key) map (d => RedirectResponse("http://"+Backend.server+"/docreg/release/" + d.latest.filename))
+      case (Full(d), Some(v)) => d.revision(v.toLong) map (r => RedirectResponse("http://"+Backend.server+"/docreg/release/" + r.filename))
       case _ => Empty
     }
   }

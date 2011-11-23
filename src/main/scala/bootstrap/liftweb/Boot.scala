@@ -78,11 +78,9 @@ class Boot
     LiftRules.ajaxEnd = Full( () => LiftRules.jsArtifacts.hide("loading").cmd )
 
     LiftRules.dispatch.append {
-      case Req("d" :: key :: "download" :: Nil, _, GetRequest) => 
-        () => Download.download(key)
-      case Req("d" :: key :: "v" :: version :: "download" :: Nil, _, GetRequest) => 
-        () => Download.download(key, version)
-      case Req("d" :: key :: "download" :: "editing" :: user :: Nil, _, GetRequest) =>
+      case Req(Document.ValidIdentifier(key, version) :: "download" :: Nil, _, GetRequest) =>
+        () => Download.download(key, Option(version).map(_.substring(1)))
+      case Req(Document.ValidIdentifier(key, version) :: "download" :: "editing" :: user :: Nil, _, GetRequest) =>
         () => Download.downloadForEditing(key, user)
     }
 
@@ -93,25 +91,37 @@ class Boot
     LiftRules.maxMimeFileSize = maxSize
     LiftRules.handleMimeFile = uploadViaDisk
 
+    def docIdParams(key: String, version: String): Map[String, String] = {
+      if (version == null) {
+        Map("key" -> key)
+      }
+      else {
+        Map("key" -> key, "version" -> version.substring(1))
+      }
+    }
+
     LiftRules.statelessRewrite.append {
-      case RewriteRequest(ParsePath(Document.ValidIdentifier(key, null) :: Nil, _, _, _), _, _) => {
-        RewriteResponse("doc" :: "info" :: Nil, Map("key" -> key))
+      case RewriteRequest(ParsePath("d" :: key :: tail, _, _, _), _, _) => {
+        RewriteResponse(key :: tail)
+      }
+      case RewriteRequest(ParsePath(Document.ValidIdentifier(key, null) :: "v" :: version :: tail, _, _, _), _, _) => {
+        RewriteResponse(key + "-" + version :: tail)
       }
       case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: Nil, _, _, _), _, _) => {
-        RewriteResponse("doc" :: "info" :: Nil, Map("key" -> key, "version" -> version.substring(1)))
+        RewriteResponse("doc" :: "info" :: Nil, docIdParams(key, version))
       }
-      case RewriteRequest(ParsePath("d" :: key :: Nil, _, _, _), _, _) =>
-        RewriteResponse("doc" :: "info" :: Nil, Map("key" -> key))
-      case RewriteRequest(ParsePath("d" :: key :: "v" :: version :: Nil, _, _, _), _, _) =>
-        RewriteResponse("doc" :: "info" :: Nil, Map("key" -> key, "version" -> version))
-      case RewriteRequest(ParsePath("d" :: key :: "v" :: version :: "approve" :: Nil, _, _, _), _, _) =>
-        RewriteResponse("doc" :: "approve" :: Nil, Map("key" -> key, "version" -> version))
-      case RewriteRequest(ParsePath("d" :: key :: "v" :: version :: "submit" :: Nil, _, _, _), _, _) =>
-        RewriteResponse("doc" :: "submit" :: Nil, Map("key" -> key, "version" -> version))
-      case RewriteRequest(ParsePath("d" :: key :: "v" :: version :: "request-approval" :: Nil, _, _, _), _, _) =>
-        RewriteResponse("doc" :: "request-approval" :: Nil, Map("key" -> key, "version" -> version))
-      case RewriteRequest(ParsePath("user" :: user :: "profile" :: Nil, _, _, _), _, _) =>
+      case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: "approve" :: Nil, _, _, _), _, _) => {
+        RewriteResponse("doc" :: "approve" :: Nil, docIdParams(key, version))
+      }
+      case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: "submit" :: Nil, _, _, _), _, _) => {
+        RewriteResponse("doc" :: "submit" :: Nil, docIdParams(key, version))
+      }
+      case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: "request-approval" :: Nil, _, _, _), _, _) => {
+        RewriteResponse("doc" :: "request-approval" :: Nil, docIdParams(key, version))
+      }
+      case RewriteRequest(ParsePath("user" :: user :: "profile" :: Nil, _, _, _), _, _) => {
         RewriteResponse("user" :: "profile" :: Nil, Map("user" -> user))
+      }
     }
 
     val env = new Environment with BackendComponentImpl with DocumentServerComponentImpl with AgentComponentImpl with DirectoryComponentImpl {
