@@ -46,6 +46,22 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
   def profileLink(): NodeSeq = profileLink(displayName)
 
   def profileLink(text: String): NodeSeq = <a href={"/user/" + id + "/profile"}>{text}</a>
+
+  def revisions(): List[Revision] = {
+    Revision.findAll(By(Revision.author, this), OrderBy(Revision.date, Descending), PreCache(Revision.document))
+  }
+
+  def activity(): Long = {
+    Revision.count(By(Revision.author, this))
+  }
+
+  def impact(): Long = {
+    Document.count(In(Document.id, Revision.document, By(Revision.author, this)))
+  }
+
+  def history(): List[Document] = {
+    Document.findAll(In(Document.id, Revision.document, By(Revision.author, this), OrderBy(Revision.date, Descending)))
+  }
 }
 
 object User extends User with LongKeyedMetaMapper[User] with Loggable {

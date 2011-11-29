@@ -72,16 +72,25 @@ class UserSnippet extends Loggable {
       case Full(uid) => User.find(uid)
       case _ => User.loggedInUser.is
     }
-    user map {u => bind("profile", in, 
-      "name" -> u.displayName,
-      "username" -> u.username,
-      "email" -> u.email,
-      //TODO get subscriptions working on profile page, with subscriptions snippet used on home page.
-      "subscriptions" -> <ul>{ if (u.subscriptions.nonEmpty) u.subscriptions.sortWith(Document.sort).map(s =>
-                                      <li><a href={ s.infoLink }>{s.fullTitle}</a></li>)
-                                else "-"
-                        }</ul>
-    )} openOr {<div class="alert-message error"><p>No such user found</p></div>}
+    user match {
+      case Full(u) => {
+        val t = ".profile-name" #> u.displayName &
+          ".profile-username" #> u.username &
+          ".profile-email" #> u.email &
+          ".profile-activity" #> <span>{ u.activity() } submits in { u.impact() } documents</span> &
+          ".subscription-item" #> u.subscriptions.sortWith(Document.sort).map { s =>
+            "li *" #> s.info()
+          } &
+          ".history-item" #> u.history.map { h =>
+            "li *" #> h.info()
+          }
+
+        t(in)
+      }
+      case _ => {
+        <div class="alert-message error"><p>No such user found</p></div>
+      }
+    }
   }
 
   def subscriptions = {

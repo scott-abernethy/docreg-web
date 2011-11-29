@@ -56,6 +56,8 @@ class Document extends LongKeyedMapper[Document] with IdPK with ManyToMany {
   }
 
   def fullTitle: String = key.is + ": " + title.is
+
+  def info(): NodeSeq = <a href={ infoLink }>{ fullTitle }</a>
 }
 
 object Document extends Document with LongKeyedMetaMapper[Document] {
