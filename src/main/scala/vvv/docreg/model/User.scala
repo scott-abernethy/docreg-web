@@ -62,7 +62,11 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
   }
 
   def history(): List[Document] = {
-    Document.findAll(In(Document.id, Revision.document, By(Revision.author, this), OrderBy(Revision.date, Descending)))
+    val documents = for {
+      revision <- Revision.findAll(By(Revision.author, this), OrderBy(Revision.date, Descending), PreCache(Revision.document))
+      document <- revision.document.obj
+    } yield document
+    documents.distinct
   }
 }
 
