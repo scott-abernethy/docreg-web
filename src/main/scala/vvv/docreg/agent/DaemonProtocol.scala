@@ -86,7 +86,7 @@ class DaemonProtocolEncoder extends OneToOneEncoder with Loggable
     msg match {
       case DownstreamMessage(message, body) =>
         val transactionId: Int = DaemonProtocol.nextTransactionId
-        logger.debug("Protocol downstream " + message + " transaction=" + transactionId)
+        //logger.debug("Protocol downstream " + message + " transaction=" + transactionId)
         val buffer = ChannelBuffers.dynamicBuffer();
 
         // header

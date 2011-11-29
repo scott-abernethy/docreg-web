@@ -38,7 +38,7 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
 
         case 'Poll if lastPoll.elapsed_?(0.9 * pollInterval toLong) =>
         {
-          logger.debug("Poll, next change request {" + lastChangeNumber + "}")
+          //logger.debug("Poll, next change request {" + lastChangeNumber + "}")
           lastPoll.mark()
           agent ! NextChange(Actor.self, hostname, lastChangeNumber)
           schedulePoll
