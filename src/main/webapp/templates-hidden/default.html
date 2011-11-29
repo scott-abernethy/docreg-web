@@ -7,6 +7,7 @@
     <script id="jquery" src="/classpath/jquery.js" type="text/javascript"></script>
     <script id="json" src="/classpath/json.js" type="text/javascript"></script>
     <script id="tablesorter" src="/static/jquery.tablesorter.min.js" type="text/javascript"></script>
+    <script id="dropdown" src="/static/js/bootstrap-dropdown.js" type="text/javascript"></script>
     <link rel="stylesheet" href="/static/bootstrap.css" type="text/css" />
     <link rel="stylesheet" href="/static/site.css" type="text/css" media="screen" />
   </head>
@@ -23,8 +24,14 @@
             </div>
             <div class="lift:snippet?type=UserSnippet.control pull-right">
               <ul class="nav">
-                <li class="user-id">Bob</li>
-                <li class="user-action">Sign Out</li>
+                  <li class="dropdown" data-dropdown="dropdown" >
+                      <a href="#" class="dropdown-toggle user-id">Fred Foo</a>
+                      <ul class="dropdown-menu">
+                        <li class="user-profile"><a href="#">Profile</a></li>
+                          <li class="divider"></li>
+                          <li class="user-action"><a href="#">Sign Out</a></li>
+                      </ul>
+                    </li>
               </ul>
           </div>
           </div>

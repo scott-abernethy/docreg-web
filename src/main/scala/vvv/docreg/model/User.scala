@@ -10,6 +10,7 @@ import provider.HTTPCookie
 import vvv.docreg.util.{Environment, StringUtil}
 import vvv.docreg.util.StringUtil.ValidEmail
 import java.util.Date
+import xml.NodeSeq
 
 // http://www.assembla.com/wiki/show/liftweb/How_to_use_Container_Managed_Security
 // http://wiki.eclipse.org/Jetty/Tutorial/JAAS#LdapLoginModule
@@ -42,7 +43,9 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
     }
   }
 
-  def profileLink = <a href={"/user/" + id + "/profile"}>{displayName}</a>
+  def profileLink(): NodeSeq = profileLink(displayName)
+
+  def profileLink(text: String): NodeSeq = <a href={"/user/" + id + "/profile"}>{text}</a>
 }
 
 object User extends User with LongKeyedMetaMapper[User] with Loggable {

@@ -57,10 +57,12 @@ class UserSnippet extends Loggable {
 
   def control = {
     if (User.loggedIn_?) {
-      ".user-id *" #> (User.loggedInUser.map(o => o.profileLink) openOr Text("?")) &
+      ".user-id *" #> (User.loggedInUser.map(o => o.displayName) openOr "?") &
+      ".user-profile *" #> (User.loggedInUser.map(o => o.profileLink("Profile")) openOr Text("?")) &
       ".user-action *" #> <a href="/user/signout">Sign out</a>
     } else {
-      ".user-id" #> NodeSeq.Empty &
+      ".user-id *" #> "Welcome" &
+      ".user-profile" #> NodeSeq.Empty &
       ".user-action *" #> <a href="/user/signin">Sign in</a>
     }
   }
