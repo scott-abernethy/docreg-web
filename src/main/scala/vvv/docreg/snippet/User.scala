@@ -93,10 +93,24 @@ class UserSnippet extends Loggable {
     }
   }
 
+  def history = {
+    User.loggedInUser.is match {
+      case Full(u) => {
+        ".history-user [href]" #> u.profile() &
+        ".history-item" #> u.reload.history().take(10).map { d =>
+          "li *" #> d.info()
+        }
+      }
+      case _ => {
+        ".history-item" #> NodeSeq.Empty
+      }
+    }
+  }
+
   def subscriptions = {
     User.loggedInUser.is match {
       case Full(u) => ".subscription:item" #> bindSubscriptions(u.reload) _
-      case _ => ClearClearable
+      case _ => ".subscription:item" #> NodeSeq.Empty
     }
   }
 

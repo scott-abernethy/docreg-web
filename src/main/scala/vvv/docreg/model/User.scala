@@ -45,7 +45,9 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
 
   def profileLink(): NodeSeq = profileLink(displayName)
 
-  def profileLink(text: String): NodeSeq = <a href={"/user/" + id + "/profile"}>{text}</a>
+  def profileLink(text: String): NodeSeq = <a href={ profile() }>{ text }</a>
+
+  def profile(): String = "/user/" + id + "/profile"
 
   def revisions(): List[Revision] = {
     Revision.findAll(By(Revision.author, this), OrderBy(Revision.date, Descending), PreCache(Revision.document))
