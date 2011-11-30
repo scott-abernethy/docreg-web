@@ -27,8 +27,6 @@ class UserSnippet extends Loggable {
     } else {
       User.forUsernameOrCreate(submittedUsername) match {
         case Full(u) if u.active.is =>
-          u.host(User.parseHost)
-          u.save
           doSignIn(u)
         case _ =>
           loginError(<p><strong>Failed</strong>{" to login as user '" + submittedUsername + User.domain + "'"}</p>)

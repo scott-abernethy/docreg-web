@@ -79,9 +79,27 @@ object User extends User with LongKeyedMetaMapper[User] with Loggable {
   
   override def dbIndexes = UniqueIndex(email) :: UniqueIndex(username) :: super.dbIndexes
   override def fieldOrder = List(id, name, email)
+
   def loggedIn_? = !loggedInUser.is.isEmpty
-  def login(user: User) = loggedInUser(Full(user))
-  def logout() = loggedInUser(Empty)
+
+  def login(user: User) = {
+    markSession(user)
+    loggedInUser(Full(user))
+  }
+
+  def logout() = {
+    loggedInUser(Empty)
+  }
+
+  private def markSession(in: User)
+  {
+    val u = in.reload
+    u.lastSession(new Date)
+    u.sessionCount(u.sessionCount.is + 1L)
+    u.host(User.parseHost)
+    u.save
+    logger.info("User '" + u.displayName + "' started session " + host)
+  }
 
   def forUsernameOrCreate(username: String): Box[User] = {
     find(By(User.username, username + domain)) match {
@@ -98,17 +116,12 @@ object User extends User with LongKeyedMetaMapper[User] with Loggable {
       case _ => S.addCookie(HTTPCookie(docRegUserCookie, "###").setPath("/"))
     }
   }
+
   def checkForUserCookie: Box[User] = {
     S.cookieValue(docRegUserCookie) match {
       case Full(id) =>
         val existing: Box[User] = User.find(id)
-        existing.foreach { u =>
-          u.lastSession(new Date)
-          u.sessionCount(u.sessionCount.is + 1L)
-          u.host(User.parseHost)
-          u.save
-          logger.info("User '" + u.displayName + "' started session " + host)
-        }
+        existing.foreach { u => markSession(u) }
         existing
       case _ =>
         Empty
