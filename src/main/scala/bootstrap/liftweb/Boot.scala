@@ -43,13 +43,13 @@ class Boot
       Menu.i("Search") / "search" >> loggedIn,
       Menu.i("Login") / "user" / "signin",
       Menu.i("Logout") / "user" / "signout" >> loggedIn,
-      Menu.i("Register") / "user" / "register",
       Menu.i("History") / "doc" / "history" >> loggedIn,
       Menu.i("Profile") / "user" / "profile" >> loggedIn,
       Menu.i("Info") / "doc" / "info" >> loggedIn,
       Menu.i("Approve") / "doc" / "approve" >> loggedIn,
       Menu.i("Request Approval") / "doc" / "request-approval" >> loggedIn,
-      Menu.i("Submit") / "doc" / "submit" >> loggedIn
+      Menu.i("Submit") / "doc" / "submit" >> loggedIn,
+      Menu.i("Project") / "project" / "info" >> loggedIn
     )
 
     // set the sitemap.  Note if you don't want access control for
@@ -114,6 +114,9 @@ class Boot
       }
       case RewriteRequest(ParsePath("user" :: user :: "profile" :: Nil, _, _, _), _, _) => {
         RewriteResponse("user" :: "profile" :: Nil, Map("user" -> user))
+      }
+      case RewriteRequest(ParsePath("project" :: key :: Nil, suffix, absolute, endSlash), _, _) => {
+        RewriteResponse(ParsePath("project" :: "info" :: Nil, suffix, absolute, endSlash), Map("key" -> key), true)
       }
     }
 
