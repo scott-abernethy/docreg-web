@@ -8,6 +8,14 @@ class Project extends LongKeyedMapper[Project] with IdPK {
   def getSingleton = Project
 
   object name extends MappedString(this, 60)
+
+  def documents(): List[Document] = {
+    Document.findAll(By(Document.project, this), OrderBy(Document.key, Descending))
+  }
+
+  def contributors(): List[User] = {
+    documents().flatMap(_.latest.author.obj).distinct.sortWith(User.sort)
+  }
 }
 
 object Project extends Project with LongKeyedMetaMapper[Project] {
