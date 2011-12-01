@@ -17,11 +17,15 @@ class ProjectSnippet extends Loggable {
   def info(in: NodeSeq): NodeSeq = {
     project match {
       case Full(p) => {
+        val documents: List[Document] = p.documents()
+        val contributors: List[User] = p.contributors()
         val t = ".p-name" #> p.name &
-          ".d-item" #> p.documents().map { d =>
+          ".d-count" #> documents.size &
+          ".d-item" #> documents.map { d =>
             "li *" #> d.info()
           } &
-          ".c-item" #> p.contributors().map { u =>
+          ".c-count" #> contributors.size &
+          ".c-item" #> contributors.map { u =>
             "li *" #> u.profileLink()
           }
         t(in)
