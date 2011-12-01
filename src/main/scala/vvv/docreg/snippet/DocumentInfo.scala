@@ -64,7 +64,7 @@ class DocumentSnippet extends Loggable {
         ".doc-number" #> r.number &
         ".doc-version" #> r.version &
         ".doc-next" #> d.nextVersion &
-        ".doc-project" #> d.projectName &
+        ".doc-project" #> d.project.map(_.infoLink).getOrElse(<span>?</span>) &
         docActions(d, r) &
         ".doc-subscribe" #> subscribe(d) &
         ".doc-editing" #> (if (d.editor.is == null) "tr" #> NodeSeq.Empty else (".doc-editor" #> d.editor & ".doc-next" #> d.nextVersion)) &

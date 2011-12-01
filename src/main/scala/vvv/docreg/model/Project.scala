@@ -3,11 +3,16 @@ package vvv.docreg.model
 import _root_.net.liftweb.mapper._
 import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
+import xml.NodeSeq
 
 class Project extends LongKeyedMapper[Project] with IdPK {
   def getSingleton = Project
 
   object name extends MappedString(this, 60)
+
+  def infoLink(): NodeSeq = {
+    <a href={ "/project/" + id }>{ name.is }</a>
+  }
 
   def documents(): List[Document] = {
     Document.findAll(By(Document.project, this), OrderBy(Document.key, Descending))

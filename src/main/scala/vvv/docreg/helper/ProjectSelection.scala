@@ -25,7 +25,7 @@ trait ProjectSelection extends Loggable {
     ".project-item" #> UserProject.listFor(User.loggedInUser.is.toOption).map { i =>
       val project = i._1
       val selected = i._2
-      ".project-name" #> Text(project.name) &
+      ".project-name" #> project.infoLink &
       ".project-check" #> createProjectCheck(project, selected, !all)
     }
   }
