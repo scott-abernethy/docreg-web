@@ -75,6 +75,7 @@ class UserSnippet extends Loggable {
         val t = ".profile-name" #> u.displayName &
           ".profile-username" #> u.username &
           ".profile-email" #> u.email &
+          ".profile-local-server" #> u.localServer &
           ".profile-activity" #> <span>{ u.activity() } submits in { u.impact() } documents</span> &
           ".subscription-item" #> u.subscriptions.sortWith(Document.sort).map { s =>
             "li *" #> s.info()

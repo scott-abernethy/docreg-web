@@ -17,16 +17,17 @@ object Download extends Loggable
   {
     log(key)
     (Document.forKey(key), version) match {
-      case (Full(d), None) => Document.forKey(key) map (d => RedirectResponse("http://"+Backend.server+"/docreg/release/" + d.latest.filename))
-      case (Full(d), Some(v)) => d.revision(v.toLong) map (r => RedirectResponse("http://"+Backend.server+"/docreg/release/" + r.filename))
+      case (Full(d), None) => Document.forKey(key) map (d => RedirectResponse(fileUrl(d.latest.filename)))
+      case (Full(d), Some(v)) => d.revision(v.toLong) map (r => RedirectResponse(fileUrl(r.filename)))
       case _ => Empty
     }
   }
 
   def downloadForEditing(key: String, user: String): Box[LiftResponse] = {
+    // TODO could just grab user here, as we get it for other reasons.
     for {
       document <- Document.forKey(key)
-      url = ("http://" + Backend.server + "/docreg/release/" + document.latest.filename).replaceAll(" ", "%20")
+      url = fileUrl(document.latest.filename)
       entity <- tryRequest(url)
       stream = entity.getContent()
     } yield StreamingResponse(stream, () => stream.close(), entity.getContentLength(), List("Content-Disposition" -> ("attachment; filename=\"" + document.editingFileName(user) + "\"")), Nil, 200)
@@ -59,5 +60,14 @@ object Download extends Loggable
         logger.info("User downloaded " + key)
       }
     }
+  }
+
+  def fileUrl(fileName: String): String = {
+    val userLocalServer: Box[String] = User.loggedInUser.is.map(_.localServer.is)
+    val server = userLocalServer match {
+      case Full(s) if (s != null && s.length() > 0) => s
+      case _ => Backend.server
+    }
+    ("http://" + server + "/docreg/release/" + fileName).replaceAll(" ", "%20")
   }
 }

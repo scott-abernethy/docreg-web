@@ -29,6 +29,7 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
   object host extends MappedString(this, 64)
   object lastSession extends MappedDateTime(this)
   object sessionCount extends MappedLong(this)
+  object localServer extends MappedString(this, 64)
   object subscriptions extends MappedManyToMany(Subscription, Subscription.user, Subscription.document, Document)
 
   def subscribed_?(d: Document) = Subscription.forDocumentBy(d, this).nonEmpty
