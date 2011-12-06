@@ -9,6 +9,7 @@ import http._
 import js._
 import scala.xml.{NodeSeq, Text}
 import vvv.docreg.util.{Environment, StringUtil}
+import vvv.docreg.util.StringUtil._
 
 class UserSnippet extends Loggable {
   val signInHint = ""
@@ -20,17 +21,34 @@ class UserSnippet extends Loggable {
   }
 
   def processLogin() {
-    var submittedUsername = username.is.toLowerCase
-
-    if (submittedUsername == signInHint) {
-      loginError(<p>Please enter <strong>your</strong> account username</p>)
-    } else {
-      User.forUsernameOrCreate(submittedUsername) match {
-        case Full(u) if u.active.is =>
-          doSignIn(u)
-        case _ =>
-          loginError(<p><strong>Failed</strong>{" to login as user '" + submittedUsername + User.domain + "'"}</p>)
+    username.is.toLowerCase match {
+      case DomainUsername("gnet", name) => {
+        tryLogin(name)
       }
+      case DomainUsername(domain, name) => {
+        loginError(<p><strong>Invalid domain</strong>{" '" + domain + "'. Please use your GNET domain username."}</p>)
+      }
+      case ValidEmail(name, "gnet.global.vpn") => {
+        tryLogin(name)
+      }
+      case ValidEmail(name, domain) => {
+        loginError(<p><strong>Invalid domain</strong>{" '" + domain + "'. Please use your GNET domain username."}</p>)
+      }
+      case input if (input == signInHint) => {
+        loginError(<p>Please enter <strong>your</strong> account username</p>)
+      }
+      case input => {
+        tryLogin(input)
+      }
+    }
+  }
+
+  private def tryLogin(username: String) {
+    User.forUsernameOrCreate(username) match {
+      case Full(u) if u.active.is =>
+        doSignIn(u)
+      case _ =>
+        loginError(<p><strong>Failed</strong>{" to login as user '" + username + User.domain + "'"}</p>)
     }
   }
 

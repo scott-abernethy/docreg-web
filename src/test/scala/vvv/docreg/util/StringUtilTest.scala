@@ -9,6 +9,13 @@ object StringUtilTest extends Specification {
       StringUtil.ValidEmail.findFirstIn("sabernethy@GNET.global.vpn") must beSome("sabernethy@GNET.global.vpn")
     }
 
+    "parse valid domain username" >> {
+      StringUtil.DomainUsername.findFirstIn("GNET\\sabernethy") must beSome("GNET\\sabernethy")
+      StringUtil.DomainUsername.findFirstIn("GNET/sabernethy") must beSome("GNET/sabernethy")
+      StringUtil.DomainUsername.findFirstIn("sabernethy") must beNone
+      StringUtil.DomainUsername.findFirstIn("sabernethy@GNET") must beNone
+    }
+
     "convert email to name" >> {
       StringUtil.nameFromEmail("foo@bar.com") must be equalTo("Foo")
       StringUtil.nameFromEmail("scott.abernethy@aviatnet.com") must be equalTo("Scott Abernethy")

@@ -4,6 +4,7 @@ import java.util.regex._
 import util.matching.Regex
 
 object StringUtil {
+  val DomainUsername: Regex = """([a-zA-Z0-9.-]+)[\\/]([a-zA-Z0-9._%+-]+)""".r
   val ValidEmail: Regex = """([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})""".r
   val FileName: Regex = """.*\.(.+)""".r
 
