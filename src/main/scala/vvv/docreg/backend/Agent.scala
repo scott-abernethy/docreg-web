@@ -72,8 +72,8 @@ class WrappedAgent(version: String, val server: String, user: String, val backen
     }
   }
   new ChangePoller(server, backend, new DaemonAgentImpl().start).start() ! 'Reset
-//  val library = new FileList(server, this)
-//  library.addUpdateListener(updateListener)
+  val library = new FileList(server, this)
+  library.addUpdateListener(updateListener)
 }
 
 trait AgentComponentImpl extends AgentComponent {
