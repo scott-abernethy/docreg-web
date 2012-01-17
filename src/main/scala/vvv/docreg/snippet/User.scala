@@ -92,27 +92,36 @@ class UserSnippet extends Loggable {
     }
     user match {
       case Full(u) => {
-        val t = ".profile-name" #> u.displayName &
-          ".profile-username" #> u.username &
-          ".profile-email" #> u.email &
-          ".profile-local-server" #> Server.description(u.localServer) &
-          ".profile-activity" #> <span>{ u.activity() } submits in { u.impact() } documents</span> &
-          ".profile-preferences [href]" #> u.preferences() &
-          ".subscription-item" #> u.subscriptions.sortWith(Document.sort).map { s =>
-            "li *" #> s.info()
-          } &
-          ".history-item" #> u.history.map { h =>
-            "li *" #> h.info()
-          } &
-          ".editing-item" #> u.editing.map { d =>
-            "li *" #> d.info()
-          }
-
-        t(in)
+        profileTransform(u).apply(in)
       }
       case _ => {
         <div class="alert-message error"><p>No such user found</p></div>
       }
+    }
+  }
+
+  def profileTransform(u: User) = {
+    val t = ".profile-name" #> u.displayName &
+    ".profile-username" #> u.username &
+    ".profile-email" #> u.email &
+    ".profile-local-server" #> Server.description(u.localServer) &
+    ".profile-activity" #> <span>{ u.activity() } submits in { u.impact() } documents</span> &
+    ".profile-preferences [href]" #> u.preferences() &
+    ".subscription-item" #> u.subscriptions.sortWith(Document.sort).map { s =>
+      "li *" #> s.info()
+    } &
+    ".history-item" #> u.history.map { h =>
+      "li *" #> h.info()
+    } &
+    ".editing-item" #> u.editing.map { d =>
+      "li *" #> d.info()
+    }
+
+    if (User.loggedInUser.is.exists(_ == u)) {
+      t
+    }
+    else {
+      t & ".profile-preferences" #> NodeSeq.Empty
     }
   }
 
@@ -122,7 +131,7 @@ class UserSnippet extends Loggable {
       case _ => User.loggedInUser.is
     }
     user match {
-      case Full(u) => {
+      case Full(u) if (User.loggedInUser.is.exists(_ == u)) => {
         var selected = u.localServer.is
         ClearClearable &
         ".profile-name" #> u.displayName &
@@ -131,6 +140,7 @@ class UserSnippet extends Loggable {
         "#cancel" #> SHtml.onSubmit( x => S.redirectTo(u.profile()) )
       }
       case _ => {
+        S.warning("You do not have permission to edit that users preferences!")
         S.redirectTo("/")
       }
     }
