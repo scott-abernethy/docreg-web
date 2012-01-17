@@ -122,8 +122,8 @@ trait BackendComponentImpl extends BackendComponent
         {
           try {
             agent.unedit(d.latest.filename, user.shortUsername())
-          } catch { /* An IOException means there was no reply from the sent request.
-                       This is what we want since there is no reply from an UNEDIT_RQST. */
+          } catch {
+            // An IOException means there was no reply from the sent request. This is what we want since there is no reply from an UNEDIT_RQST.
             case e: IOException => logger.info("Unedit request sent")
           }
         }
@@ -173,6 +173,8 @@ trait BackendComponentImpl extends BackendComponent
       assignDocument(document, reconcile.document)
       document.save
 
+      assignEditor(document, reconcile.document)
+
       reconcile.revisions.foreach{createRevision(document, _)}
       applyApprovals(document, reconcile.approvals)
       updateSubscriptions(document, reconcile.subscriptions)
@@ -216,21 +218,41 @@ trait BackendComponentImpl extends BackendComponent
     updateSubscriptions(document, reconcile.subscriptions)
     applyApprovals(document, reconcile.approvals)
     
-    assignDocument(document, reconcile.document)
-    if (document.dirty_?) {
+    val docChanged = assignDocument(document, reconcile.document)
+    val editorChanged = assignEditor(document, reconcile.document)
+    if (docChanged || editorChanged) {
       document.save
       documentServer ! DocumentChanged(document)
     }
     }
   }
 
-  private def assignDocument(document: Document, d: AgentDocument) {
+  private def assignDocument(document: Document, d: AgentDocument): Boolean = {
     document.key(d.getKey)
     document.project(projectWithName(d.getProject))
     document.title(d.getTitle)
-    document.editor(d.getEditor)
     document.access(d.getAccess)
+    document.dirty_?
     // todo check that revision based info here, such as access, is correct in the AgentDocument object.
+  }
+
+  private def assignEditor(document: Document, d: AgentDocument): Boolean = {
+    DB.use(DefaultConnectionIdentifier) { c =>
+      if (d.getEditor != null && d.getEditor.length > 0) {
+        UserLookup.lookup(Some(d.getEditor()), None, None, directory) match {
+          case Full(u) => {
+            Pending.assignEditor(u, document, d.getEditorStart)
+          }
+          case _ => {
+            logger.warn("Editor not resolved for '" + d.getEditor + "' on " + document)
+            false
+          }
+        }
+      }
+      else {
+        Pending.unassignEditor(document)
+      }
+    }
   }
 
   private def assignRevision(revision: Revision, r: AgentRevision) {

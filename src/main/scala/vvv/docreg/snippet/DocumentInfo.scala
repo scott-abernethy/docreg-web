@@ -35,12 +35,34 @@ class DocumentSnippet extends Loggable {
       }
     case _ => Empty
   }
+  val user: Box[User] = User.loggedInUser.is
+  val editor: List[Pending] = {
+    document match {
+      case Full(d) => Pending.forAction(d, PendingAction.editing)
+      case _ => Nil
+    }
+  }
+  val userPendings: List[Pending] = {
+    (document, user) match {
+      case (Full(d), Full(u)) => Pending.forUserDocument(u, d)
+      case _ => Nil
+    }
+  }
+  val userIsActingAsEditor: Boolean = {
+    userPendings.exists(p =>
+      p.action == PendingAction.editing ||
+      p.action == PendingAction.editRequest
+    ) &&
+    !userPendings.exists(p =>
+      p.action == PendingAction.editCancel
+    )
+  }
 
   def forRequest(in: NodeSeq, op: (NodeSeq, Document, Revision) => NodeSeq): NodeSeq = {
     document match {
       case Full(d) => revision match {
         case Full(r) =>
-          if (d.editor.is != null) S.notice(<div class="alert-message info"><p>Document is currently being editted</p></div>)
+          if (editor != Nil) S.notice(<div class="alert-message info"><p>Document is currently being editted</p></div>)
           if (!d.latest_?(r.version.is)) S.warning(<p>Not the most recent version of this document</p>)
           op(in, d, r)
         case _ => 
@@ -67,7 +89,18 @@ class DocumentSnippet extends Loggable {
         ".doc-project" #> d.project.map(_.infoLink).getOrElse(<span>?</span>) &
         docActions(d, r) &
         ".doc-subscribe" #> subscribe(d) &
-        ".doc-editing" #> (if (d.editor.is == null) "tr" #> NodeSeq.Empty else (".doc-editor" #> d.editor & ".doc-next" #> d.nextVersion)) &
+        ".doc-pending" #> {
+          editor.headOption match {
+            case Some(editPending) => {
+              ".doc-editor" #> editPending.user.obj.map(_.profileLink()).getOrElse(<span>???</span>) &
+              ".edit-requested" #> editPending.date &
+              ".doc-next" #> d.nextVersion
+            }
+            case _ => {
+              "tr" #> NodeSeq.Empty
+            }
+          }
+        } &
         ".doc-revision" #> d.revisions.map { r =>
           ".rev-link" #> <a href={r.info}>{r.version.asHtml}</a> &
           ".rev-author" #> r.authorLink &
@@ -86,10 +119,20 @@ class DocumentSnippet extends Loggable {
       ).apply(in)
     })
 
+  def edit(in: NodeSeq): NodeSeq = forRequest(in, (in, d, r) => {
+    (
+      ClearClearable &
+      ".doc-title" #> <a href={r.info}>{r.fullTitle}</a> &
+      ".edit-download [href]" #> d.linkForEditing(user.map(_.shortUsername).getOrElse("unknown")) &
+      ".edit-submit-file [href]" #> (d.latest.info + "/submit") &
+      ".edit-back [href]" #> (d.latest.info)
+    ).apply(in)
+    })
+
   private def docActions(d: Document, r: Revision): CssBindFunc = {
     ".doc-link [href]" #> r.link &
-    ".doc-edit" #> edit(d, User.loggedInUser.is) &
-    ".doc-submit" #> submit(d, User.loggedInUser.is) &
+    ".doc-edit" #> edit(d) &
+    ".doc-submit" #> submit(d) &
     ".doc-approve [href]" #> (r.info + "/approve") &
     ".doc-request-approval [href]" #> (r.info + "/request-approval")
   }
@@ -126,13 +169,13 @@ class DocumentSnippet extends Loggable {
 //    }
 //  }
 
-  private def edit(d: Document, u: Box[User]): NodeSeq = {
-    u match {
-      case Full(user) if (user.shortUsername().equalsIgnoreCase(d.editor.is)) => {
-        SHtml.a(() => { processUnedit(d, user) }, <span>Cancel Edit</span>, "class" -> "btn danger")
+  private def edit(d: Document): NodeSeq = {
+    user match {
+      case Full(u) if (userIsActingAsEditor) => {
+        SHtml.a(() => { processUnedit(d, u) }, <span>Cancel Edit</span>, "class" -> "btn danger")
       }
-      case Full(user) => {
-        SHtml.a(() => { processEdit(d, user) }, <span>Edit</span>, "class" -> "btn danger")
+      case Full(u) => {
+        SHtml.a(() => { processEdit(d, u) }, <span>Edit</span>, "class" -> "btn danger")
       }
       case _ => {
         NodeSeq.Empty
@@ -140,9 +183,9 @@ class DocumentSnippet extends Loggable {
     }
   }
 
-  private def submit(d: Document, u: Box[User]): NodeSeq = {
-    u match {
-      case Full(user) if (user.shortUsername().equalsIgnoreCase(d.editor.is)) => {
+  private def submit(d: Document): NodeSeq = {
+    user match {
+      case Full(u) if (userIsActingAsEditor) => {
         <a class="btn success" href={d.latest.info + "/submit"}>Submit...</a>
       }
       case _ => {
@@ -152,19 +195,15 @@ class DocumentSnippet extends Loggable {
   }
 
   private def processEdit(d: Document, u: vvv.docreg.model.User): JsCmd = {
-    DB.use(DefaultConnectionIdentifier) { c =>
-      d.editor(u.shortUsername())
-      d.save
-    }
+    Pending.editRequest(u, d)
+    // TODO remove explicit call, make backend listen for pendings
     backend ! Edit(d, u)
-    JsCmds.RedirectTo(d.linkForEditing(u.shortUsername()))
+    S.redirectTo(d.latest.info + "/edit")
   }
 
   private def processUnedit(d: Document, u: vvv.docreg.model.User): JsCmd = {
-    DB.use(DefaultConnectionIdentifier) { c =>
-      d.editor(null)
-      d.save
-    }
+    Pending.editCancel(u, d)
+    // TODO remove explicit call, make backend listen for pendings
     backend ! Unedit(d, u)
     JsCmds.RedirectTo(d.infoLink)
   }

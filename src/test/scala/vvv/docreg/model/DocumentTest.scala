@@ -10,7 +10,7 @@ object DocumentTest extends Specification {
       TestDbVendor.initAndClean()
       val p = Project.create.name("p")
       p.save
-      val d = Document.create.key("999").project(p).title("hellow world").editor("me").access("all")
+      val d = Document.create.key("999").project(p).title("hellow world").access("all")
       d.save
 
       d.nextVersion must be_==(1)
@@ -21,7 +21,7 @@ object DocumentTest extends Specification {
       val (u1, u2) = TestDbVendor.createUsers
       val p = Project.create.name("Cthulhu")
       p.save
-      val d: Document = Document.create.key("234").project(p).title("The Nameless City").editor("H P Lovecraft").access("Forbidden")
+      val d: Document = Document.create.key("234").project(p).title("The Nameless City").access("Forbidden")
       d.save
       val r4 = Revision.create.document(d).version(4).filename("foo.txt").author(u2).date(new Date()).comment("hmmm")
       r4.save

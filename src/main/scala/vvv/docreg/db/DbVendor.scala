@@ -25,7 +25,7 @@ trait DbVendor {
     // Use Lift's Mapper ORM to populate the database
     // you don't need to use Mapper to use Lift... use
     // any ORM you want
-    Schemifier.schemify(true, Schemifier.infoF _, User, Project, Document, Revision, Approval, Subscription, UserProject, UserLookup)
+    Schemifier.schemify(true, Schemifier.infoF _, User, Project, Document, Revision, Approval, Subscription, UserProject, UserLookup, Pending)
   }
 }
 

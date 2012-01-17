@@ -48,6 +48,7 @@ class Boot
       Menu.i("Info") / "doc" / "info" >> loggedIn,
       Menu.i("Approve") / "doc" / "approve" >> loggedIn,
       Menu.i("Request Approval") / "doc" / "request-approval" >> loggedIn,
+      Menu.i("Edit") / "doc" / "edit" >> loggedIn,
       Menu.i("Submit") / "doc" / "submit" >> loggedIn,
       Menu.i("Project") / "project" / "info" >> loggedIn
     )
@@ -103,14 +104,8 @@ class Boot
       case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: Nil, _, _, _), _, _) => {
         RewriteResponse("doc" :: "info" :: Nil, docIdParams(key, version))
       }
-      case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: "approve" :: Nil, _, _, _), _, _) => {
-        RewriteResponse("doc" :: "approve" :: Nil, docIdParams(key, version))
-      }
-      case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: "submit" :: Nil, _, _, _), _, _) => {
-        RewriteResponse("doc" :: "submit" :: Nil, docIdParams(key, version))
-      }
-      case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: "request-approval" :: Nil, _, _, _), _, _) => {
-        RewriteResponse("doc" :: "request-approval" :: Nil, docIdParams(key, version))
+      case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: action :: Nil, _, _, _), _, _) => {
+        RewriteResponse("doc" :: action :: Nil, docIdParams(key, version))
       }
       case RewriteRequest(ParsePath("user" :: user :: "profile" :: Nil, _, _, _), _, _) => {
         RewriteResponse("user" :: "profile" :: Nil, Map("user" -> user))

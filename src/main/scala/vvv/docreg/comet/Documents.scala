@@ -60,6 +60,5 @@ class Documents extends DocumentSubscriber {
       "project" -> d.projectName, 
       "title" -> d.title, 
       "author" -> d.latest.authorLink,
-      "editor" -> d.editor,
       "dateRevised" -> d.latest.date)
 }
