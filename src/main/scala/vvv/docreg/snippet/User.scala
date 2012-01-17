@@ -93,8 +93,9 @@ class UserSnippet extends Loggable {
         val t = ".profile-name" #> u.displayName &
           ".profile-username" #> u.username &
           ".profile-email" #> u.email &
-          ".profile-local-server" #> u.localServer &
+          ".profile-local-server" #> Server.description(u.localServer) &
           ".profile-activity" #> <span>{ u.activity() } submits in { u.impact() } documents</span> &
+          ".profile-preferences [href]" #> u.preferences() &
           ".subscription-item" #> u.subscriptions.sortWith(Document.sort).map { s =>
             "li *" #> s.info()
           } &
@@ -108,6 +109,32 @@ class UserSnippet extends Loggable {
         <div class="alert-message error"><p>No such user found</p></div>
       }
     }
+  }
+
+  def preferences = {
+    val user = S.param("user") match {
+      case Full(uid) => User.find(uid)
+      case _ => User.loggedInUser.is
+    }
+    user match {
+      case Full(u) => {
+        var selected = u.localServer.is
+        ClearClearable &
+        ".profile-name" #> u.displayName &
+        ".local-server" #> SHtml.select(Server.select.toSeq, Full(selected), selected = _) &
+        "#submit" #> SHtml.onSubmit( x => savePreferences(u, selected) ) &
+        "#cancel" #> SHtml.onSubmit( x => S.redirectTo(u.profile()) )
+      }
+      case _ => {
+        S.redirectTo("/")
+      }
+    }
+  }
+
+  def savePreferences(u: User, server: String) {
+    u.reload.localServer(server).save
+    User.reloadLoggedInUser()
+    S.redirectTo(u.profile)
   }
 
   def history = {

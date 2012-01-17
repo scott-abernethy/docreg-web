@@ -4,6 +4,24 @@ class Server(val description: String, val name: String, val address: String) {
 }
 
 object Server {
+  lazy val select: List[(String, String)] = {
+    for (server <- all)
+    yield (server.name, server.description + " (" + server.name + " = " + server.address + ")")
+  }
+
+  lazy val toAddress: List[(String, String)] = {
+    for (server <- all)
+    yield (server.name, server.name + ".gnet.global.vpn")
+  }
+
+  def description(name: String): String = {
+    select.toMap.get(name).getOrElse(name)
+  }
+
+  def address(name: String): String = {
+    toAddress.toMap.get(name).getOrElse(name)
+  }
+
   lazy val all: List[Server] = {
     new Server("Santa Clara", "boromir", "10.15.168.22") ::
     new Server("NZ", "shelob", "10.16.9.179") ::

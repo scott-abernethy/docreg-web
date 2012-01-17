@@ -45,6 +45,7 @@ class Boot
       Menu.i("Logout") / "user" / "signout" >> loggedIn,
       Menu.i("History") / "doc" / "history" >> loggedIn,
       Menu.i("Profile") / "user" / "profile" >> loggedIn,
+      Menu.i("Preferences") / "user" / "preferences" >> loggedIn,
       Menu.i("Info") / "doc" / "info" >> loggedIn,
       Menu.i("Approve") / "doc" / "approve" >> loggedIn,
       Menu.i("Request Approval") / "doc" / "request-approval" >> loggedIn,
@@ -104,11 +105,11 @@ class Boot
       case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: Nil, _, _, _), _, _) => {
         RewriteResponse("doc" :: "info" :: Nil, docIdParams(key, version))
       }
-      case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: action :: Nil, _, _, _), _, _) => {
+      case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: action :: Nil, _, _, _), _, _) if (action != "download") => {
         RewriteResponse("doc" :: action :: Nil, docIdParams(key, version))
       }
-      case RewriteRequest(ParsePath("user" :: user :: "profile" :: Nil, _, _, _), _, _) => {
-        RewriteResponse("user" :: "profile" :: Nil, Map("user" -> user))
+      case RewriteRequest(ParsePath("user" :: user :: action :: Nil, _, _, _), _, _) => {
+        RewriteResponse("user" :: action :: Nil, Map("user" -> user))
       }
       case RewriteRequest(ParsePath("project" :: key :: Nil, suffix, absolute, endSlash), _, _) => {
         RewriteResponse(ParsePath("project" :: "info" :: Nil, suffix, absolute, endSlash), Map("key" -> key), true)

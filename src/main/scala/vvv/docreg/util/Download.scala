@@ -10,16 +10,23 @@ import org.apache.http.HttpEntity
 import net.liftweb.util.ControlHelpers._
 import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.client.methods.HttpGet
+import vvv.docreg.model.Server
 
 object Download extends Loggable
 {
   def download(key: String, version: Option[String]): Box[LiftResponse] =
   {
-    log(key)
-    (Document.forKey(key), version) match {
-      case (Full(d), None) => Document.forKey(key) map (d => RedirectResponse(fileUrl(d.latest.filename)))
-      case (Full(d), Some(v)) => d.revision(v.toLong) map (r => RedirectResponse(fileUrl(r.filename)))
-      case _ => Empty
+    Document.forKey(key) match {
+      case Full(d) => {
+        val r = version.flatMap(v => d.revision(v.toLong)).getOrElse(d.latest)
+        val url: String = fileUrl(r.filename)
+        log("downloaded " + key + " via " + url)
+        Full(RedirectResponse(url))
+      }
+      case _ => {
+        log("failed to download " + key)
+        Empty
+      }
     }
   }
 
@@ -30,7 +37,11 @@ object Download extends Loggable
       url = fileUrl(document.latest.filename)
       entity <- tryRequest(url)
       stream = entity.getContent()
-    } yield StreamingResponse(stream, () => stream.close(), entity.getContentLength(), List("Content-Disposition" -> ("attachment; filename=\"" + document.editingFileName(user) + "\"")), Nil, 200)
+    }
+    yield {
+      log("downloaded for editing " + key + " via " + url)
+      StreamingResponse(stream, () => stream.close(), entity.getContentLength(), List("Content-Disposition" -> ("attachment; filename=\"" + document.editingFileName(user) + "\"")), Nil, 200)
+    }
   }
 
   def tryRequest(url: String): Option[HttpEntity] = {
@@ -46,24 +57,25 @@ object Download extends Loggable
     }
   }
 
-  def log(key: String)
+  def log(text: String)
   {
     // todo log to backend
-    User.loggedInUser.is match
-    {
-      case Full(user) =>
-      {
-        logger.info("User '" + user.displayName + "' downloaded " + key)
+    User.loggedInUser.is match {
+      case Full(user) => {
+        logger.info("User '" + user.displayName + "' " + text)
       }
-      case _ =>
-      {
-        logger.info("User downloaded " + key)
+      case _ => {
+        logger.info("User ??? " + text)
       }
     }
   }
 
   def fileUrl(fileName: String): String = {
-    val userLocalServer: Box[String] = User.loggedInUser.is.map(_.localServer.is)
+    val userLocalServer: Box[String] = for {
+      user <- User.loggedInUser.is
+    }
+    yield Server.address(user.localServer.is)
+
     val server = userLocalServer match {
       case Full(s) if (s != null && s.length() > 0) => s
       case _ => Backend.server

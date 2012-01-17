@@ -50,6 +50,10 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
 
   def profile(): String = "/user/" + id + "/profile"
 
+  def preferences(): String = {
+    "/user/" + id + "/preferences"
+  }
+
   def revisions(): List[Revision] = {
     Revision.findAll(By(Revision.author, this), OrderBy(Revision.date, Descending), PreCache(Revision.document))
   }
@@ -80,6 +84,12 @@ object User extends User with LongKeyedMetaMapper[User] with Loggable {
   
   override def dbIndexes = UniqueIndex(email) :: UniqueIndex(username) :: super.dbIndexes
   override def fieldOrder = List(id, name, email)
+
+  def reloadLoggedInUser() {
+    for (u <- loggedInUser.is) {
+      loggedInUser(Full(u.reload))
+    }
+  }
 
   def loggedIn_? = !loggedInUser.is.isEmpty
 
@@ -128,6 +138,7 @@ object User extends User with LongKeyedMetaMapper[User] with Loggable {
         Empty
     }
   }
+
   def parseHost: String = {
     val host = S.request match {
       case Full(req: Req) => req.remoteAddr
