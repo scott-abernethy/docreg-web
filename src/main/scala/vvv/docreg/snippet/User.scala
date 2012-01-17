@@ -75,10 +75,12 @@ class UserSnippet extends Loggable {
     if (User.loggedIn_?) {
       ".user-id *" #> (User.loggedInUser.map(o => o.displayName) openOr "?") &
       ".user-profile *" #> (User.loggedInUser.map(o => o.profileLink("Profile")) openOr Text("?")) &
+      ".user-preferences *" #> <a href={ (User.loggedInUser.map(o => o.preferences()) openOr "#") }>Preferences</a> &
       ".user-action *" #> <a href="/user/signout">Sign out</a>
     } else {
       ".user-id *" #> "Welcome" &
       ".user-profile" #> NodeSeq.Empty &
+      ".user-preferences" #> NodeSeq.Empty &
       ".user-action *" #> <a href="/user/signin">Sign in</a>
     }
   }
