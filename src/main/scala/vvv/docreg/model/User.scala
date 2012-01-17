@@ -73,6 +73,14 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
     } yield document
     documents.distinct
   }
+
+  def editing(): List[Document] = {
+    val documents = for {
+      pending <- Pending.forUserAction(this, PendingAction.editing)
+      document <- pending.document.obj
+    } yield document
+    documents.distinct
+  }
 }
 
 object User extends User with LongKeyedMetaMapper[User] with Loggable {

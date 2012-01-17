@@ -76,6 +76,10 @@ object Pending extends Pending with LongKeyedMetaMapper[Pending] {
     Pending.findAll(By(document, d), By(action, a))
   }
 
+  def forUserAction(u: User, a: PendingAction.Value): List[Pending] = {
+    Pending.findAll(By(user, u), By(action, a), OrderBy(date, Descending), PreCache(document))
+  }
+
   def forUserAction(u: User, d: Document, a: PendingAction.Value): Option[Pending] = {
     Pending.find(By(user, u), By(document, d), By(action, a)).toOption
   }

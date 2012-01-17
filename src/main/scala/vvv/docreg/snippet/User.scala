@@ -103,6 +103,9 @@ class UserSnippet extends Loggable {
           } &
           ".history-item" #> u.history.map { h =>
             "li *" #> h.info()
+          } &
+          ".editing-item" #> u.editing.map { d =>
+            "li *" #> d.info()
           }
 
         t(in)
@@ -149,6 +152,20 @@ class UserSnippet extends Loggable {
       }
       case _ => {
         ".history-item" #> NodeSeq.Empty
+      }
+    }
+  }
+
+  def editing = {
+    User.loggedInUser.is match {
+      case Full(u) => {
+        ".editing-user [href]" #> u.profile() &
+        ".editing-item" #> u.reload.editing().map { d =>
+          "li *" #> d.info()
+        }
+      }
+      case _ => {
+        ".editing-item" #> NodeSeq.Empty
       }
     }
   }
