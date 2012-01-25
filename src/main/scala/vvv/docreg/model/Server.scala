@@ -11,7 +11,7 @@ object Server {
 
   lazy val toAddress: List[(String, String)] = {
     for (server <- all)
-    yield (server.name, server.name + ".gnet.global.vpn")
+    yield (server.name, server.address)
   }
 
   def description(name: String): String = {
