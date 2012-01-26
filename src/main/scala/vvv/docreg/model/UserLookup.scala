@@ -97,7 +97,7 @@ object UserLookup extends UserLookup with LongKeyedMetaMapper[UserLookup] with L
       case Full(existing) =>
         Full(existing)
       case _ =>
-        val created = User.create.name(attributes.displayName).email(attributes.mail).username(attributes.userName).active(active).localServer("shelob")
+        val created = User.create.name(attributes.displayName).email(attributes.mail).username(attributes.userName).active(active).localServer("boromir")
         created.save
         Full(created)
     }
