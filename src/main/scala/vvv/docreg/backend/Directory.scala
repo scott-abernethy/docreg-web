@@ -1,6 +1,7 @@
 package vvv.docreg.backend
 
 import net.liftweb.ldap._
+import net.liftweb.util.ControlHelpers._
 import javax.naming.directory._
 import net.liftweb.common.{Full, Failure, Empty, Box}
 import vvv.docreg.model.User
@@ -75,18 +76,18 @@ class DirectoryImpl extends LDAPVendor with Directory {
   }
   
   def find(filter: String): Box[UserAttributes] = {
-    searchIt("(&(objectCategory=person)(" + filter + "))") match {
-      case Nil => Empty
-      case dn :: Nil => findFromDn(dn)
-      case dn :: more => Failure("Multiple users found " + (dn :: more))
+    tryo(searchIt("(&(objectCategory=person)(" + filter + "))")) match {
+      case Full(Nil) => Empty
+      case Full(dn :: Nil) => findFromDn(dn)
+      case Full(dn :: more) => Failure("Multiple users found " + (dn :: more))
+      case _ => Failure("Exception encoutered during search for '" + filter + "'")
     }
   }
 
   def findFromDn(dn: String): Box[UserAttributes] = {
     def extractValue(attr: Attributes, key: String): Option[String] = Option(attr).map(_.get(key)).filter(_ != null).map(_.get()).filter(_ != null).map(_.toString)
-    attributesFromDn(dn + "," + ldapBase) match {
-      case null => Empty
-      case attr => 
+    tryo(attributesFromDn(dn + "," + ldapBase)) match {
+      case Full(attr) if (attr != null) => {
         Box(
           for {
             userPrincipalName <- extractValue(attr, "userPrincipalName")
@@ -94,6 +95,10 @@ class DirectoryImpl extends LDAPVendor with Directory {
             displayName <- extractValue(attr, "displayName")
           } yield UserAttributes(userPrincipalName, mail, displayName)
         )
+      }
+      case _ => {
+        Empty
+      }
     }
   }
 }
