@@ -82,7 +82,7 @@ class DocumentSnippet extends Loggable {
         "subscriber" -> subscribers(d)
       )
       (
-        ".doc-title" #> <a href={r.info}>{r.fullTitle}</a> &
+        ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
         ".doc-number" #> r.number &
         ".doc-version" #> r.version &
         ".doc-next" #> d.nextVersion &
@@ -122,7 +122,7 @@ class DocumentSnippet extends Loggable {
   def edit(in: NodeSeq): NodeSeq = forRequest(in, (in, d, r) => {
     (
       ClearClearable &
-      ".doc-title" #> <a href={r.info}>{r.fullTitle}</a> &
+      ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
       ".edit-download [href]" #> d.linkForEditing(user.map(_.shortUsername).getOrElse("unknown")) &
       ".edit-submit-file [href]" #> (d.latest.info + "/submit") &
       ".edit-back [href]" #> (d.latest.info)
@@ -238,7 +238,7 @@ class DocumentSnippet extends Loggable {
     var comment = ""
     var state = ApprovalState.approved
     (
-      ".doc-title" #> <a href={r.info}>{r.fullTitle}</a> &
+      ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
       ".approval-version" #> r.version &
       ".approval-by" #> Text(User.loggedInUser map (_.displayName) openOr "?") &
       ".approval-state" #> SHtml.select(states, Full(state.toString), (selected) => (state = ApprovalState parse selected)) &
@@ -272,7 +272,7 @@ class DocumentSnippet extends Loggable {
   }
 
   def requestApproval(in: NodeSeq): NodeSeq = forRequest(in, (in, d, r) => {
-      ("#doc:title *" #> <a href={r.info}>{r.fullTitle}</a> &
+      ("#doc:title *" #> <a href={d.infoLink}>{r.fullTitle}</a> &
        "#doc:version" #> r.version &
        ".approval:approver" #> approver &
        ".approver:add" #> SHtml.ajaxButton("Add", () => {JqJsCmds.AppendHtml("addTo", approver(approverPartial))}, "class" -> "btn") &
@@ -308,7 +308,7 @@ class DocumentSnippet extends Loggable {
     var comment = ""
     var file: Option[FileParamHolder] = None
     (
-      ".doc-title" #> <a href={r.info}>{r.fullTitle}</a> &
+      ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
       ".submission-version" #> d.nextVersion &
       ".submission-file" #> SHtml.fileUpload(ul => file = Some(ul)) &
       ".submission-by" #> Text(User.loggedInUser map (_.displayName) openOr "?") &
