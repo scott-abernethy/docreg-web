@@ -31,7 +31,7 @@ object UserLookup extends UserLookup with LongKeyedMetaMapper[UserLookup] with L
     }
   }
 
-  def lookup(usernameOption: Option[String], emailOption: Option[String], nameOption: Option[String], directory: Directory): Box[User] = {
+  def lookup(usernameOption: Option[String], emailOption: Option[String], nameOption: Option[String], directory: Directory, why: String): Box[User] = {
     if (usernameOption.isEmpty && emailOption.isEmpty && nameOption.isEmpty) return Failure("Invalid input")
     
     val existing = UserLookup.find(
@@ -49,6 +49,7 @@ object UserLookup extends UserLookup with LongKeyedMetaMapper[UserLookup] with L
           case _ => unknownUser
         }
         createLookup(usernameOption, emailOption, nameOption, x)
+        logger.info("UserLookup created for " + usernameOption + " " + emailOption + " " + nameOption + " due to " + why)
         x
     }
   }

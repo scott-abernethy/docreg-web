@@ -198,7 +198,7 @@ trait BackendComponentImpl extends BackendComponent
     // The agent returns a single approval item per revision/user pair, so no need to cull.
     Revision.forDocument(document, a.getVersion) match {
       case Full(revision) =>
-        val user = UserLookup.lookup(Some(a.getUsername()), Some(a.getApproverEmail), Some(a.getApproverName), directory) openOr null
+        val user = UserLookup.lookup(Some(a.getUsername()), Some(a.getApproverEmail), Some(a.getApproverName), directory, "approval " + a + " on " + document) openOr null
         val approval = Approval.forRevisionBy(revision, user) match {
           case Full(a) => a
           case _ => Approval.create.revision(revision).by(user)
@@ -239,7 +239,7 @@ trait BackendComponentImpl extends BackendComponent
   private def assignEditor(document: Document, d: AgentDocument): Boolean = {
     DB.use(DefaultConnectionIdentifier) { c =>
       if (d.getEditor != null && d.getEditor.length > 0) {
-        UserLookup.lookup(Some(d.getEditor()), None, None, directory) match {
+        UserLookup.lookup(Some(d.getEditor()), None, None, directory, "editor on " + document + " with " + d) match {
           case Full(u) => {
             Pending.assignEditor(u, document, d.getEditorStart)
           }
@@ -256,7 +256,7 @@ trait BackendComponentImpl extends BackendComponent
   }
 
   private def assignRevision(revision: Revision, r: AgentRevision) {
-    val author = UserLookup.lookup(Some(r.getUsername), None, Some(r.getAuthor), directory)
+    val author = UserLookup.lookup(Some(r.getUsername), None, Some(r.getAuthor), directory, "revision on " + revision + " for " + r)
     revision.version(r.getVersion)
     revision.filename(r.getFilename)
     revision.author(author)
@@ -284,7 +284,7 @@ trait BackendComponentImpl extends BackendComponent
   {
     val subscribers: List[User] = for {
       s <- subscriptions
-      u <- UserLookup.lookup(Some(s.getSubscriberUserName), Some(s.getSubscriberEmail), None, directory)
+      u <- UserLookup.lookup(Some(s.getSubscriberUserName), Some(s.getSubscriberEmail), None, directory, "subscription on " + document + " for " + s)
     } yield u
 
     val listed = subscribers.distinct.toSet

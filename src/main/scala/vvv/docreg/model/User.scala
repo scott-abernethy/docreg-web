@@ -125,7 +125,7 @@ object User extends User with LongKeyedMetaMapper[User] with Loggable {
       case Full(user) =>
         Full(user)
       case _ =>
-        UserLookup.lookup(Some(username), None, None, Environment.env.directory)
+        UserLookup.lookup(Some(username), None, None, Environment.env.directory, "forUsernameOrCreate")
     }
   }
 
