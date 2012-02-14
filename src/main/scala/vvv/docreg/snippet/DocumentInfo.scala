@@ -348,6 +348,7 @@ class DocumentSnippet extends Loggable {
 //            }
             Environment.env.backend ! Submit(d, f.localFile, f.fileName, comment, user)
             S.notice("Document submitted, waiting for system to update...")
+            S.redirectTo(d.infoLink)
           case _ =>
             S.error("Unable to submit, no user logged in!")
         }
