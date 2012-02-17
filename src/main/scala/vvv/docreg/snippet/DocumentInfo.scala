@@ -104,7 +104,7 @@ class DocumentSnippet extends Loggable {
         ".doc-revision" #> d.revisions.map { r =>
           ".rev-link" #> <a href={r.info}>{r.version.asHtml}</a> &
           ".rev-author" #> r.authorLink &
-          ".rev-comment" #> r.comment &
+          ".rev-comment" #> r.comment.is &
           ".rev-date" #> r.date & // TODO date only, hover for time
           ".rev-approval" #> Approval.forRevision(r).map { a =>
             ".approval-by" #> (a.by.obj.map(_.profileLink) openOr Text("?")) &
