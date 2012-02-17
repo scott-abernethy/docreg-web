@@ -306,14 +306,16 @@ class DocumentSnippet extends Loggable {
 
   def submit(in: NodeSeq) = forRequest(in, (in, d, r) => {
     var comment = ""
+    var name = d.title.is
     var file: Option[FileParamHolder] = None
     (
       ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
+      ".submission-name" #> SHtml.text(name, name = _) &
       ".submission-version" #> d.nextVersion &
       ".submission-file" #> SHtml.fileUpload(ul => file = Some(ul)) &
       ".submission-by" #> Text(User.loggedInUser map (_.displayName) openOr "?") &
       ".submission-comment" #> SHtml.textarea(comment, comment = _) &
-      ".submission-submit" #> SHtml.submit("Submit", () => processSubmit(d, comment, file), "class" -> "btn primary") &
+      ".submission-submit" #> SHtml.submit("Submit", () => processSubmit(d, name, comment, file), "class" -> "btn primary") &
       ".submission-cancel" #> SHtml.submit("Cancel", () => S.redirectTo("/"), "class" -> "btn")
     ).apply(in)
   })
@@ -333,19 +335,24 @@ class DocumentSnippet extends Loggable {
 //    )
 //  }
 
-  private def processSubmit(d: Document, comment: String, file: Option[FileParamHolder]) {
+  private def processSubmit(d: Document, name: String, comment: String, file: Option[FileParamHolder]) {
     file match {
       case Some(f: OnDiskFileParamHolder) if f.mimeType == null =>
         S.error("No file uploaded!")
+      case Some(f: OnDiskFileParamHolder) if name == "" =>
+        S.error("Document name is blank!")
       case Some(f: OnDiskFileParamHolder) =>
         User.loggedInUser.is match {
           case Full(user) =>
             println("send " + f.localFile + " as " + f.fileName + " to " + d.key + " ")
-//            DB.use(DefaultConnectionIdentifier){ c =>
-//              d.editor(null)
-//              d.save
-//              Revision.create.document(d).version(d.nextVersion).filename("#").author(user).comment(comment).date(new Date).save
-//            }
+            if (name != d.title.is)
+              d.title.apply(name)
+            //DB.use(DefaultConnectionIdentifier){ c =>
+              //d.editor(null)
+              //d.save
+              //Revision.create.document(d).version(d.nextVersion).filename("#").author(user).comment(comment).date(new Date).save
+            //}
+
             Environment.env.backend ! Submit(d, f.localFile, f.fileName, comment, user)
             S.notice("Document submitted, waiting for system to update...")
             S.redirectTo(d.infoLink)
