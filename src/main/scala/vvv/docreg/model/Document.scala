@@ -36,8 +36,7 @@ class Document extends LongKeyedMapper[Document] with IdPK with ManyToMany {
       prePadTo(nextVersion.toString, 3, '0') +
       "-" +
       title +
-      "." +
-      fileExtension(userFileName).getOrElse("")
+      fileExtension(userFileName).map("." + _).getOrElse("")
 
   def editingFileName(username: String): String = {
     prePadTo(key, 4, '0') +

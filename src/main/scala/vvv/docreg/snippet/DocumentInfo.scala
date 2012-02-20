@@ -62,7 +62,7 @@ class DocumentSnippet extends Loggable {
     document match {
       case Full(d) => revision match {
         case Full(r) =>
-          if (editor != Nil) S.notice(<div class="alert-message info"><p>Document is currently being editted</p></div>)
+          if (editor != Nil) S.notice(<div class="alert-message info"><p>Document is currently being edited</p></div>)
           if (!d.latest_?(r.version.is)) S.warning(<p>Not the most recent version of this document</p>)
           op(in, d, r)
         case _ => 
@@ -307,15 +307,18 @@ class DocumentSnippet extends Loggable {
   def submit(in: NodeSeq) = forRequest(in, (in, d, r) => {
     var comment = ""
     var name = d.title.is
+    var projectName = d.projectName;
+    val projectList = Project.findAll().map( i =>(i.name.is, i.name.is))
     var file: Option[FileParamHolder] = None
     (
       ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
+      ".submission-project" #> SHtml.select(projectList, Option(projectName), projectName = _) &
       ".submission-name" #> SHtml.text(name, name = _) &
       ".submission-version" #> d.nextVersion &
       ".submission-file" #> SHtml.fileUpload(ul => file = Some(ul)) &
       ".submission-by" #> Text(User.loggedInUser map (_.displayName) openOr "?") &
       ".submission-comment" #> SHtml.textarea(comment, comment = _) &
-      ".submission-submit" #> SHtml.submit("Submit", () => processSubmit(d, name, comment, file), "class" -> "btn primary") &
+      ".submission-submit" #> SHtml.submit("Submit", () => processSubmit(d, projectName, name, comment, file), "class" -> "btn primary") &
       ".submission-cancel" #> SHtml.submit("Cancel", () => S.redirectTo("/"), "class" -> "btn")
     ).apply(in)
   })
@@ -335,7 +338,7 @@ class DocumentSnippet extends Loggable {
 //    )
 //  }
 
-  private def processSubmit(d: Document, name: String, comment: String, file: Option[FileParamHolder]) {
+  private def processSubmit(d: Document, projectName : String, name: String, comment: String, file: Option[FileParamHolder]) {
     file match {
       case Some(f: OnDiskFileParamHolder) if f.mimeType == null =>
         S.error("No file uploaded!")
@@ -347,13 +350,16 @@ class DocumentSnippet extends Loggable {
             println("send " + f.localFile + " as " + f.fileName + " to " + d.key + " ")
             if (name != d.title.is)
               d.title.apply(name)
+
+
+
             //DB.use(DefaultConnectionIdentifier){ c =>
               //d.editor(null)
               //d.save
               //Revision.create.document(d).version(d.nextVersion).filename("#").author(user).comment(comment).date(new Date).save
             //}
 
-            Environment.env.backend ! Submit(d, f.localFile, f.fileName, comment, user)
+            Environment.env.backend ! Submit(d, projectName, f.localFile, f.fileName, comment, user)
             S.notice("Document submitted, waiting for system to update...")
             S.redirectTo(d.infoLink)
           case _ =>

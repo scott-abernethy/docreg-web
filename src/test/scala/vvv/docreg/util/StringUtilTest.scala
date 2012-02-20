@@ -37,6 +37,7 @@ object StringUtilTest extends Specification {
       StringUtil.fileExtension("foo.bar.baz") must beSome("baz")
       StringUtil.fileExtension("123-887 wer sfaf.ZIP") must beSome("ZIP")
       StringUtil.fileExtension("/usr/share/foo/goat.sh") must beSome("sh")
+      StringUtil.fileExtension("/usr/share/foo/goat.") must beNone
       StringUtil.fileExtension("asdf sfdsf") must beNone
       StringUtil.fileExtension("/asdf/sf/sf sdf - sdf") must beNone
     }

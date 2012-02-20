@@ -29,6 +29,19 @@ object DocumentTest extends Specification {
       d.nextFileName("youyoui.odt") must be_==("0234-005-The Nameless City.odt")
     }
 
+    "check no file extension" in {
+      TestDbVendor.initAndClean()
+      val (u1, u2) = TestDbVendor.createUsers
+      val p = Project.create.name("Cthulhu")
+      p.save
+      val d: Document = Document.create.key("234").project(p).title("The Nameless City").access("Forbidden")
+      d.save
+      val r4 = Revision.create.document(d).version(4).filename("foo.txt").author(u2).date(new Date()).comment("hmmm")
+      r4.save
+
+      d.nextFileName("youyoui") must be_==("0234-005-The Nameless City")
+    }
+
     "check valid identifiers" >> {
       Document.ValidIdentifier.findFirstIn("") must beNone
       Document.ValidIdentifier.findFirstIn("index") must beNone

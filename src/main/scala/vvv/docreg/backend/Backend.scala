@@ -25,7 +25,7 @@ case class SubscribeRequested(document: Document, user: User)
 case class UnsubscribeRequested(document: Document, user: User)
 case class Edit(document: Document, user: User)
 case class Unedit(document: Document, user: User)
-case class Submit(document: Document, localFile: java.io.File, userFileName: String, comment: String, user: User)
+case class Submit(document: Document, projectName: String, localFile: java.io.File, userFileName: String, comment: String, user: User)
 
 trait Backend extends Actor
 
@@ -127,11 +127,11 @@ trait BackendComponentImpl extends BackendComponent
             case e: IOException => logger.info("Unedit request sent")
           }
         }
-        case Submit(d, localFile, userFileName, comment, user) =>
+        case Submit(d, projectName, localFile, userFileName, comment, user) =>
         {
           // todo check revision is latest?
           try {
-            agent.registerCopySubmit(localFile, d.nextFileName(userFileName), d.projectName, d.access.is, user.shortUsername(), user.host.is, comment)
+            agent.registerCopySubmit(localFile, d.nextFileName(userFileName), projectName, d.access.is, user.shortUsername(), user.host.is, comment)
           } catch {
             case a => logger.warn("Submit failed " + a)
             a.printStackTrace()
