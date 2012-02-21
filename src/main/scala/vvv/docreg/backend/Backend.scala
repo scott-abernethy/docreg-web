@@ -15,6 +15,7 @@ import com.hstx.docregsx.{Document => AgentDocument, Revision => AgentRevision, 
 import vvv.docreg.db.DbVendor
 import vvv.docreg.agent.Changed
 import vvv.docreg.agent.DaemonProtocol
+import java.util.Date
 
 case class Connect()
 case class Reload(d: Document)
@@ -56,9 +57,26 @@ trait BackendComponentImpl extends BackendComponent
           logger.info("Starting " + product + " v" + version + " " + java.util.TimeZone.getDefault.getDisplayName)
           agent = createAgent("dr+w " + version, Backend.server, product, self)
         }
-        case Loaded(ds) =>
-        {
-          ds.foreach(reconciler ! Prepare(_, agent))
+        case Loaded(d :: ds) => {
+          Document.forKey(d.getKey) match {
+            case Full(document) => {
+              // reconcile if
+              // 1. not latest version
+              // 2. editor (recently)
+              val v: Int = Integer.parseInt(d.getVersion)
+              val recentEditor = d.getEditor != null && d.getEditorStart != null && d.getEditorStart.after(new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 7)))
+              if (!document.latest_?(v) || recentEditor) {
+                reconciler ! Prepare(d, agent)
+              }
+            }
+            case _ => {
+              reconciler ! Prepare(d, agent)
+            }
+          }
+          this ! Loaded(ds)
+        }
+        case Loaded(Nil) => {
+          logger.info("Parsing docreg.txt for changes to reconcile complete")
         }
         case Updated(d) =>
         {
