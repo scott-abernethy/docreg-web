@@ -2,6 +2,7 @@ package vvv.docreg.snippet
 
 import vvv.docreg.model._
 import net.liftweb._
+import mapper.MappedTimeZone
 import util._
 import common._
 import Helpers._
@@ -10,7 +11,7 @@ import js._
 import scala.xml.{NodeSeq, Text}
 import vvv.docreg.util.{Environment, StringUtil}
 import vvv.docreg.util.StringUtil._
-import java.util.{TimeZone}
+
 
 
 
@@ -141,7 +142,7 @@ class UserSnippet extends Loggable {
         ClearClearable &
         ".profile-name" #> u.displayName &
         ".local-server" #> SHtml.select(Server.select.toSeq, Full(selectedServer), selectedServer = _) &
-        ".local-time" #> SHtml.select(TimeZone.getAvailableIDs().toSeq.map(x => (x,x)), Option(u.timeZone.is), selectedTime = _) &
+        ".local-time" #> SHtml.select(MappedTimeZone.timeZoneList, Option(u.timeZone.is), selectedTime = _) &
         "#submit" #> SHtml.onSubmit( x => savePreferences(u, selectedServer, selectedTime) ) &
         "#cancel" #> SHtml.onSubmit( x => S.redirectTo(u.profile()) )
       }
