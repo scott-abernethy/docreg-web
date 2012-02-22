@@ -10,6 +10,9 @@ import js._
 import scala.xml.{NodeSeq, Text}
 import vvv.docreg.util.{Environment, StringUtil}
 import vvv.docreg.util.StringUtil._
+import java.util.{TimeZone}
+
+
 
 class UserSnippet extends Loggable {
   val signInHint = ""
@@ -105,6 +108,7 @@ class UserSnippet extends Loggable {
     ".profile-username" #> u.username &
     ".profile-email" #> u.email &
     ".profile-local-server" #> Server.description(u.localServer) &
+    ".profile-time-zone" #> u.timeZone.is &
     ".profile-activity" #> <span>{ u.activity() } submits in { u.impact() } documents</span> &
     ".profile-preferences [href]" #> u.preferences() &
     ".subscription-item" #> u.subscriptions.sortWith(Document.sort).map { s =>
@@ -132,11 +136,13 @@ class UserSnippet extends Loggable {
     }
     user match {
       case Full(u) if (User.loggedInUser.is.exists(_ == u)) => {
-        var selected = u.localServer.is
+        var selectedServer = u.localServer.is
+        var selectedTime = ""
         ClearClearable &
         ".profile-name" #> u.displayName &
-        ".local-server" #> SHtml.select(Server.select.toSeq, Full(selected), selected = _) &
-        "#submit" #> SHtml.onSubmit( x => savePreferences(u, selected) ) &
+        ".local-server" #> SHtml.select(Server.select.toSeq, Full(selectedServer), selectedServer = _) &
+        ".local-time" #> SHtml.select(TimeZone.getAvailableIDs().toSeq.map(x => (x,x)), Option(u.timeZone.is), selectedTime = _) &
+        "#submit" #> SHtml.onSubmit( x => savePreferences(u, selectedServer, selectedTime) ) &
         "#cancel" #> SHtml.onSubmit( x => S.redirectTo(u.profile()) )
       }
       case _ => {
@@ -146,9 +152,11 @@ class UserSnippet extends Loggable {
     }
   }
 
-  def savePreferences(u: User, server: String) {
+  def savePreferences(u: User, server: String, timeZone: String) {
     u.reload.localServer(server).save
+    u.timeZone(timeZone).save
     User.reloadLoggedInUser()
+    S.session.foreach(_.destroySession())
     S.redirectTo(u.profile)
   }
 

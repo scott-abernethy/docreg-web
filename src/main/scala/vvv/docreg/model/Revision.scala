@@ -8,6 +8,7 @@ import scala.xml.{NodeSeq, Text}
 import vvv.docreg.util.DatePresentation
 import net.liftweb.util._
 
+
 class Revision extends LongKeyedMapper[Revision] with IdPK {
   def getSingleton = Revision
 
@@ -18,14 +19,14 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
   object filename extends MappedString(this, 200)
   object author extends MappedLongForeignKey(this, User)
   object date extends MappedDateTime(this) {
-    override def asHtml = Text(if (is != null) DatePresentation.dateTimeF format is else "?")
+    override def asHtml = Text(if (is != null) DatePresentation.formatDateTime(is) else "?")
   }
   object comment extends MappedTextarea(this, 512)
   def when: String = DatePresentation.short(date.is)
 
   def dateOnly(): String =
   {
-    DatePresentation.dayF.format(date.is)
+    DatePresentation.formatDay(date.is)
   }
 
   def number: String = {

@@ -3,24 +3,54 @@ package vvv.docreg.util
 import java.text._
 import java.util.Date
 import java.util.TimeZone
+import vvv.docreg.model.User
+import net.liftweb.common.Full
 
 object DatePresentation {
-  val dateTimeF = new SimpleDateFormat("MMM dd, yyyy h:mm a")
+  private val dateTimeF = new SimpleDateFormat("MMM dd, yyyy h:mm a")
   dateTimeF.setTimeZone(TimeZone.getDefault)
-  val dayF = new SimpleDateFormat("MMM dd, yyyy")
+  private val dayF = new SimpleDateFormat("MMM dd, yyyy")
   dayF.setTimeZone(TimeZone.getDefault)
-  val timeF = new SimpleDateFormat("h:mm a")
+  private val timeF = new SimpleDateFormat("h:mm a")
   timeF.setTimeZone(TimeZone.getDefault)
-  val dateF = new SimpleDateFormat("MMM dd '('E')'")
+  private val dateF = new SimpleDateFormat("MMM dd '('E')'")
   dateF.setTimeZone(TimeZone.getDefault)
 
   def now = new Date
 
   def short(date: Date) = {
-    if (dayF.format(now) == dayF.format(date)) {
-      "Today " + timeF.format(date)
+    if (formatDay(now) == formatDay(date)) {
+      "Today " + formatTime(date)
     } else {
-      dateF.format(date) 
+      formatDate(date)
     }
+  }
+
+  def formatDateTime(date: Date): String = {
+    User.loggedInUser.is.foreach(u =>
+      dateTimeF.setTimeZone(u.timeZone.isAsTimeZone)
+    )
+    dateTimeF.format(date)
+  }
+
+  def formatDay(date: Date): String = {
+    User.loggedInUser.is.foreach(u =>
+      dayF.setTimeZone(u.timeZone.isAsTimeZone)
+    )
+    dayF.format(date)
+  }
+
+  def formatTime(date: Date): String = {
+    User.loggedInUser.is.foreach(u =>
+      timeF.setTimeZone(u.timeZone.isAsTimeZone)
+    )
+    timeF.format(date)
+  }
+
+  def formatDate(date: Date): String = {
+    User.loggedInUser.is.foreach(u =>
+      dateF.setTimeZone(u.timeZone.isAsTimeZone)
+    )
+    dateF.format(date)
   }
 }

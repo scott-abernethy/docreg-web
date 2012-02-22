@@ -14,7 +14,7 @@ class Pending extends LongKeyedMapper[Pending] with IdPK {
   object document extends MappedLongForeignKey(this, Document)
   object action extends MappedEnum(this, PendingAction)
   object date extends MappedDateTime(this) {
-    override def asHtml = Text(if (is != null) DatePresentation.dateTimeF format is else "?")
+    override def asHtml = Text(if (is != null) DatePresentation.formatDate(is) else "?")
   }
 }
 

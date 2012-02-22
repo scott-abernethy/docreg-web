@@ -12,7 +12,7 @@ class Approval extends LongKeyedMapper[Approval] with IdPK {
   object by extends MappedLongForeignKey(this, User)
   object state extends MappedEnum(this, ApprovalState)
   object date extends MappedDateTime(this) {
-    override def asHtml = Text(if (is != null) DatePresentation.dateTimeF format is else "?")
+    override def asHtml = Text(if (is != null) DatePresentation.formatTime(is) else "?")
   }
   object comment extends MappedString(this, 128)
 }

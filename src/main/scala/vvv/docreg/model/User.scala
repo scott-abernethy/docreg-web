@@ -12,6 +12,7 @@ import vvv.docreg.util.StringUtil.ValidEmail
 import java.util.Date
 import xml.NodeSeq
 
+
 // http://www.assembla.com/wiki/show/liftweb/How_to_use_Container_Managed_Security
 // http://wiki.eclipse.org/Jetty/Tutorial/JAAS#LdapLoginModule
 // http://www.mail-archive.com/openbd@googlegroups.com/msg05268.html
@@ -31,6 +32,7 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
   object sessionCount extends MappedLong(this)
   object localServer extends MappedString(this, 64)
   object subscriptions extends MappedManyToMany(Subscription, Subscription.user, Subscription.document, Document)
+  object timeZone extends MappedTimeZone(this)
 
   def subscribed_?(d: Document) = Subscription.forDocumentBy(d, this).nonEmpty
 
