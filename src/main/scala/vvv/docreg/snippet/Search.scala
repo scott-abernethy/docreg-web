@@ -34,7 +34,9 @@ class Search extends Loggable with ProjectSelection {
     var found: List[Document] = FilteredDocument.searchLike(Document.title, formatSearch(searchInput.is))
     if (!in.isEmpty) {
       found = FilteredDocument.searchLike(Document.key, prePadTo(searchInput.is, 4, '0')) ::: found
+      found = FilteredDocument.searchAuthor(searchInput.is)  ::: found
     }
+
     results(in, found)
   }
 

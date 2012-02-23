@@ -82,17 +82,34 @@ object FilteredDocument {
     if (ProjectSelection.showAll.is) {
       Document.findAll(
         Like(field, value),
-        OrderBy(Document.id, Descending),
-        MaxRows(200)
+        OrderBy(Document.id, Descending)
       )
     } else {
       val checked = ProjectSelection.projects.is.toList
       Document.findAll(
         Like(field, value),
         In(Document.project, Project.id, ByList(Project.id, checked.map( _.id.is))),
-        OrderBy(Document.id, Descending),
-        MaxRows(200)
+        OrderBy(Document.id, Descending)
       )
+    }
+  }
+  def searchAuthor(value: String): List[Document] = {
+    val users : List[User] = User.findAll(
+        Like(User.name, "%" + value + "%"),
+        OrderBy(User.name, Descending)
+    )
+    if (!ProjectSelection.showAll.is){
+      val touchedRevisions = Revision.findAll(
+//      In(Revision.author, User.id, In(User.name, User.name, Like(User.name, "%" + value + "%"))),
+        In(Revision.author, User.id, ByList(User.id, users.map(_.id.is))),
+        In(Revision.document, Document.id, In(Document.project, Project.id, ByList(Project.id, ProjectSelection.projects.is.map(_.id.is).toSeq)))
+      )
+      touchedRevisions.flatMap(_.document.obj).distinct
+    }else{
+      val touchedRevisions = Revision.findAll(
+        In(Revision.author, User.id, ByList(User.id, users.map(_.id.is)))
+      )
+      touchedRevisions.flatMap(_.document.obj).distinct
     }
   }
 }
