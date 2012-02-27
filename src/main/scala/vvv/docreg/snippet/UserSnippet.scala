@@ -2,7 +2,7 @@ package vvv.docreg.snippet
 
 import vvv.docreg.model._
 import net.liftweb._
-import mapper.MappedTimeZone
+import mapper.{Like, MappedTimeZone}
 import util._
 import common._
 import Helpers._
@@ -91,7 +91,7 @@ class UserSnippet extends Loggable {
 
   def profile(in: NodeSeq): NodeSeq = {
     val user = S.param("user") match {
-      case Full(uid) => User.find(uid)
+      case Full(uname) => User.find(Like(User.username, uname + "@%"))
       case _ => User.loggedInUser.is
     }
     user match {
@@ -99,7 +99,8 @@ class UserSnippet extends Loggable {
         profileTransform(u).apply(in)
       }
       case _ => {
-        <div class="alert-message error"><p>No such user found</p></div>
+        S.warning(<div class="alert-message error"><p>No such user found</p></div>)
+        S.redirectTo("/")
       }
     }
   }
@@ -132,7 +133,7 @@ class UserSnippet extends Loggable {
 
   def preferences = {
     val user = S.param("user") match {
-      case Full(uid) => User.find(uid)
+      case Full(uname) => User.find(Like(User.username, uname + "@%"))
       case _ => User.loggedInUser.is
     }
     user match {
@@ -147,7 +148,7 @@ class UserSnippet extends Loggable {
         "#cancel" #> SHtml.onSubmit( x => S.redirectTo(u.profile()) )
       }
       case _ => {
-        S.warning("You do not have permission to edit that users preferences!")
+        S.warning(<div class="alert-message error"><p>You do not have permission to edit that users preferences!</p></div>)
         S.redirectTo("/")
       }
     }

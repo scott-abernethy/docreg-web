@@ -296,7 +296,7 @@ class DocumentSnippet extends Loggable {
   def processRequestApproval(d: Document, r: Revision) = {
     selected.is.map(s => UserLookup.lookup(None, Some(s), None, Environment.env.directory, "process request approval on " + r) openOr null).filterNot(_ == null) match {
       case Nil =>
-        S.warning("Approval request with no users!")     
+        S.warning(<div class="alert-message error"><p>Approval request with no users!</p></div>)
       case xs  =>
         backend ! ApprovalRequested(d, r, xs)
         S.notice("Approval requested for " + (xs.map(_.displayName).reduceRight((a, b) => a + "; " + b)))
@@ -341,9 +341,9 @@ class DocumentSnippet extends Loggable {
   private def processSubmit(d: Document, projectName : String, name: String, comment: String, file: Option[FileParamHolder]) {
     file match {
       case Some(f: OnDiskFileParamHolder) if f.mimeType == null =>
-        S.error("No file uploaded!")
+        S.error(<div class="alert-message error"><p>No file uploaded!</p></div>)
       case Some(f: OnDiskFileParamHolder) if name == "" =>
-        S.error("Document name is blank!")
+        S.error( <div class="alert-message error"><p>Document name is blank!</p></div>)
       case Some(f: OnDiskFileParamHolder) =>
         User.loggedInUser.is match {
           case Full(user) =>
@@ -360,13 +360,13 @@ class DocumentSnippet extends Loggable {
             //}
 
             Environment.env.backend ! Submit(d, projectName, f.localFile, f.fileName, comment, user)
-            S.notice("Document submitted, waiting for system to update...")
+            S.notice(<div class="alert-message info"><p>Document submitted, waiting for system to update...</p></div>)
             S.redirectTo(d.infoLink)
           case _ =>
-            S.error("Unable to submit, no user logged in!")
+            S.error(<div class="alert-message error"><p>Unable to submit, no user logged in!</p></div>)
         }
       case _ => 
-        S.error("Failed to upload file!")
+        S.error(<div class="alert-message error"><p>Failed to upload file!</p></div>)
     }
   }
 }
