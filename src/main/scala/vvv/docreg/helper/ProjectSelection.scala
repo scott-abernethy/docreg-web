@@ -59,7 +59,8 @@ trait ProjectSelection extends Loggable {
     ProjectSelection.showAll(s)
     val toggleCheckboxes: JsCmd = if (s) Hide(".projects input") else Show(".projects input")
     val toggleTabs: JsCmd = if (s) JsRaw("$('#projects-all').addClass('active');$('#projects-sel').removeClass('active')").cmd else JsRaw("$('#projects-all').removeClass('active');$('#projects-sel').addClass('active')").cmd
-    projectSelectionUpdate & toggleTabs & toggleCheckboxes
+    //previously selection update was first, after changing the order widget problems seem to be gone...
+    toggleTabs & toggleCheckboxes & projectSelectionUpdate
   }
 }
 
