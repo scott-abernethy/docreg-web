@@ -9,8 +9,8 @@ import http._
 import provider.HTTPCookie
 import vvv.docreg.util.{Environment, StringUtil}
 import vvv.docreg.util.StringUtil.ValidEmail
-import java.util.Date
 import xml.NodeSeq
+import java.util.{TimeZone, Date}
 
 
 // http://www.assembla.com/wiki/show/liftweb/How_to_use_Container_Managed_Security
@@ -83,6 +83,14 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
     } yield document
     documents.distinct
   }
+  
+  def getTimeZone(): TimeZone = {
+    if (timeZone.isEmpty){
+      TimeZone.getDefault
+    } else {
+      timeZone.isAsTimeZone
+    }
+  }
 }
 
 object User extends User with LongKeyedMetaMapper[User] with Loggable {
@@ -133,7 +141,7 @@ object User extends User with LongKeyedMetaMapper[User] with Loggable {
 
   def saveUserCookie() {
     loggedInUser.is match {
-      case Full(u) => S.addCookie(HTTPCookie(docRegUserCookie, u.id.is.toString).setMaxAge(3600 * 24 * 365).setPath("/"))
+      case Full(u) => S.addCookie(HTTPCookie(docRegUserCookie, u.username.is).setMaxAge(3600 * 24 * 365).setPath("/"))
       case _ => S.addCookie(HTTPCookie(docRegUserCookie, "###").setPath("/"))
     }
   }
@@ -141,7 +149,7 @@ object User extends User with LongKeyedMetaMapper[User] with Loggable {
   def checkForUserCookie: Box[User] = {
     S.cookieValue(docRegUserCookie) match {
       case Full(id) =>
-        val existing: Box[User] = User.find(id)
+        val existing: Box[User] = User.find(By(User.username, id))
         existing.foreach { u => markSession(u) }
         existing
       case _ =>

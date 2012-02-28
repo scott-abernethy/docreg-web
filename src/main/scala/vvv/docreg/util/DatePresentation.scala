@@ -28,29 +28,31 @@ object DatePresentation {
 
   def formatDateTime(date: Date): String = {
     User.loggedInUser.is.foreach(u =>
-      dateTimeF.setTimeZone(u.timeZone.isAsTimeZone)
+      dateTimeF.setTimeZone(u.getTimeZone)
     )
     dateTimeF.format(date)
   }
 
   def formatDay(date: Date): String = {
     User.loggedInUser.is.foreach(u =>
-      dayF.setTimeZone(u.timeZone.isAsTimeZone)
+      dayF.setTimeZone(u.getTimeZone)
     )
     dayF.format(date)
   }
 
   def formatTime(date: Date): String = {
     User.loggedInUser.is.foreach(u =>
-      timeF.setTimeZone(u.timeZone.isAsTimeZone)
+      timeF.setTimeZone(u.getTimeZone)
     )
     timeF.format(date)
   }
 
   def formatDate(date: Date): String = {
     User.loggedInUser.is.foreach(u =>
-      dateF.setTimeZone(u.timeZone.isAsTimeZone)
+      dateF.setTimeZone(u.getTimeZone)
     )
     dateF.format(date)
   }
+
+
 }
