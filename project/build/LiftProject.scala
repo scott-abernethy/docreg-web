@@ -25,6 +25,7 @@ class LiftProject(info: ProjectInfo) extends DefaultWebProject(info) with IdeaPr
     "org.mockito" % "mockito-all" % "1.8.5" % "test",
     "c3p0" % "c3p0" % "0.9.1.2",
     "org.jboss.netty" % "netty" % "3.2.3.Final",
+    "ch.ethz.ganymed" % "ganymed-ssh2" % "build210",
     "org.apache.httpcomponents" % "httpclient" % "4.1.2",
     "log4j" % "log4j" % "1.2.16",
     "org.slf4j" % "slf4j-log4j12" % "1.6.1"
