@@ -85,7 +85,7 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
   }
   
   def getTimeZone(): TimeZone = {
-    if (timeZone.isEmpty){
+    if (timeZone.is == null){
       TimeZone.getDefault
     } else {
       timeZone.isAsTimeZone
