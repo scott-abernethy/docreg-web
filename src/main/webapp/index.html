@@ -7,12 +7,16 @@
   <body class="lift:content_id=main">
     <div id="main" class="lift:surround?with=default;at=body_content">
 
+    <header class="page-header">
+        <h1>Dashboard</h1>
+    </header>
+
     <div class="row">
-    <div class="span4">
+    <div class="span3">
       <div class="lift:snippet?type=Dashboard.projects well">
         <div id="project_filter">
           <h4>Projects <small>Filter</small></h4>
-            <ul class="tabs">
+            <ul class="nav nav-pills">
               <li id="projects-all"><a href="#">All</a></li>
               <li id="projects-sel"><a href="#">Selected</a></li>
             </ul>
@@ -25,9 +29,9 @@
       </div>
     </div>
 
-    <div class="span6">
+    <div class="span5">
       <div class="lift:snippet?type=Dashboard.log">
-      <h2>Recent Activity</h2>
+      <h3>Recent Activity</h3>
       <div class="lift:comet?type=Log">
         <ol id="log">
             <li class="log-item border-top" id="">
@@ -39,30 +43,32 @@
       </div>
       </div>
     </div>
-    <div class="span6">
+    <div class="span4">
       <h3>Recent History <small>Last 30 days | <a href="/doc/history">More</a></small></h3>
         <div class="lift:snippet?type=History.mini">
-          <div id="g0" class="graph" style="width:320px;height:80px;"></div>
+          <div id="g0" class="graph" style="width:300px;height:80px;"></div>
         </div>
-      <hr class="space"/>
+      <hr/>
 
     <div class="lift:snippet?type=UserSnippet.editing">
       <h3>My Edits In Progress <small><a href="#" class="editing-user">More</a></small></h3>
-      <ul>
+      <ul class="unstyled">
         <li class="editing-item">La</li>
       </ul>
     </div>
+        <hr/>
 
     <div class="lift:snippet?type=UserSnippet.history">
       <h3>My Submissions <small>Last 10 | <a href="#" class="history-user">More</a></small></h3>
-      <ul>
+      <ul class="unstyled">
         <li class="history-item">La</li>
       </ul>
     </div>
+    <hr/>
 
       <h3>My Subscriptions</h3>
       <div class="lift:snippet?type=UserSnippet.subscriptions">
-        <ul>
+        <ul class="unstyled">
           <li class="subscription:item"><a href=""><span class="item:title">001-Foo</span></a></li>
         </ul>
       </div>

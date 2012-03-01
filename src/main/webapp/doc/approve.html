@@ -7,35 +7,45 @@
   <body class="lift:content_id=main">
     <div id="main" class="lift:surround?with=no-sidebar;at=content">
 
-  <div class="lift:snippet?type=DocumentSnippet.approve;form=post">
-    <h2><span class="doc-title"></span></h2>
-    <hr/>
-    <div>
-        <h4>Document Approval</h4>
-        <table>
-          <tr>
-            <th>Version:</th>
-            <td><span class="approval-version"></span></td>
-          </tr>
-          <tr>
-            <th>Action:</th>
-            <td><span class="approval-state"></span></td>
-          </tr>
-          <tr>
-            <th>By:</th>
-            <td class="loud"><span class="approval-by"></span></td>
-          </tr>
-          <tr>
-            <th>Comment:</th>
-            <td><span class="quiet">(an optional comment describing this approval)</span><br/><span class="approval-comment"></span></td>
-          </tr>
-          <tr>
-            <td></td>
-            <td><span class="approval-submit"></span> <span class="approval-cancel"></span></td>
-          </tr>
-        </table>
-    </div>
-  </div>
+  <form class="lift:snippet?type=DocumentSnippet.approve;form=post form-horizontal">
+     <header class="page-header">
+          <h1><span class="doc-title"></span></h1>
+      </header>
+
+      <div class="row"><div class="span12">
+      <fieldset>
+          <legend>Document Approval</legend>
+          <div class="control-group">
+              <label class="control-label" for="input01">Version</label>
+              <div class="controls">
+                <span id="input01" class="approval-version input-small uneditable-input"></span>
+                <p class="help-block">The version of the document to be approved.</p>
+              </div>
+          </div>
+          <div class="control-group">
+              <label class="control-label" for="input02">Action</label>
+              <div class="controls">
+                <span id="input02" class="approval-state"></span>
+              </div>
+          </div>
+          <div class="control-group">
+              <label class="control-label" for="input03">By</label>
+              <div class="controls">
+                <span id="input03" class="approval-by uneditable-input"></span>
+              </div>
+          </div>
+          <div class="control-group">
+              <label class="control-label" for="input04">Comment</label>
+              <div class="controls">
+                <span id="input04" class="approval-comment"></span>
+                <p class="help-block">An optional comment describing this approval.</p>
+              </div>
+          </div>
+          <div class="form-actions">
+              <input type="submit" id="submit" value="Submit" class="btn btn-primary approval-submit"/> <input type="submit" id="cancel" value="Cancel" class="btn approval-cancel"/>
+          </div>
+      </fieldset></div></div>
+  </form>
 
     </div>
   </body>

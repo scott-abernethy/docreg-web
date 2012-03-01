@@ -7,12 +7,16 @@
   <body class="lift:content_id=main">
     <div id="main" class="lift:surround?with=default;at=body_content">
 
+    <header class="page-header">
+        <h1>Search Results</h1>
+    </header>
+
     <div class="row">
-    <div class="span4">
+    <div class="span3">
       <div class="lift:snippet?type=Search.projects well">
         <div id="project_filter">
           <h4>Projects <small>Filter</small></h4>
-            <ul class="tabs">
+            <ul class="nav nav-pills">
               <li id="projects-all"><a href="#">All</a></li>
               <li id="projects-sel"><a href="#">Selected</a></li>
             </ul>
@@ -25,9 +29,7 @@
       </div>
     </div>
 
-    <div class="span12">
-
-      <h2>Search Results</h2>
+    <div class="span9">
 
       <div class="lift:snippet?type=Search.results">
         <script  type="text/javascript">
@@ -46,7 +48,7 @@
   });
 </script>
         <div id="search_results">
-          <table id="search-table" class="zebra-striped">
+          <table id="search-table" class="table table-striped">
               <thead>
               <tr>
                 <th class="header nowrap">Project</th>

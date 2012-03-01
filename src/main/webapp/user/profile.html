@@ -8,9 +8,12 @@
     <div id="main" class="lift:surround?with=no-sidebar;at=content">
 
   <div class="lift:snippet?type=UserSnippet.profile">
+      <header class="page-header">
+          <h1><span class="profile-name"></span> <small>User Profile</small></h1>
+      </header>
+
     <div>
-      <h2><span class="profile-name"></span> <small>User Profile</small></h2>
-      <table cellspacing="0" class="baseline-align-cells">
+      <table class="table table-bordered">
         <tr>
           <th>Username:</th><td><span class="profile-username"/></td>
         </tr>
@@ -26,25 +29,24 @@
         <tr>
           <th>Activity:</th><td><span class="profile-activity"/></td>
         </tr>
-        <tr>
-          <th></th><td><a href="#" class="profile-preferences btn">Edit Preferences</a></td>
-        </tr>
       </table>
+        <p><a href="#" class="profile-preferences btn">Edit Preferences</a></p>
+        <hr/>
       <div class="row">
-          <div class="span8">
+          <div class="span6">
         <h3>Edits In Progress <small>By Start Date</small></h3>
-        <ul>
+        <ul class="unstyled">
           <li class="editing-item"></li>
         </ul>
-              <hr/>
+        <hr/>
           <h3>Submissions <small>By Submit Date</small></h3>
-        <ul>
+        <ul class="unstyled">
           <li class="history-item"></li>
         </ul>
           </div>
-        <div class="span8">
+        <div class="span6">
           <h3>Subscriptions <small>By Document Number</small></h3>
-        <ul>
+        <ul class="unstyled">
           <li class="subscription-item"></li>
         </ul>
         </div>

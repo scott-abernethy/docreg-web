@@ -9,27 +9,37 @@
 
       <div class="lift:snippet?type=DocumentSnippet.info">
 
-      <div class="row">
-         <div class="span16">
-          <h2><span class="doc-title">Title</span> <small>#<span class="doc-version">2</span></small></h2>
-          <h4>Project: <span class="doc-project">Foo</span></h4>
-             <div id="doc-actions" class="well">
-               <a class="btn primary doc-link" href="#">Download</a>
-               <a class="btn danger doc-edit" href="#">Edit</a>
-               <a class="btn success doc-submit" href="#">Submit</a>
-               <a class="btn doc-approve " href="#">Approve...</a>
-               <a class="btn doc-request-approval" href="#">Request Approval...</a>
-             </div>
+      <header class="page-header">
+          <h1><span class="doc-title">Title</span></h1>
+          <p>Project: <span class="doc-project">Foo</span></p>
+      </header>
 
+      <div class="row">
+         <div class="span12">
+             <div id="doc-actions" class="btn-toolbar">
+               <div class="btn-group">
+               <a class="btn btn-info doc-link" href="#"><i class="icon-file icon-white"></i> Download</a>
+               </div>
+               <div class="btn-group">
+               <a class="btn btn-success doc-submit" href="#"><i class="icon-pencil icon-white"></i> Submit</a>
+                   <a class="btn doc-edit" href="#"><i class="icon-pencil icon-white"></i> Edit</a>
+               </div>
+               <div class="btn-group">
+               <a class="btn doc-approve " href="#">Approve</a>
+               <a class="btn doc-request-approval" href="#">Request Approval</a>
+               </div>
+             </div>
          </div>
       </div>
+
+      <hr/>
           
       <div class="row">
 
-      <div class="span12">
+      <div class="span9">
 
-      <h4>Document History</h4>
-      <table id="history" class="zebra-striped">
+      <h3>Document History</h3>
+      <table id="history" class="table table-striped">
         <thead>
           <tr>
             <th>#</th>
@@ -43,7 +53,7 @@
         <tr class="doc-pending">
               <td><span class="doc-next">+</span></td>
               <td class="nowrap"><span class="doc-editor">Editor</span></td>
-              <td><span class="label important">Editing</span></td>
+              <td><span class="label label-important">Editing</span></td>
               <td class="nowrap"><span class="edit-requested">...</span></td>
         </tr>
 
@@ -63,9 +73,9 @@
       </table>
     </div>
 
-      <div class="span4">
-          <h4>Subscribers</h4>
-          <ul id="subscribers">
+      <div class="span3">
+          <h3>Subscribers</h3>
+          <ul id="subscribers" class="unstyled">
             <li class="doc-subscriber"><span class="subscriber-info"></span></li>
           </ul>
           <a class="btn small pull-right doc-subscribe" href="#">Subscribe</a>

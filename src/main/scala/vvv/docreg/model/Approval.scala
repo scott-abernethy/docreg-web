@@ -39,8 +39,8 @@ object ApprovalState extends Enumeration {
     case _ => notApproved
   }
   def style(state: Any): String = state match {
-    case ApprovalState.approved => "label success"
+    case ApprovalState.approved => "label label-success"
     case ApprovalState.pending => "label"
-    case _ => "label important"
+    case _ => "label label-important"
   }
 }

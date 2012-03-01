@@ -9,6 +9,7 @@ import util._
 import common._
 import Helpers._
 import http._
+import js.JE.JsRaw
 import js.jquery.JqJE._
 import js._
 import js.jquery._
@@ -172,10 +173,10 @@ class DocumentSnippet extends Loggable {
   private def edit(d: Document): NodeSeq = {
     user match {
       case Full(u) if (userIsActingAsEditor) => {
-        SHtml.a(() => { processUnedit(d, u) }, <span>Cancel Edit</span>, "class" -> "btn danger")
+        SHtml.a(() => { processUnedit(d, u) }, <span> Cancel Edit</span>, "class" -> "btn")
       }
       case Full(u) => {
-        SHtml.a(() => { processEdit(d, u) }, <span>Edit</span>, "class" -> "btn danger")
+        SHtml.a(() => { processEdit(d, u) }, <i class="icon-edit icon-white"></i><span> Edit</span>, "class" -> "btn btn-warning")
       }
       case _ => {
         NodeSeq.Empty
@@ -186,7 +187,7 @@ class DocumentSnippet extends Loggable {
   private def submit(d: Document): NodeSeq = {
     user match {
       case Full(u) if (userIsActingAsEditor) => {
-        <a class="btn success" href={d.latest.info + "/submit"}>Submit...</a>
+        <a class="btn btn-success" href={d.latest.info + "/submit"}><i class="icon-share icon-white"></i> Submit</a>
       }
       case _ => {
         NodeSeq.Empty
@@ -239,10 +240,10 @@ class DocumentSnippet extends Loggable {
     var state = ApprovalState.approved
     (
       ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
-      ".approval-version" #> r.version &
-      ".approval-by" #> Text(User.loggedInUser map (_.displayName) openOr "?") &
+      ".approval-version *" #> r.version &
+      ".approval-by *" #> Text(User.loggedInUser map (_.displayName) openOr "?") &
       ".approval-state" #> SHtml.select(states, Full(state.toString), (selected) => (state = ApprovalState parse selected)) &
-      ".approval-comment" #> SHtml.textarea(comment, comment = _) &
+      ".approval-comment" #> SHtml.textarea(comment, comment = _, "class" -> "input-xlarge") &
       ".approval-submit" #> SHtml.submit("Submit", () => processApprove(d, r, state, comment), "class" -> "btn primary") &
       ".approval-cancel" #> SHtml.submit("Cancel", () => S.redirectTo(r.info), "class" -> "btn")
     ).apply(in)
@@ -263,7 +264,7 @@ class DocumentSnippet extends Loggable {
   }
 
   lazy val approverPartial = Templates("doc" :: "request-approval" :: Nil) match {
-    case Full(in) => in \\ "tr" filter (x => (x \ "@class").text.contains("approval:approver"))
+    case Full(in) => in \\ "div" filter (x => (x \ "@class").text.contains("approval-approver"))
     case _ => NodeSeq.Empty
   }
   lazy val docActionsPartial = Templates("doc" :: "info" :: Nil) match {
@@ -273,9 +274,9 @@ class DocumentSnippet extends Loggable {
 
   def requestApproval(in: NodeSeq): NodeSeq = forRequest(in, (in, d, r) => {
       ("#doc:title *" #> <a href={d.infoLink}>{r.fullTitle}</a> &
-       "#doc:version" #> r.version &
-       ".approval:approver" #> approver &
-       ".approver:add" #> SHtml.ajaxButton("Add", () => {JqJsCmds.AppendHtml("addTo", approver(approverPartial))}, "class" -> "btn") &
+       "#doc:version *" #> r.version &
+        ".approver:add" #> SHtml.ajaxButton(<span><i class="icon-plus"></i> Add</span>, () => {JqJsCmds.AppendHtml("approverList", approver(approverPartial))}, "class" -> "btn") &
+       ".approval-approver" #> approver &
        "#submit" #> SHtml.submit("Submit", () => (processRequestApproval(d, r)), "class" -> "btn primary") &
        "#cancel" #> SHtml.submit("Cancel", () => S.redirectTo(r.info), "class" -> "btn") &
        ClearClearable) apply in
@@ -288,9 +289,9 @@ class DocumentSnippet extends Loggable {
     approverCount = approverCount + 1
     val id = "approver" + approverCount
     var approver = ""
-    ".approval:approver [id]" #> id &
+    ".approval-approver [id]" #> id &
     ".approver:email" #> (SHtml.text(approver, s => selected(s :: selected.is)) % ("style" -> "width: 250px")) &
-    ".approver:remove" #> SHtml.ajaxButton("Remove", () => {JsCmds.Replace(id, NodeSeq.Empty)}, "class" -> "btn danger")
+    ".approver:remove" #> SHtml.ajaxButton(<i class="icon-minus icon-white"></i>, () => {JsCmds.Replace(id, NodeSeq.Empty)}, "class" -> "btn btn-warning")
   }
 
   def processRequestApproval(d: Document, r: Revision) = {
@@ -314,10 +315,10 @@ class DocumentSnippet extends Loggable {
       ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
       ".submission-project" #> SHtml.select(projectList, Option(projectName), projectName = _) &
       ".submission-name" #> SHtml.text(name, name = _) &
-      ".submission-version" #> d.nextVersion &
+      ".submission-version *" #> d.nextVersion &
       ".submission-file" #> SHtml.fileUpload(ul => file = Some(ul)) &
-      ".submission-by" #> Text(User.loggedInUser map (_.displayName) openOr "?") &
-      ".submission-comment" #> SHtml.textarea(comment, comment = _) &
+      ".submission-by *" #> Text(User.loggedInUser map (_.displayName) openOr "?") &
+      ".submission-comment" #> SHtml.textarea(comment, comment = _, "class" -> "input-xlarge") &
       ".submission-submit" #> SHtml.submit("Submit", () => processSubmit(d, projectName, name, comment, file), "class" -> "btn primary") &
       ".submission-cancel" #> SHtml.submit("Cancel", () => S.redirectTo("/"), "class" -> "btn")
     ).apply(in)

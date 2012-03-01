@@ -9,8 +9,9 @@
 #log li {
   padding: 8px 6px 8px 6px;
 }
-.projects {
+.projects ul {
   list-style: none;
+  margin-left: 0;
 }
 .project-item {
   list-style: none;
@@ -104,4 +105,7 @@ li small {
 }
 blockquote p {
   font-size: inherit;
+}
+.approval-approver {
+  margin-bottom: 9px;
 }

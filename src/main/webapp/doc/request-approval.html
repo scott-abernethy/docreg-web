@@ -7,34 +7,37 @@
   <body class="lift:content_id=main">
     <div id="main" class="lift:surround?with=no-sidebar;at=content">
 
-  <form class="lift:snippet?type=DocumentSnippet.requestApproval">
-    <h2 id="doc:title">1234 Document Foo</h2>
-    <hr/>
-    <div>
-      <h4>Request Document Approval</h4>
-      <table class="baseline-align-cells" cellpadding="0">
-        <tbody id="addTo">
-          <tr>
-            <th>Version:</th>
-            <td><span id="doc:version">99</span></td>
-          </tr>
-          <tr class="approval:approver" id="#">
-              <th>Approver E-mail:</th>
-              <td><input class="approver:email" value="scott.abernethy@aviatnet.com" /> <span class="approver:remove">Remove</span></td>
-          </tr>
-        </tbody>
-        <tbody>
-          <tr>
-            <th></th>
-            <td><span class="approver:add">Add</span></td>
-          </tr>
-          <tr>
-            <td></td>
-            <td><input value="Submit" type="submit" id="submit" /> <input value="Cancel" type="submit" id="cancel" /></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+  <form class="lift:snippet?type=DocumentSnippet.requestApproval form-horizontal">
+    <header class="page-header">
+          <h1><span id="doc:title"></span></h1>
+      </header>
+    <div class="row"><div class="span12">
+      <fieldset>
+          <legend>Request Document Approval</legend>
+          <div class="control-group">
+              <label class="control-label" for="doc:version">Version</label>
+              <div class="controls">
+                <span id="doc:version" class="input-small uneditable-input"></span>
+                <p class="help-block">The version of the document to be approved.</p>
+              </div>
+          </div>
+          <div class="control-group">
+              <label class="control-label">Approver E-mail</label>
+              <div class="controls">
+                  <div id="approverList">
+                      <div class="approval-approver">
+                          <span class="approver:email"></span>
+                          <span class="approver:remove">R</span>
+                      </div>
+                  </div>
+                  <span class="approver:add">Add</span>
+                  <p class="help-block">The list of people who are required to approve this document.</p>
+              </div>
+          </div>
+          <div class="form-actions">
+              <input type="submit" id="submit" value="Submit" class="btn btn-primary approval-submit"/> <input type="submit" id="cancel" value="Cancel" class="btn approval-cancel"/>
+          </div>
+      </fieldset></div></div>
   </form>
 
     </div>
