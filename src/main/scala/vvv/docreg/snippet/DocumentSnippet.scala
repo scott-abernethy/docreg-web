@@ -74,6 +74,13 @@ class DocumentSnippet extends Loggable {
     }
   }
 
+  def header(in: NodeSeq): NodeSeq = {
+    forRequest(in, (in, d, r) => {
+      ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
+      ".doc-project" #> d.project.map(_.infoLink).getOrElse(<span>?</span>) apply in
+    })
+  }
+
   def info(in: NodeSeq): NodeSeq = forRequest(in, (in, d, r) => {
       val out = bind("doc", in,
         "key" -> d.key,

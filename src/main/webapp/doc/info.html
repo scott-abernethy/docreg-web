@@ -7,12 +7,14 @@
   <body class="lift:content_id=main">
     <div id="main" class="lift:surround?with=default;at=body_content">
 
-      <div class="lift:snippet?type=DocumentSnippet.info">
+      <div class="lift:snippet?type=DocumentSnippet.header">
+          <header class="page-header">
+              <h1><span class="doc-title">Title</span></h1>
+              <p>Project: <span class="doc-project">Foo</span></p>
+          </header>
+      </div>
 
-      <header class="page-header">
-          <h1><span class="doc-title">Title</span></h1>
-          <p>Project: <span class="doc-project">Foo</span></p>
-      </header>
+      <div class="lift:snippet?type=DocumentSnippet.info">
 
       <div class="row">
          <div class="span12">

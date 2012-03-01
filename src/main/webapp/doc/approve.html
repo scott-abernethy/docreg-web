@@ -7,11 +7,14 @@
   <body class="lift:content_id=main">
     <div id="main" class="lift:surround?with=no-sidebar;at=content">
 
-  <form class="lift:snippet?type=DocumentSnippet.approve;form=post form-horizontal">
-     <header class="page-header">
-          <h1><span class="doc-title"></span></h1>
-      </header>
+        <div class="lift:snippet?type=DocumentSnippet.header">
+            <header class="page-header">
+                <h1><span class="doc-title">Title</span></h1>
+                <p>Project: <span class="doc-project">Foo</span></p>
+            </header>
+        </div>
 
+  <form class="lift:snippet?type=DocumentSnippet.approve;form=post form-horizontal">
       <div class="row"><div class="span12">
       <fieldset>
           <legend>Document Approval</legend>
