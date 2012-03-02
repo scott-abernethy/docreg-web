@@ -86,7 +86,7 @@ class Log extends DocumentSubscriber {
         ".log-item [class+]" #> (if (hidden) Some("hide") else blank) &
         ".doc-title"  #> <a href={d.infoLink}>{r.fullTitle}</a> &
         ".doc-author" #> r.authorLink &
-        ".doc-comment" #> r.comment &
+        ".doc-comment" #> r.comment.is &
         ".doc-when" #> r.when &
         ".doc-info [href]" #> d.infoLink
       }
