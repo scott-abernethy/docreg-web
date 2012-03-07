@@ -44,7 +44,7 @@ trait RegisterRequestEncoder extends RequestEncoder[RegisterRequest]
     writeString(buffer, request.comment, 512)
     writeString(buffer, request.access, 128)
     writeString(buffer, request.author, 64)
-    writeString(buffer, request.clientName, 64)
+    writeString(buffer, request.clientHost, 64)
     writeString(buffer, request.userName, 64)
     writeString(buffer, request.clientVersion, 16)
   }

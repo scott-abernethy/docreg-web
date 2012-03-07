@@ -8,13 +8,15 @@ import org.specs.mock.Mockito
 import vvv.docreg.db.TestDbVendor
 import com.hstx.docregsx.{TabLine, Subscriber => AgentSubscriber}
 import vvv.docreg.model.{Subscription, UserLookup, User, Document}
+import vvv.docreg.agent.DaemonAgentComponent
 
 object BackendTest extends Specification with Mockito
 {
-  val x = new BackendComponentImpl with DocumentServerComponent with AgentComponent with DirectoryComponent
+  val x = new BackendComponentImpl with DocumentServerComponent with AgentComponent with DirectoryComponent with DaemonAgentComponent
   {
     val directory = null
     val documentServer = null
+    val daemonAgent = null
     def createAgent(version: String, server: String, user: String, backend: Actor) = null
   }
 

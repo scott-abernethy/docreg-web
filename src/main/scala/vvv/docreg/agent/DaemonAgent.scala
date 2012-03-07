@@ -41,27 +41,30 @@ class DaemonAgentImpl extends DaemonAgent with DaemonProtocol with Loggable
             // todo yuck, these should be encode stacks in the protocol.
             case x: NextChangeRequest =>
             {
-              Some((buffer: ChannelBuffer) => new NextChangeRequestEncoder{}.encode(x, buffer))
+              val e = new NextChangeRequestEncoder{}
+              Some((e.messageType, (buffer: ChannelBuffer) => e.encode(x, buffer)))
             }
             case x: RegisterRequest =>
             {
-              Some((buffer: ChannelBuffer) => new RegisterRequestEncoder{}.encode(x, buffer))
+              val e = new RegisterRequestEncoder{}
+              Some((e.messageType, (buffer: ChannelBuffer) => e.encode(x, buffer)))
             }
             case x: SubmitRequest =>
             {
-              Some((buffer: ChannelBuffer) => new SubmitRequestEncoder{}.encode(x, buffer))
+              val e = new SubmitRequestEncoder{}
+              Some((e.messageType, (buffer: ChannelBuffer) => e.encode(x, buffer)))
             }
             case _ =>
             {
               None
             }
           }
-          encoding.foreach{ e =>
+          encoding.foreach{ x =>
             val id = nextTransaction()
             outstandingTransactions += (id -> replyTo)
             transmit(target, DownstreamMessage(
-              Header(DaemonProtocol.protocolVersion, MessageType.nextChangeRequest, id, 1),
-              e
+              Header(DaemonProtocol.protocolVersion, x._1, id, 1),
+              x._2
             ))
           }
         }

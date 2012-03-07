@@ -13,9 +13,8 @@ import _root_.net.liftweb.common._
 import java.io.IOException
 import com.hstx.docregsx.{Document => AgentDocument, Revision => AgentRevision, Approval => AgentApproval, Subscriber => AgentSubscriber, ApprovalStatus => AgentApprovalState}
 import vvv.docreg.db.DbVendor
-import vvv.docreg.agent.Changed
-import vvv.docreg.agent.DaemonProtocol
 import java.util.Date
+import vvv.docreg.agent.{DaemonAgentComponent, Changed, DaemonProtocol}
 
 case class Connect()
 case class Reload(d: Document)
@@ -27,6 +26,7 @@ case class UnsubscribeRequested(document: Document, user: User)
 case class Edit(document: Document, user: User)
 case class Unedit(document: Document, user: User)
 case class Submit(document: Document, projectName: String, localFile: java.io.File, userFileName: String, comment: String, user: User)
+case class SubmitNew(projectName: String, localFile: java.io.File, userFileName: String, comment: String, user: User)
 
 trait Backend extends Actor
 
@@ -36,7 +36,7 @@ trait BackendComponent {
 
 trait BackendComponentImpl extends BackendComponent
 {
-  this: DocumentServerComponent with AgentComponent with DirectoryComponent =>
+  this: DocumentServerComponent with AgentComponent with DaemonAgentComponent with DirectoryComponent =>
 
   val backend = new Backend with Loggable
   {

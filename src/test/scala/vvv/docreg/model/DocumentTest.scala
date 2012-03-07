@@ -76,5 +76,31 @@ object DocumentTest extends Specification {
       checkValidId("12-4", "12", "-4")
       checkValidId("9999-999", "9999", "-999")
     }
+
+    "check valid document filename" >>
+    {
+      def checkValid(in: String, expectedKey: String, expectedVersion: String, expectedFileName: String)
+      {
+        in match {
+          case Document.ValidDocumentFileName(key, version, fileName) =>
+          {
+            key must be_==(expectedKey)
+            version must be_==(expectedVersion)
+            expectedFileName must be_==(expectedFileName)
+          }
+          case _ =>
+          {
+            fail()
+          }
+        }
+      }
+
+      Document.ValidDocumentFileName.findFirstIn("6146-001") must beNone
+      Document.ValidDocumentFileName.findFirstIn("6146-001-") must beNone
+      Document.ValidDocumentFileName.findFirstIn("6146-New Document Test.txt") must beNone
+      Document.ValidDocumentFileName.findFirstIn("New Document Test.txt") must beNone
+
+      checkValid("6146-001-New Document Test 3.txt", "6146", "001", "New Document Test 3.txt")
+    }
   }
 }

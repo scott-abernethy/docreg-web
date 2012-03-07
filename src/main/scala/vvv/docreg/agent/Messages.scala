@@ -21,7 +21,7 @@ case class DocumentInfo(key: Int, version: Int, fileName: String, projectName: S
 sealed abstract class Request
 sealed abstract class Reply
 
-case class RegisterRequest(fileName: String, project: String, comment: String, access: String, author: String, userName: String, clientName: String, clientVersion: String) extends Request
+case class RegisterRequest(fileName: String, project: String, comment: String, access: String, author: String, userName: String, clientHost: String, clientVersion: String) extends Request
 case class RegisterReply(response: String, suggestedFileName: String) extends Reply
 
 case class SubmitRequest(fileName: String, size: Int = -1) extends Request
