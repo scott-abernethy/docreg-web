@@ -8,6 +8,8 @@ import net.liftweb.common.Loggable
 import vvv.docreg.util.Millis
 import com.hstx.docregsx.Document
 
+case class Changed(documentInfo: DocumentInfo)
+
 class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Actor with Loggable
 {
   // todo use akka watchdog
@@ -40,7 +42,7 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
         {
           //logger.debug("Poll, next change request {" + lastChangeNumber + "}")
           lastPoll.mark()
-          agent ! NextChange(Actor.self, hostname, lastChangeNumber)
+          agent ! RequestPackage(Actor.self, hostname, NextChangeRequest(lastChangeNumber))
           schedulePoll
           scheduleWake
         }
@@ -60,7 +62,7 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
           scheduleWake
         }
 
-        case ChangeReply(header, changeNumber, documentInfo) =>
+        case NextChangeReply(changeNumber, documentInfo) =>
         {
           lastReply.mark()
           if (changeNumber != lastChangeNumber)

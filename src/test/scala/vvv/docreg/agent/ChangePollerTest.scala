@@ -15,7 +15,7 @@ object ChangePollerTest extends Specification
       x.start()
 
       val a: DocumentInfo = DocumentInfo(2, 1, "", "", "", "", "", "", "", "", "", "", "")
-      x ! ChangeReply(null, 1, a)
+      x ! NextChangeReply(1, a)
       x !? 'Ping
       receiveWithin(1000)
       {
@@ -24,7 +24,7 @@ object ChangePollerTest extends Specification
       }
 
       val b: DocumentInfo = DocumentInfo(456, 2, "sd", "", "", "", "", "", "", "", "", "", "")
-      x ! ChangeReply(null, 1, b)
+      x ! NextChangeReply(1, b)
       x !? 'Ping
       receiveWithin(1000)
       {
@@ -32,7 +32,7 @@ object ChangePollerTest extends Specification
         case other => fail("no msg expected " + other)
       }
 
-      x ! ChangeReply(null, 3, b)
+      x ! NextChangeReply(3, b)
       x !? 'Ping
       receiveWithin(1000)
       {
@@ -49,7 +49,7 @@ object ChangePollerTest extends Specification
       val a: DocumentInfo = DocumentInfo(5174,193,"5174-193-Performance Review Process Check List.xlsx","Eclipse","Performance Review Process Check List","updated for SC SP group","Everyone","RVann","2011-08-26 16:15:18 Z","boromir","10.15.153.122","","")
       val a2: DocumentInfo = DocumentInfo(5174,193,"5174-193-Performance Review Process Check List.xlsx","Eclipse","Performance Review Process Check List","updated for SC SP group","Everyone","RVann","2011-08-26 16:15:18 Z","boromir","10.15.153.122","","")
 
-      x ! ChangeReply(null, 1, a)
+      x ! NextChangeReply(1, a)
       x !? 'Ping
       receiveWithin(1000)
       {
@@ -57,7 +57,7 @@ object ChangePollerTest extends Specification
         case _ => fail("Changed msg expected")
       }
 
-      x ! ChangeReply(null, 2, a2)
+      x ! NextChangeReply(2, a2)
       x !? 'Ping
       receiveWithin(1000)
       {
@@ -65,7 +65,7 @@ object ChangePollerTest extends Specification
         case other => fail("no msg expected " + other)
       }
 
-      x ! ChangeReply(null, 2, a2)
+      x ! NextChangeReply(2, a2)
       x !? 'Ping
       receiveWithin(1000)
       {

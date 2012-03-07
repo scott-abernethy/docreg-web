@@ -13,46 +13,24 @@ import java.nio.charset.Charset
 import com.hstx.docregsx.Document
 import java.text.DecimalFormat
 import actors.{TIMEOUT, Actor}
-import collection.immutable.HashSet
 
-object DaemonProtocol extends Loggable
+trait DaemonProtocol extends Loggable
 {
-  implicit def documentInfoToAgentDocument(d: DocumentInfo): Document =
-  {
-    val line = new DecimalFormat("0000").format(d.key) :: new DecimalFormat("0000").format(d.version) :: d.fileName :: d.projectName :: d.title :: d.description :: d.access :: d.author :: d.date :: d.server :: d.client :: d.editor :: d.editorStart :: Nil
-    new Document(line.mkString("\t"))
-  }
-
-  var transactionId: Int = 0
-  var consumers: Set[Actor] = new HashSet[Actor]()
-
-  def nextTransactionId(): Int =
-  {
-    if (transactionId < (Int.MaxValue - 1))
-    {
-      transactionId = transactionId + 1
-    }
-    else
-    {
-      transactionId = 0
-    }
-    transactionId
-  }
-
-  def main(args: Array[String])
-  {
-    getNextChange(Actor.self, "shelob", -1)
-    Actor.receiveWithin(5000) {
-      case msg => println("XX " + msg)
-    }
-  }
-
   val factory = new NioDatagramChannelFactory(Executors.newCachedThreadPool)
+
+  val consumers: List[Actor]
+
   val bootstrap = new ConnectionlessBootstrap(factory)
   bootstrap.setPipelineFactory(new ChannelPipelineFactory {
     def getPipeline = Channels.pipeline(
       new DaemonProtocolEncoder,
-      new DaemonProtocolDecoder,
+      new DaemonProtocolDecoder(
+        Map(
+          MessageType.nextChangeReply -> NextChangeReplyDecoder,
+          MessageType.registerReply -> RegisterReplyDecoder,
+          MessageType.submitReply -> SubmitReplyDecoder
+        )
+      ),
       new DaemonProtocolHandler(m => consumers.foreach(_ ! m))
     )
   })
@@ -60,22 +38,15 @@ object DaemonProtocol extends Loggable
 
   val channel: DatagramChannel = bootstrap.bind(new InetSocketAddress(0)).asInstanceOf[DatagramChannel]
   
-  def getNextChange(consumer: Actor, hostname: String, changeNumber: Int)
+  def transmit(hostname: String, message: DownstreamMessage)
   {
-    registerConsumer(consumer)
-    channel.write(new DownstreamMessage(Messages.nextChange, buffer => buffer.writeInt(changeNumber)), new InetSocketAddress(hostname, 5436))
+    channel.write(message, new InetSocketAddress(hostname, 5436))
   }
 
   def close()
   {
     channel.close.awaitUninterruptibly(5000)
     factory.releaseExternalResources()
-  }
-
-  def registerConsumer(consumer: Actor)
-  {
-    // todo lame and not thread safe
-    consumers = consumers + consumer
   }
 }
 
@@ -84,16 +55,19 @@ class DaemonProtocolEncoder extends OneToOneEncoder with Loggable
   def encode(ctx: ChannelHandlerContext, channel: Channel, msg: AnyRef) =
   {
     msg match {
-      case DownstreamMessage(message, body) =>
-        val transactionId: Int = DaemonProtocol.nextTransactionId
-        //logger.debug("Protocol downstream " + message + " transaction=" + transactionId)
+      case DownstreamMessage(header, body) =>
+        //unique transaction id per message.
+        //store map of transaction id to request with reply to
+
+        println("Protocol downstream " + header)
+
         val buffer = ChannelBuffers.dynamicBuffer();
 
         // header
-        buffer.writeInt(3) // version
-        buffer.writeInt(message.id) // message id
-        buffer.writeInt(transactionId) // transaction id
-        buffer.writeInt(transactionId) // sequence id
+        buffer.writeInt(header.version)
+        buffer.writeInt(header.message.id)
+        buffer.writeInt(header.transactionId)
+        buffer.writeInt(header.sequence)
 
         // body
         body(buffer)
@@ -106,25 +80,30 @@ class DaemonProtocolEncoder extends OneToOneEncoder with Loggable
   }
 }
 
-class DaemonProtocolDecoder extends OneToOneDecoder
+class DaemonProtocolDecoder(decoders: Map[MessageType.Type, ReplyDecoder]) extends OneToOneDecoder with Loggable
 {
   def decode(ctx: ChannelHandlerContext, channel: Channel, msg: AnyRef): AnyRef =
   {
     msg match
     {
       case buffer: ChannelBuffer =>
-
+      {
         // header
         val version = buffer.readInt()
         val messageId = buffer.readInt()
         val transactionId = buffer.readInt()
         val sequenceId = buffer.readInt()
-        val header: Header = Header(version, Messages(messageId), transactionId, sequenceId)
+        val header: Header = Header(version, MessageType(messageId), transactionId, sequenceId)
 
-        decodeMessage(header, buffer)
+        val message = decodeMessage(header, buffer)
+        println("Upstream message received " + header + " and decoded as " + message)
+        message
+      }
       case _ =>
+      {
         // Can't decode this, ignore
         msg
+      }
     }
   }
 
@@ -132,38 +111,15 @@ class DaemonProtocolDecoder extends OneToOneDecoder
   {
     header match
     {
-      case Header(3, Messages.nextChangeResponse, t, s) =>
-        decodeChangeReply(header, buffer)
+      case Header(v, messageType, transaction, sequence) if (DaemonProtocol.protocolVersion == v && decoders.contains(messageType)) =>
+      {
+        ReplyPackage(header, decoders(messageType).decode(header, buffer))
+      }
       case _ =>
+      {
         null
+      }
     }
-  }
-
-  def decodeChangeReply(header: Header, buffer: ChannelBuffer): AnyRef =
-  {
-    val changeNumber = buffer.readInt()
-    val key = buffer.readInt()
-    val version = buffer.readInt()
-
-    val fileName = decodeString(buffer, 128)
-    val projectName = decodeString(buffer, 64)
-    val title = decodeString(buffer, 64)
-    val description = decodeString(buffer, 512)
-    val access = decodeString(buffer, 128)
-    val author = decodeString(buffer, 64)
-    val date = decodeString(buffer, 32)
-    val server = decodeString(buffer, 32)
-    val client = decodeString(buffer, 32)
-    val editor = decodeString(buffer, 64)
-    val editorStart = decodeString(buffer, 32)
-    
-    ChangeReply(header, changeNumber, DocumentInfo(key, version, fileName, projectName, title, description, access, author, date, server, client, editor, editorStart))
-  }
-
-  def decodeString(b: ChannelBuffer, length: Int) =
-  {
-    val string: String = b.readBytes(length).toString(Charset.forName("UTF-8"))
-    string.substring(0, string.indexOf('\u0000'))
   }
 }
 
@@ -180,19 +136,48 @@ class DaemonProtocolHandler(consume: (Any) => Unit) extends SimpleChannelUpstrea
   }
 }
 
+case class DownstreamMessage(header: Header, body: (ChannelBuffer) => Unit)
 
-
-case class DownstreamMessage(message: Messages.Type, body: (ChannelBuffer) => Unit)
-
-case class Header(version: Int, message: Messages.Type, transactionId: Int, sequence: Int)
-
-case class DocumentInfo(key: Int, version: Int, fileName: String, projectName: String, title: String, description: String, access: String, author: String, date: String, server: String, client: String, editor: String, editorStart: String)
-
-case class ChangeReply(header: Header, changeNumber: Int, documentInfo: DocumentInfo)
-
-object Messages extends Enumeration
+object DaemonProtocol
 {
-  type Type = Value
-  val nextChange = Value(21)
-  val nextChangeResponse = Value(22)
+  implicit def documentInfoToAgentDocument(d: DocumentInfo): Document =
+  {
+    val line = new DecimalFormat("0000").format(d.key) :: new DecimalFormat("0000").format(d.version) :: d.fileName :: d.projectName :: d.title :: d.description :: d.access :: d.author :: d.date :: d.server :: d.client :: d.editor :: d.editorStart :: Nil
+    new Document(line.mkString("\t"))
+  }
+
+  val protocolVersion: Int = 3
+
+  def main(args: Array[String])
+  {
+    //getNextChange(Actor.self, "shelob", -1)
+
+//    val request = RegisterRequest(
+//      "New Document Test 3",
+//      "DocReg",
+//      "Testing document addition with docregbeta",
+//      "Everyone",
+//      "sabernethy",
+//      "sabernethy",
+//      "docregweb",
+//      "0.7.0"
+//    )
+//    val encoder = new RegisterRequestEncoder{}
+
+    val request = NextChangeRequest(-1)
+    val encoder = new NextChangeRequestEncoder{}
+
+    val msg = new DownstreamMessage(
+      Header(3, encoder.messageType, 1, 1),
+      buffer => encoder.encode(request, buffer)
+    )
+
+    val x = new DaemonProtocol{
+      val consumers = List(Actor.self)
+    }
+    x.transmit("shelob", msg)
+    Actor.receiveWithin(5000) {
+      case in => println("XX " + in)
+    }
+  }
 }
