@@ -15,7 +15,7 @@
 }
 .project-item {
   list-style: none;
-  margin-left: 20px;
+  margin-left: 0;
 }
 .edit_error_class {
   display: block;
