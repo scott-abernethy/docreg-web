@@ -9,7 +9,6 @@ import org.jboss.netty.channel._
 import org.jboss.netty.buffer.{ChannelBuffers, ChannelBuffer}
 import org.jboss.netty.handler.codec.oneone.{OneToOneDecoder, OneToOneEncoder}
 import net.liftweb.common.Loggable
-import java.nio.charset.Charset
 import com.hstx.docregsx.Document
 import java.text.DecimalFormat
 import actors.{TIMEOUT, Actor}
@@ -56,9 +55,7 @@ class DaemonProtocolEncoder extends OneToOneEncoder with Loggable
   {
     msg match {
       case DownstreamMessage(header, body) =>
-        //unique transaction id per message.
-        //store map of transaction id to request with reply to
-
+      {
         println("Protocol downstream " + header)
 
         val buffer = ChannelBuffers.dynamicBuffer();
@@ -73,9 +70,12 @@ class DaemonProtocolEncoder extends OneToOneEncoder with Loggable
         body(buffer)
 
         buffer
+      }
       case _ =>
+      {
         // Can't encode this, ignore
         msg
+      }
     }
   }
 }

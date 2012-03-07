@@ -44,6 +44,11 @@ trait DocumentServerComponentImpl extends DocumentServerComponent {
         case c @ DocumentChanged(d) =>
           logger.info(d.key + " changed")
           distribute(c)
+        case 'Die =>
+        {
+          logger.info("DocumentServer killed")
+          exit()
+        }
         case _ =>
       }
     }

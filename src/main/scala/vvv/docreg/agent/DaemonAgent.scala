@@ -2,29 +2,18 @@ package vvv.docreg.agent
 
 import actors.Actor
 import org.jboss.netty.buffer.ChannelBuffer
+import net.liftweb.common.Loggable
 
 trait DaemonAgent extends Actor
-
-// Encoder ... create DownstreamMessage to write to channel
-//  hook up replyTo in DownstreamMessage?
-//  who handles message and transaction id? low level.
-
-// Decoder ... decode function matched to each Downstream message OR each message type. someone needs to detail who it goes back to.
-
-/*
-if we get a message where we can't find the requester, reject. thus we can assign a processing method to the requester, thus we can assign a processing method to the request / DownstreamMessage.
- */
 
 case class RequestPackage(replyTo: Actor, target: String, request: Request)
 case class ReplyPackage(header: Header, reply: Reply)
 
-class DaemonAgentImpl extends DaemonAgent with DaemonProtocol
+class DaemonAgentImpl extends DaemonAgent with DaemonProtocol with Loggable
 {
   var previousTransaction: Int = 0
   val consumers = List(this)
   var outstandingTransactions: Map[Int, Actor] = Map.empty
-
-  // todo close protocol on exit
 
   def nextTransaction(): Int =
   {
@@ -83,6 +72,12 @@ class DaemonAgentImpl extends DaemonAgent with DaemonProtocol
             replyTo ! reply
           }
         }
+        case 'Die =>
+        {
+          logger.info("DaemonAgent killed")
+          close()
+          exit()
+        }
         case _ =>
         {
           // Ignored message.
@@ -92,4 +87,14 @@ class DaemonAgentImpl extends DaemonAgent with DaemonProtocol
   }
 
 
+}
+
+trait DaemonAgentComponent
+{
+  val daemonAgent: DaemonAgent
+}
+
+trait DaemonAgentComponentImpl extends DaemonAgentComponent
+{
+  val daemonAgent = new DaemonAgentImpl()
 }

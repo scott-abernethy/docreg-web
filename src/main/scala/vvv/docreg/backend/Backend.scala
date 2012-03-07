@@ -155,6 +155,22 @@ trait BackendComponentImpl extends BackendComponent
             a.printStackTrace()
           }
         }
+        /*
+        case SubmitNew() => {
+          //check document name doesn't have 0000-000 format.
+          // register, and check reply message for document and revision
+          //Register status: Accepted
+          //Suggested file name: 6116-001-Testing document addition.txt
+          // submit
+          // success.
+          //
+        }
+         */
+        case 'Die =>
+        {
+          logger.info("Backend killed")
+          exit()
+        }
         case other =>
         {
           logger.warn("Unrecognised message " + other)

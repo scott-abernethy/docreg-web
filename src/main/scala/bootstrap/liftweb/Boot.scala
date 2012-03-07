@@ -16,6 +16,8 @@ import _root_.vvv.docreg.util._
 import vvv.docreg.backend._
 import vvv.docreg.db.DbVendor
 import net.liftweb.widgets.flot._
+import actors.Actor
+import vvv.docreg.agent.{ChangePoller, DaemonAgentImpl, DaemonAgentComponentImpl}
 
 
 /**
@@ -124,14 +126,9 @@ class Boot
         () => Download.downloadForEditing(key, user)
     }
 
-    val env = new Environment with BackendComponentImpl with DocumentServerComponentImpl with AgentComponentImpl with DirectoryComponentImpl {
-      def start() {
-        documentServer.start()
-        backend.start()
-        backend ! Connect()
-      }
-    }
+    val env = new EnvironmentImpl{}
     env.start()
     Environment.env = env
+    LiftRules.unloadHooks.append(() => env.exit())
   }
 }
