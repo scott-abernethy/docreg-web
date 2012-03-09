@@ -27,7 +27,11 @@ trait DaemonProtocol extends Loggable
         Map(
           MessageType.nextChangeReply -> NextChangeReplyDecoder,
           MessageType.registerReply -> RegisterReplyDecoder,
-          MessageType.submitReply -> SubmitReplyDecoder
+          MessageType.submitReply -> SubmitReplyDecoder,
+          MessageType.editReply -> EditReplyDecoder,
+          MessageType.subscribeReply -> SubscribeReplyDecoder,
+          MessageType.unsubscribeReply -> UnsubscribeReplyDecoder,
+          MessageType.approvalReply -> ApprovalReplyDecoder
         )
       ),
       new DaemonProtocolHandler(m => consumers.foreach(_ ! m))

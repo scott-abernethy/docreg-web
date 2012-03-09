@@ -63,6 +63,64 @@ trait SubmitRequestEncoder extends RequestEncoder[SubmitRequest]
   }
 }
 
+trait EditRequestEncoder extends RequestEncoder[EditRequest]
+{
+  def messageType = MessageType.editRequest
+
+  def encode(request: EditRequest, buffer: ChannelBuffer)
+  {
+//    char acFileName[128];
+//    char acAuthor[64];
+    writeString(buffer, request.fileName, 128)
+    writeString(buffer, request.userName, 64)
+  }
+}
+
+trait UneditRequestEncoder extends RequestEncoder[UneditRequest]
+{
+  def messageType = MessageType.uneditRequest
+
+  def encode(request: UneditRequest, buffer: ChannelBuffer)
+  {
+//    char acFileName[128];
+//    char acAuthor[64];
+    writeString(buffer, request.fileName, 128)
+    writeString(buffer, request.userName, 64)
+  }
+}
+
+trait SubscribeRequestEncoder extends RequestEncoder[SubscribeRequest]
+{
+  def messageType = MessageType.subscribeRequest
+
+  def encode(request: SubscribeRequest, buffer: ChannelBuffer)
+  {
+//    char acName[128];          // file name
+//    char acAuthor[64];         // author name as displayed
+//    char acEmailAddress[64];   // e-mail address
+//    char acOptions[128];       // space separated options
+    writeString(buffer, request.fileName, 128)
+    writeString(buffer, request.userName, 64)
+    writeString(buffer, request.email, 64)
+    writeString(buffer, request.options, 128)
+  }
+}
+
+trait UnsubscribeRequestEncoder extends RequestEncoder[UnsubscribeRequest]
+{
+  def messageType = MessageType.unsubscribeRequest
+
+  def encode(request: UnsubscribeRequest, buffer: ChannelBuffer)
+  {
+//    char acName[128];          // file name
+//    char acAuthor[64];         // author name as displayed
+//    char acEmailAddress[64];   // e-mail address
+    writeString(buffer, request.fileName, 128)
+    writeString(buffer, request.userName, 64)
+    writeString(buffer, request.email, 64)
+  }
+}
+
 trait NextChangeRequestEncoder extends RequestEncoder[NextChangeRequest]
 {
   def messageType = MessageType.nextChangeRequest
@@ -73,7 +131,25 @@ trait NextChangeRequestEncoder extends RequestEncoder[NextChangeRequest]
   }
 }
 
-class RequestAndEncoder[T <: Request](request: T, encoder: RequestEncoder[T])
+trait ApprovalRequestEncoder extends RequestEncoder[ApprovalRequest]
 {
+  def messageType = MessageType.approvalRequest
 
+  def encode(request: ApprovalRequest, buffer: ChannelBuffer)
+  {
+//    char acFileName[128];      // file name
+//    char acApprover[64];       // approver name as displayed
+//    char acEmailAddress[64];   // e-mail address
+//    char acStatus[32];         // "Approved", "Not Approved" or "Pending"
+//    char acComment[128];       // optional comment on approval
+//    char acClientName[64];        // name of the client PC as resolved by client
+//    char acUserName[64];          // user name client is running under
+    writeString(buffer, request.fileName, 128)
+    writeString(buffer, request.approverUserName, 64)
+    writeString(buffer, request.approverEmail, 64)
+    writeString(buffer, request.status, 32)
+    writeString(buffer, request.comment, 128)
+    writeString(buffer, request.clientHost, 64)
+    writeString(buffer, request.userName, 64)
+  }
 }

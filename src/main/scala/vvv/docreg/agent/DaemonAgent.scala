@@ -54,11 +54,37 @@ class DaemonAgentImpl extends DaemonAgent with DaemonProtocol with Loggable
               val e = new SubmitRequestEncoder{}
               Some((e.messageType, (buffer: ChannelBuffer) => e.encode(x, buffer)))
             }
+            case x: EditRequest =>
+            {
+              val e = new EditRequestEncoder{}
+              Some((e.messageType, (buffer: ChannelBuffer) => e.encode(x, buffer)))
+            }
+            case x: UneditRequest =>
+            {
+              val e = new UneditRequestEncoder{}
+              Some((e.messageType, (buffer: ChannelBuffer) => e.encode(x, buffer)))
+            }
+            case x: SubscribeRequest =>
+            {
+              val e = new SubscribeRequestEncoder{}
+              Some((e.messageType, (buffer: ChannelBuffer) => e.encode(x, buffer)))
+            }
+            case x: UnsubscribeRequest =>
+            {
+              val e = new UnsubscribeRequestEncoder{}
+              Some((e.messageType, (buffer: ChannelBuffer) => e.encode(x, buffer)))
+            }
+            case x: ApprovalRequest =>
+            {
+              val e = new ApprovalRequestEncoder{}
+              Some((e.messageType, (buffer: ChannelBuffer) => e.encode(x, buffer)))
+            }
             case _ =>
             {
               None
             }
           }
+          // Todo, unedit doesn't have a reply, so no outstanding transaction!!!!!!!!
           encoding.foreach{ x =>
             val id = nextTransaction()
             outstandingTransactions += (id -> replyTo)

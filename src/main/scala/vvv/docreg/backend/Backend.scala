@@ -82,6 +82,7 @@ trait BackendComponentImpl extends BackendComponent
         }
         case Changed(d) =>
         {
+          // Todo: Apply what we know of the change now, then reconcile. Though the reconcile typically takes <1 second.
           logger.info("Change received, sending to reconcile " + d.key)
           priorityReconciler ! Prepare(DaemonProtocol.documentInfoToAgentDocument(d), agent)
         }
@@ -96,52 +97,56 @@ trait BackendComponentImpl extends BackendComponent
         }
         case ApprovalApproved(d, r, user, state, comment) =>
         {
-          val done = agent.approval(r.filename,
-            user.displayName,
-            user.email.is,
-            state match {
-              case ApprovalState.approved => AgentApprovalState.Approved
-              case ApprovalState.notApproved => AgentApprovalState.NotApproved
-              case _ => AgentApprovalState.Pending
-            },
-            comment,
-            product,
-            user.shortUsername())
-          if (done) logger.info("Approval processed") else logger.warn("Approval rejected for " + r + " by " + user + " to " + state)
+          daemonAgent ! RequestPackage(Actor.self, target,
+            ApprovalRequest(
+              r.filename,
+              user.shortUsername(), // todo this was user.displayName?!
+              user.email.is,
+              state match {
+                case ApprovalState.approved => AgentApprovalState.Approved.toString()
+                case ApprovalState.notApproved => AgentApprovalState.NotApproved.toString()
+                case _ => AgentApprovalState.Pending.toString()
+              },
+              comment,
+              product, // todo is this consistent?
+              user.shortUsername()
+            ))
         }
         case ApprovalRequested(d, r, users) =>
         {
           users foreach (this ! ApprovalApproved(d, r, _, ApprovalState.pending, ""))
         }
+        case ApprovalReply(response) =>
+        {
+          logger.info("Approval reply, " + response)
+        }
         case SubscribeRequested(d, user) =>
         {
-          // todo subscribe needs to pass username
-          if(agent.subscribe(d.latest.filename, user.email))
-            logger.info(user + " has subscribed to " + d)
-          else
-            logger.warn("Subscribe request rejected for " + d + " by " + user)
+          daemonAgent ! RequestPackage(Actor.self, target, SubscribeRequest(d.latest.filename, user.shortUsername(), user.email.is, "always"))
+        }
+        case SubscribeReply(response, fileName, userName) =>
+        {
+          logger.info("Subscribe reply, " + List(response, fileName, userName))
         }
         case UnsubscribeRequested(d, user) =>
         {
-          // todo subscribe needs to pass username
-          if(agent.unsubscribe(d.latest.filename, user.email))
-            logger.info(user + " has unsubscribed from " + d)
-          else
-            logger.warn("Unsubscribe request rejected for " + d + " by " + user)
+          daemonAgent ! RequestPackage(Actor.self, target, UnsubscribeRequest(d.latest.filename, user.shortUsername(), user.email.is))
+        }
+        case UnsubscribeReply(response, fileName, userName) =>
+        {
+           logger.info("Unsubscribe reply, " + List(response, fileName, userName))
         }
         case Edit(d, user) =>
         {
-          agent.edit(d.latest.filename, user.shortUsername())
-          logger.info("Edit request sent")
+          daemonAgent ! RequestPackage(Actor.self, target, EditRequest(d.latest.filename, user.shortUsername()))
+        }
+        case EditReply(user) =>
+        {
+          logger.info("Edit reply, editor is " + user)
         }
         case Unedit(d, user) =>
         {
-          try {
-            agent.unedit(d.latest.filename, user.shortUsername())
-          } catch {
-            // An IOException means there was no reply from the sent request. This is what we want since there is no reply from an UNEDIT_RQST.
-            case e: IOException => logger.info("Unedit request sent")
-          }
+          daemonAgent ! RequestPackage(Actor.self, target, UneditRequest(d.latest.filename, user.shortUsername()))
         }
         case Submit(d, projectName, localFile, userFileName, comment, user) =>
         {
