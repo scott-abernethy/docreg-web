@@ -2,7 +2,6 @@ package vvv.docreg.agent
 
 import org.specs.Specification
 import actors.Actor._
-import vvv.docreg.backend.Updated
 import actors.{TIMEOUT, Actor}
 
 object ChangePollerTest extends Specification
