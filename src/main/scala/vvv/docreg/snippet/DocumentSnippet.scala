@@ -333,19 +333,6 @@ class DocumentSnippet extends Loggable {
 
   private object submitFile extends RequestVar[Box[FileParamHolder]](Empty)
 
-//   private def submissionForm(in: NodeSeq, d: Document, r: Revision): NodeSeq = {
-//     var comment = ""
-//     var file: Option[FileParamHolder] = None
-//      bind("submission", in,
-//      "version" -> d.nextVersion,
-//      "by" -> Text(User.loggedInUser map (_.displayName) openOr "?"),
-//      "file" -> SHtml.fileUpload(ul => file = Some(ul)),
-//      "comment" -> SHtml.textarea(comment, comment = _) % ("class" -> "smalltextarea"),
-//      "submit" -> SHtml.submit("Submit", () => processSubmit(d, comment, file)),
-//      "cancel" -> SHtml.submit("Cancel", () => S.redirectTo(r.info))
-//    )
-//  }
-
   private def processSubmit(d: Document, projectName : String, name: String, comment: String, file: Option[FileParamHolder]) {
     file match {
       case Some(f: OnDiskFileParamHolder) if f.mimeType == null =>
@@ -358,14 +345,6 @@ class DocumentSnippet extends Loggable {
             println("send " + f.localFile + " as " + f.fileName + " to " + d.key + " ")
             if (name != d.title.is)
               d.title.apply(name)
-
-
-
-            //DB.use(DefaultConnectionIdentifier){ c =>
-              //d.editor(null)
-              //d.save
-              //Revision.create.document(d).version(d.nextVersion).filename("#").author(user).comment(comment).date(new Date).save
-            //}
 
             Environment.env.backend ! Submit(d, projectName, f.localFile, f.fileName, comment, user)
             S.notice(<div class="alert-message info"><p>Document submitted, waiting for system to update...</p></div>)

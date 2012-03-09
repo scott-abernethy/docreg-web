@@ -14,7 +14,7 @@ import java.io.IOException
 import com.hstx.docregsx.{Document => AgentDocument, Revision => AgentRevision, Approval => AgentApproval, Subscriber => AgentSubscriber, ApprovalStatus => AgentApprovalState}
 import vvv.docreg.db.DbVendor
 import java.util.Date
-import vvv.docreg.agent.{DaemonAgentComponent, Changed, DaemonProtocol}
+import vvv.docreg.agent._
 
 case class Connect()
 case class Reload(d: Document)
@@ -26,7 +26,7 @@ case class UnsubscribeRequested(document: Document, user: User)
 case class Edit(document: Document, user: User)
 case class Unedit(document: Document, user: User)
 case class Submit(document: Document, projectName: String, localFile: java.io.File, userFileName: String, comment: String, user: User)
-case class SubmitNew(projectName: String, localFile: java.io.File, userFileName: String, comment: String, user: User)
+case class Create(projectName: String, localFile: java.io.File, fileName: String, comment: String, user: User)
 
 trait Backend extends Actor
 
@@ -42,6 +42,8 @@ trait BackendComponentImpl extends BackendComponent
   {
   val product = ProjectProps.get("project.name") openOr "drw"
   val version = ProjectProps.get("project.version") openOr "0.0"
+  val clientVersion = "dr+w " + version
+  val target = Backend.server
   val reconciler = new Reconciler(this).start()
   val priorityReconciler = new Reconciler(this).start()
   var agent: vvv.docreg.backend.Agent = _
@@ -55,7 +57,7 @@ trait BackendComponentImpl extends BackendComponent
         case Connect() =>
         {
           logger.info("Starting " + product + " v" + version + " " + java.util.TimeZone.getDefault.getDisplayName)
-          agent = createAgent("dr+w " + version, Backend.server, product, self)
+          agent = createAgent(clientVersion, target, product, self)
         }
         case Loaded(d :: ds) => {
           Document.forKey(d.getKey) match {
@@ -78,10 +80,6 @@ trait BackendComponentImpl extends BackendComponent
         case Loaded(Nil) => {
           logger.info("Parsing docreg.txt for changes to reconcile complete")
         }
-        case Updated(d) =>
-        {
-          priorityReconciler ! Prepare(d, agent)
-        }
         case Changed(d) =>
         {
           logger.info("Change received, sending to reconcile " + d.key)
@@ -98,8 +96,8 @@ trait BackendComponentImpl extends BackendComponent
         }
         case ApprovalApproved(d, r, user, state, comment) =>
         {
-          val done = agent.approval(r.filename, 
-            user.displayName, 
+          val done = agent.approval(r.filename,
+            user.displayName,
             user.email.is,
             state match {
               case ApprovalState.approved => AgentApprovalState.Approved
@@ -148,6 +146,7 @@ trait BackendComponentImpl extends BackendComponent
         case Submit(d, projectName, localFile, userFileName, comment, user) =>
         {
           // todo check revision is latest?
+          // todo pass in new user title rather than setting d's title. similar to Create below
           try {
             agent.registerCopySubmit(localFile, d.nextFileName(userFileName), projectName, d.access.is, user.shortUsername(), user.host.is, comment)
           } catch {
@@ -155,17 +154,12 @@ trait BackendComponentImpl extends BackendComponent
             a.printStackTrace()
           }
         }
-        /*
-        case SubmitNew() => {
-          //check document name doesn't have 0000-000 format.
-          // register, and check reply message for document and revision
-          //Register status: Accepted
-          //Suggested file name: 6116-001-Testing document addition.txt
-          // submit
-          // success.
-          //
+        case msg @ Create(projectName, localFile, userFileName, comment, user) =>
+        {
+          val engine = new SubmitNewEngine(daemonAgent, target, user.host.is, clientVersion)
+          engine.start()
+          engine ! msg
         }
-         */
         case 'Die =>
         {
           logger.info("Backend killed")

@@ -41,5 +41,18 @@ object StringUtilTest extends Specification {
       StringUtil.fileExtension("asdf sfdsf") must beNone
       StringUtil.fileExtension("/asdf/sf/sf sdf - sdf") must beNone
     }
+    "create document file name from title plus user uploaded file extension" >>
+    {
+      StringUtil.retitleFile("Harold", "money.png") must beSome("Harold.png")
+      StringUtil.retitleFile("Harold.txt", "money.bmp") must beSome("Harold.txt.bmp")
+      StringUtil.retitleFile("Gone with the", "wind") must beSome("Gone with the")
+      StringUtil.retitleFile("Gone with the", "wind.") must beSome("Gone with the")
+      StringUtil.retitleFile("Gone with the", "/usr/tmp/wind") must beSome("Gone with the")
+      StringUtil.retitleFile("Gone with the", "/usr/tmp/northerly.wind") must beSome("Gone with the.wind")
+      StringUtil.retitleFile("", "foo.bar") must beNone
+      StringUtil.retitleFile(null, "foo.bar") must beNone
+      StringUtil.retitleFile("baz", "") must beSome("baz")
+      StringUtil.retitleFile("baz", null) must beSome("baz")
+    }
   }
 }

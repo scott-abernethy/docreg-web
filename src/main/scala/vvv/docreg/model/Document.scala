@@ -4,7 +4,7 @@ import _root_.net.liftweb.mapper._
 import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
 import scala.xml._
-import vvv.docreg.util.StringUtil.{prePadTo, fileExtension}
+import vvv.docreg.util.StringUtil.{prePadTo, retitleFile}
 import util.matching.Regex
 
 class Document extends LongKeyedMapper[Document] with IdPK with ManyToMany {
@@ -31,25 +31,26 @@ class Document extends LongKeyedMapper[Document] with IdPK with ManyToMany {
   def nextVersion: Long = latest.version.toLong + 1L
 
   def nextFileName(userFileName: String): String =
+  {
     prePadTo(key, 4, '0') +
       "-" +
       prePadTo(nextVersion.toString, 3, '0') +
       "-" +
-      title +
-      fileExtension(userFileName).map("." + _).getOrElse("")
+      retitleFile(title, userFileName)
+  }
 
-  def editingFileName(username: String): String = {
+  def editingFileName(username: String): String =
+  {
     prePadTo(key, 4, '0') +
       "-" +
       prePadTo(nextVersion.toString, 3, '0') +
       "#" + username +
       "-" +
-      title +
-      "." +
-      fileExtension(latest.filename.is).getOrElse("")
+      retitleFile(title, latest.filename.is)
   }
 
-  def linkForEditing(username: String): String = {
+  def linkForEditing(username: String): String =
+  {
     infoLink + "/download/editing/" + username
   }
 

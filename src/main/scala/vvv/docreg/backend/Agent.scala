@@ -7,7 +7,6 @@ import java.io.File
 import vvv.docreg.agent.{DaemonAgentImpl, DaemonAgent, ChangePoller}
 
 case class Loaded(ds: List[Document])
-case class Updated(d: Document)
 
 trait Agent {
 //    private void notifyMessageListener(com.hstx.docregsx.SendMessage sendMessage, com.hstx.docregsx.ReceiveMessage receiveMessage) { /* compiled code */ }

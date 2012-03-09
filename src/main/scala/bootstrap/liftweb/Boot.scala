@@ -41,7 +41,7 @@ class Boot
 
     // Build SiteMap
     val entries: List[ConvertableToMenu] = List(
-      Menu.i("Home") / "index" >> loggedIn,
+      Menu.i("Dashboard") / "index" >> loggedIn,
       Menu.i("Help") / "help",
       Menu.i("Search") / "search" >> loggedIn,
       Menu.i("Login") / "user" / "signin",
@@ -49,12 +49,13 @@ class Boot
       Menu.i("History") / "doc" / "history" >> loggedIn,
       Menu.i("Profile") / "user" / "profile" >> loggedIn,
       Menu.i("Preferences") / "user" / "preferences" >> loggedIn,
-      Menu.i("Info") / "doc" / "info" >> loggedIn,
-      Menu.i("Approve") / "doc" / "approve" >> loggedIn,
+      Menu.i("Document Info") / "doc" / "info" >> loggedIn,
+      Menu.i("Approve Document") / "doc" / "approve" >> loggedIn,
       Menu.i("Request Approval") / "doc" / "request-approval" >> loggedIn,
-      Menu.i("Edit") / "doc" / "edit" >> loggedIn,
-      Menu.i("Submit") / "doc" / "submit" >> loggedIn,
-      Menu.i("Project") / "project" / "info" >> loggedIn
+      Menu.i("Edit Document") / "doc" / "edit" >> loggedIn,
+      Menu.i("Create Document") / "doc" / "create" >> loggedIn,
+      Menu.i("Submit Document") / "doc" / "submit" >> loggedIn,
+      Menu.i("Project Information") / "project" / "info" >> loggedIn
     )
 
     // set the sitemap.  Note if you don't want access control for

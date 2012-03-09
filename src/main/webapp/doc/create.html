@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type"/>
+    <title>?</title>
+  </head>
+  <body class="lift:content_id=main">
+    <div id="main" class="lift:surround?with=no-sidebar;at=content">
+
+        <div>
+            <header class="page-header">
+                <h1>Create Document</h1>
+                <p>Add a new document to the document register.</p>
+            </header>
+        </div>
+
+  <form class="lift:snippet?type=CreateDocumentSnippet.render;form=post;multipart=true form-horizontal">
+    <fieldset>
+          <legend>New document submission</legend>
+          <div class="control-group">
+              <label class="control-label" for="input01">Project</label>
+              <div class="controls">
+                <span id="input01" class="submission-project"></span>
+              </div>
+          </div>
+          <div id="name-group" class="control-group">
+              <label class="control-label" for="input02">Name</label>
+              <div class="controls">
+                <span id="input02" class="submission-name"></span>
+                <p class="help-block">Please enter the title name for the new document, e.g. &quot;The Catcher In The Rye&quot;</p>
+              </div>
+          </div>
+          <div class="control-group">
+              <label class="control-label" for="input03">Version</label>
+              <div class="controls">
+                <span id="input03" class="submission-version input-small uneditable-input"></span>
+              </div>
+          </div>
+          <div id="file-group" class="control-group">
+              <label class="control-label" for="input04">Select File</label>
+              <div class="controls">
+                <span id="input04" class="submission-file"></span>
+                <p class="help-block">Select the file that represents the initial version of this document.</p>
+              </div>
+          </div>
+          <div class="control-group">
+              <label class="control-label" for="input05">By</label>
+              <div class="controls">
+                <span id="input05" class="submission-by uneditable-input"></span>
+              </div>
+          </div>
+          <div class="control-group">
+              <label class="control-label" for="input06">Comment</label>
+              <div class="controls">
+                <span id="input06" class="submission-comment"></span>
+                <p class="help-block">Please enter a meaningful comment for this submission.</p>
+              </div>
+          </div>
+          <div class="form-actions">
+              <input type="submit" value="Save" class="submission-submit btn btn-primary"/> <input type="submit" value="Cancel" class="submission-cancel btn"/>
+          </div>
+      </fieldset>
+  </form>
+
+    </div>
+  </body>
+</html>

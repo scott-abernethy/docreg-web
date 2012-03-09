@@ -3,7 +3,6 @@ package vvv.docreg.agent
 import actors.Actor
 import net.liftweb.util.Schedule
 import java.util.concurrent.ScheduledFuture
-import vvv.docreg.backend.Updated
 import net.liftweb.common.Loggable
 import vvv.docreg.util.Millis
 import com.hstx.docregsx.Document

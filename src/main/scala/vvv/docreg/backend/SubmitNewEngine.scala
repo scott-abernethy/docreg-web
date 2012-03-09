@@ -17,10 +17,11 @@ class SubmitNewEngine(agent: DaemonAgent, target: String, clientHost: String, cl
     {
       react
       {
-        case SubmitNew(projectName, localFile, userFileName, comment, user) =>
+        case Create(projectName, localFile, userFileName, comment, user) =>
         {
+          // todo check the fields, including comment which should default to "[no description]"? Check default for approval etc also.
           cachedLocalFile = localFile
-          agent ! RequestPackage(Actor.self, target, RegisterRequest(userFileName, projectName, comment, "Everyone", user.displayName, user.shortUsername(), clientHost, clientVersion))
+          agent ! RequestPackage(Actor.self, target, RegisterRequest(userFileName, projectName, if (comment.length() < 1) "[no description]" else comment, "Everyone", user.displayName, user.shortUsername(), clientHost, clientVersion))
         }
         case RegisterReply(response, suggestedFileName) =>
         {
@@ -28,25 +29,30 @@ class SubmitNewEngine(agent: DaemonAgent, target: String, clientHost: String, cl
 
           // Sending multiple times with the same file name gives the same doc key suggestion.
           // "Accepted - file name already contained correct version
-          println("Register reply " + response + " with suggested filename of " + suggestedFileName)
           if (response != null && response.startsWith("Accepted"))
           {
-            // Submit with suggested file name assuming, as long as it is version 001 and has same fileName part.
+            logger.info("Register reply " + response + " with suggested filename of " + suggestedFileName)
+              // Submit with suggested file name assuming, as long as it is version 001 and has same fileName part.
             val submittedFileName = suggestedFileName
             var scpClient = new ScpClient(target)
-            println("Copying file")
+            logger.info("Copying file")
             scpClient.copy(cachedLocalFile.toString(), submittedFileName);
-            println("Copying file, done")
+            logger.info("Copying file, done")
             // todo check file size
             agent ! RequestPackage(Actor.self, target, SubmitRequest(submittedFileName, -1))
             // todo delete local file?
           }
-          // todo else
+          else
+          {
+            logger.warn("Failed to register new document " + response + " -> " + suggestedFileName)
+            // todo warn user!
+          }
         }
         case SubmitReply(response, suggestedFileName) =>
         {
-          println("Submit reply " + response + " with suggested filename of " + suggestedFileName)
+          logger.info("Submit reply " + response + " with suggested filename of " + suggestedFileName)
           // todo, notify user
+          Actor.self ! 'Die
         }
         case 'Die =>
         {
@@ -54,8 +60,9 @@ class SubmitNewEngine(agent: DaemonAgent, target: String, clientHost: String, cl
         }
         case other =>
         {
-          println("Submit engine got unexpected " + other)
+          logger.warn("Submit engine got unexpected " + other)
         }
+        // todo timeout
       }
     }
   }
@@ -71,7 +78,7 @@ object SubmitNewEngine
     agent.start()
     val x = new SubmitNewEngine(agent, "shelob", "10.16.2.0", "dr+w 0.7.0.dev")
     x.start()
-    x ! SubmitNew("DocReg", new File("/tmp/garbage.txt"), "New Document Test 4.txt", "Testing document addition with docregweb", u)
+    x ! Create("DocReg", new File("/tmp/garbage.txt"), "New Document Test 4.txt", "Testing document addition with docregweb", u)
     Actor.receiveWithin(30000) {
       case in => println("XX " + in)
     }

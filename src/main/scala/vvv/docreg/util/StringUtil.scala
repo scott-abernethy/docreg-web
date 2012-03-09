@@ -37,4 +37,18 @@ object StringUtil {
     case FileName(extension) => Some(extension)
     case _ => None
   }
+
+  def retitleFile(newTitle: String, fileName: String): Option[String] =
+  {
+    newTitle match {
+      case s: String if (s.length() > 0) =>
+      {
+        Some(newTitle + fileExtension(fileName).map("." + _).getOrElse(""))
+      }
+      case _ =>
+      {
+        None
+      }
+    }
+  }
 }
