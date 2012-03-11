@@ -114,7 +114,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
             }
           }
         } &
-        ".doc-revision" #> d.revisions.map { r =>
+        ".doc-revision" #> d.revisions.map { r =>User
           ".rev-link" #> <a href={r.info}>{r.version.asHtml}</a> &
           ".rev-author" #> r.authorLink &
           ".rev-comment" #> r.comment.is &
@@ -362,7 +362,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
 
             Environment.env.backend ! Submit(d, projectName, f.localFile, d.nextFileName(name, f.fileName), comment, user)
             S.notice(<div class="alert-message info"><p>Document submitted, waiting for system to update...</p></div>)
-            S.redirectTo(d.infoLink)
+            S.redirectTo("/")
           case _ =>
             S.error(<div class="alert-message error"><p>Unable to submit, no user logged in!</p></div>)
             S.redirectTo("/")
