@@ -27,7 +27,7 @@ class SubmitEngine(agent: DaemonAgent, target: String, clientHost: String, clien
           logger.info("SubmitEngine register " + request)
           agent ! RequestPackage(Actor.self, target, request)
         }
-        case RegisterReply("Rejected", suggestedFileName) =>
+        case RegisterReply(response, suggestedFileName) if (response.startsWith("Rejected")) =>
         {
           (suggestedFileName, cachedRequest) match
           {
