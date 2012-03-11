@@ -21,7 +21,7 @@ object CurrentLog extends SessionVar[Box[Log]](Empty)
 case class ReloadLog()
 
 class Log extends DocumentSubscriber {
-  val limit = 20
+  val limit = 30
   private val documentServer = Environment.env.documentServer
   private var revisions: List[Revision] = Nil
   private lazy val revisionPart: NodeSeq = (".log-item ^^" #> "foo").apply(defaultHtml)
