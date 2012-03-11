@@ -22,7 +22,7 @@ class Search extends Loggable with ProjectSelection {
 
   def input = {
     if (User.loggedIn_?) {
-      ".search-input" #> SHtml.text(searchInput.is, s => searchInput(s), "class" -> "search-query") &
+      ".search-input" #> SHtml.text(searchInput.is, s => searchInput(s), "class" -> "search-query input-medium") &
       ".search-submit" #> SHtml.onSubmit((s) => S.redirectTo("/search"))
     } else {
       ".all" #> NodeSeq.Empty
@@ -32,13 +32,11 @@ class Search extends Loggable with ProjectSelection {
   def bindResults(in: NodeSeq): NodeSeq = {
     import vvv.docreg.util.StringUtil._
     // todo better parsing of search string, from 
-    var found: List[Document] = FilteredDocument.searchLike(Document.title, formatSearch(searchInput.is))
-    if (!in.isEmpty) {
-      found = FilteredDocument.searchLike(Document.key, prePadTo(searchInput.is, 4, '0')) ::: found
-      found = FilteredDocument.searchAuthor(searchInput.is)  ::: found
-    }
-
-    results(in, found)
+    results(in,
+      FilteredDocument.searchLike(Document.title, formatSearch(searchInput.is)) :::
+      FilteredDocument.searchAuthor(formatSearch(searchInput.is)) :::
+      FilteredDocument.searchLike(Document.key, prePadTo(searchInput.is, 4, '0'))
+    )
   }
 
   var html: NodeSeq = NodeSeq.Empty
