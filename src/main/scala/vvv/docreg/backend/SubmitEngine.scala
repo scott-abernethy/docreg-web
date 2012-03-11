@@ -5,10 +5,11 @@ import vvv.docreg.agent._
 import net.liftweb.common.Loggable
 import java.io.File
 import com.hstx.docregsx.ScpClient
+import vvv.docreg.model.Document.ValidDocumentFileName
 
 class SubmitEngine(agent: DaemonAgent, target: String, clientHost: String, clientVersion: String) extends Actor with Loggable
 {
-  var cachedLocalFile: File = null
+  var cachedRequest: Submit = null
 
   def act()
   {
@@ -16,15 +17,31 @@ class SubmitEngine(agent: DaemonAgent, target: String, clientHost: String, clien
     {
       react
       {
-        case Submit(document, projectName, localFile, userFileName, comment, user) =>
+        case msg @ Submit(document, projectName, localFile, userFileName, comment, user) =>
         {
           // todo check revision is latest?
           // todo pass in new user title rather than setting d's title. similar to Create below
           // todo check the fields, including comment which should default to "[no description]"? Check default for approval etc also.
-          cachedLocalFile = localFile
+          cachedRequest = msg
           val request = RegisterRequest(userFileName, projectName, if (comment.length() < 1) "[no description]" else comment, document.access.is, user.displayName, user.shortUsername(), clientHost, clientVersion)
           println("SubmitEngine register " + request)
           agent ! RequestPackage(Actor.self, target, request)
+        }
+        case RegisterReply("Rejected", suggestedFileName) =>
+        {
+          (suggestedFileName, cachedRequest) match
+          {
+            case (ValidDocumentFileName(suggestedKey, _, suggestedSuffix), Submit(document, projectName, localFile, ValidDocumentFileName(key, _, suffix), comment, user)) if (suggestedKey == key && suggestedSuffix == suffix) =>
+            {
+              println("SubmitEngine rejected, so RETRY register using " + suggestedFileName)
+              Actor.self ! Submit(document, projectName, localFile, suggestedFileName, comment, user)
+            }
+            case _ =>
+            {
+              println("SubmitEngine rejected, would have accepted " + suggestedFileName + " but that doesn't make sense.")
+              Actor.self ! 'Die
+            }
+          }
         }
         case RegisterReply(response, suggestedFileName) =>
         {
@@ -40,7 +57,7 @@ class SubmitEngine(agent: DaemonAgent, target: String, clientHost: String, clien
             val submittedFileName = suggestedFileName
             var scpClient = new ScpClient(target)
             logger.info("Copying file")
-            scpClient.copy(cachedLocalFile.toString(), submittedFileName);
+            scpClient.copy(cachedRequest.localFile.toString(), submittedFileName);
             logger.info("Copying file, done")
             // todo check file size
             agent ! RequestPackage(Actor.self, target, SubmitRequest(submittedFileName, -1))
