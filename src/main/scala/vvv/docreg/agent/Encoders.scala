@@ -1,8 +1,9 @@
 package vvv.docreg.agent
 
 import org.jboss.netty.buffer.ChannelBuffer
+import net.liftweb.common.Loggable
 
-trait RequestEncoder[T <: Request]
+trait RequestEncoder[T <: Request] extends Loggable
 {
   def messageType: MessageType.Type
 
@@ -10,9 +11,9 @@ trait RequestEncoder[T <: Request]
 
   def writeString(b: ChannelBuffer, string: String, length: Int)
   {
-    val bit = if (string.size > length)
+    val bit = if (string.length() > length)
     {
-      println("Truncated string during encoding, " + string + " must be size " + length)
+      logger.warn("Truncated string during encoding, " + string + " must be size " + length)
       string.substring(0, length - 1)
     }
     else

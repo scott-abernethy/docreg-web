@@ -24,7 +24,7 @@ class SubmitEngine(agent: DaemonAgent, target: String, clientHost: String, clien
           // todo check the fields, including comment which should default to "[no description]"? Check default for approval etc also.
           cachedRequest = msg
           val request = RegisterRequest(userFileName, projectName, if (comment.length() < 1) "[no description]" else comment, document.access.is, user.displayName, user.shortUsername(), clientHost, clientVersion)
-          println("SubmitEngine register " + request)
+          logger.info("SubmitEngine register " + request)
           agent ! RequestPackage(Actor.self, target, request)
         }
         case RegisterReply("Rejected", suggestedFileName) =>
@@ -33,12 +33,12 @@ class SubmitEngine(agent: DaemonAgent, target: String, clientHost: String, clien
           {
             case (ValidDocumentFileName(suggestedKey, _, suggestedSuffix), Submit(document, projectName, localFile, ValidDocumentFileName(key, _, suffix), comment, user)) if (suggestedKey == key && suggestedSuffix == suffix) =>
             {
-              println("SubmitEngine rejected, so RETRY register using " + suggestedFileName)
+              logger.warn("SubmitEngine rejected, so RETRY register using " + suggestedFileName)
               Actor.self ! Submit(document, projectName, localFile, suggestedFileName, comment, user)
             }
             case _ =>
             {
-              println("SubmitEngine rejected, would have accepted " + suggestedFileName + " but that doesn't make sense.")
+              logger.warn("SubmitEngine rejected, would have accepted " + suggestedFileName + " but that doesn't make sense.")
               Actor.self ! 'Die
             }
           }

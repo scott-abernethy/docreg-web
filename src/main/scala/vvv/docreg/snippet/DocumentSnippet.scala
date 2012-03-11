@@ -358,7 +358,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
       {
         User.loggedInUser.is match {
           case Full(user) =>
-            println("send " + f.localFile + " as " + f.fileName + " to " + d.key + " ")
+            logger.info("send " + f.localFile + " as " + f.fileName + " to " + d.key + " ")
 
             Environment.env.backend ! Submit(d, projectName, f.localFile, d.nextFileName(name, f.fileName), comment, user)
             S.notice(<div class="alert-message info"><p>Document submitted, waiting for system to update...</p></div>)

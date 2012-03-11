@@ -2,13 +2,13 @@ package vvv.docreg.snippet
 
 import xml.{Text, NodeSeq}
 import vvv.docreg.model.{User, Project}
-import net.liftweb.common.Full
 import net.liftweb.util.Helpers._
 import vvv.docreg.backend.Create
 import vvv.docreg.util.{StringUtil, Environment}
 import net.liftweb.http._
+import net.liftweb.common.{Loggable, Full}
 
-class CreateDocumentSnippet
+class CreateDocumentSnippet extends Loggable
 {
   private val projects = Project.findAll()
   private object name extends RequestVar("")
@@ -50,7 +50,7 @@ class CreateDocumentSnippet
       {
         User.loggedInUser.is match {
           case Full(user) =>
-            println("send " + f.localFile + " as " + f.fileName + " new")
+            logger.info("send " + f.localFile + " as " + f.fileName + " new")
 
             Environment.env.backend ! Create(project.is, f.localFile, StringUtil.retitleFile(name.is, f.fileName).getOrElse(f.fileName), comment.is, user)
             S.notice(<div class="alert-message info"><p>Document created, waiting for system to update...</p></div>)

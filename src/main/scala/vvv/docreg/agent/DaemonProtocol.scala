@@ -60,7 +60,7 @@ class DaemonProtocolEncoder extends OneToOneEncoder with Loggable
     msg match {
       case DownstreamMessage(header, body) =>
       {
-        println("Protocol downstream " + header)
+        //println("Protocol downstream " + header)
 
         val buffer = ChannelBuffers.dynamicBuffer();
 
@@ -100,7 +100,7 @@ class DaemonProtocolDecoder(decoders: Map[MessageType.Type, ReplyDecoder]) exten
         val header: Header = Header(version, MessageType(messageId), transactionId, sequenceId)
 
         val message = decodeMessage(header, buffer)
-        println("Upstream message received " + header + " and decoded as " + message)
+        //println("Upstream message received " + header + " and decoded as " + message)
         message
       }
       case _ =>
