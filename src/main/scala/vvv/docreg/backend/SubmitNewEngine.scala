@@ -66,6 +66,15 @@ class SubmitNewEngine(agent: DaemonAgent, target: String, clientHost: String, cl
       }
     }
   }
+
+  override def exceptionHandler =
+  {
+    case e: Exception =>
+    {
+      logger.error("SubmitNewEngine exception " + e.getMessage, e)
+      Actor.self ! 'Die
+    }
+  }
 }
 
 object SubmitNewEngine

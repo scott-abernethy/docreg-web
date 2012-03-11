@@ -87,6 +87,15 @@ class SubmitEngine(agent: DaemonAgent, target: String, clientHost: String, clien
       }
     }
   }
+
+  override def exceptionHandler =
+  {
+    case e: Exception =>
+    {
+      logger.error("SubmitEngine exception " + e.getMessage, e)
+      Actor.self ! 'Die
+    }
+  }
 }
 
 //SubmitEngine register RegisterRequest(0021-439-Document Register Test - SC.doc,DocReg,Fix title, submit via new async protocol client.,Everyone,Scott Abernethy,sabernethy,0:0:0:0:0:0:0:1,dr+w 0.7.0)
