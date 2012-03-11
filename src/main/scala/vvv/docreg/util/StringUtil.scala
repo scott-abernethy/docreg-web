@@ -51,4 +51,11 @@ object StringUtil {
       }
     }
   }
+
+  def pluralise(count: Long, description: String): String = pluralise(count, description, "s")
+
+  def pluralise(count: Long, description: String, pluraliser: String): String =
+  {
+    if (count == 1) count + " " + description else count + " " + description + pluraliser
+  }
 }

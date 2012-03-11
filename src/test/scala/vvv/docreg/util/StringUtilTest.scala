@@ -54,5 +54,15 @@ object StringUtilTest extends Specification {
       StringUtil.retitleFile("baz", "") must beSome("baz")
       StringUtil.retitleFile("baz", null) must beSome("baz")
     }
+
+    "pluralise" >>
+    {
+      StringUtil.pluralise(0, "foo") must be_==("0 foos")
+      StringUtil.pluralise(1, "foo") must be_==("1 foo")
+      StringUtil.pluralise(2, "foo") must be_==("2 foos")
+      StringUtil.pluralise(1000, "foo") must be_==("1000 foos")
+
+      StringUtil.pluralise(1000, "foo", "es") must be_==("1000 fooes")
+    }
   }
 }

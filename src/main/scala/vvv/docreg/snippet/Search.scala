@@ -15,6 +15,7 @@ import _root_.net.liftweb.http.js.JE.JsRaw
 import vvv.docreg.helper.ProjectSelection
 import vvv.docreg.comet._
 import vvv.docreg.model.{User, FilteredDocument, Document}
+import vvv.docreg.util.StringUtil._
 
 class Search extends Loggable with ProjectSelection {
   object searchInput extends SessionVar("")
@@ -52,7 +53,9 @@ class Search extends Loggable with ProjectSelection {
   }
 
   def items(in: NodeSeq, ds: List[Document]): NodeSeq = {
-    (".search-item" #> ds.map { d =>
+    (
+      ".match-count" #> pluralise(ds.size, "match", "es") &
+      ".search-item" #> ds.map { d =>
       ".doc-project" #> d.projectName &
         ".doc-author" #> d.latest.authorLink &
         ".doc-key" #> <a href={d.infoLink}>{d.key}</a> &
