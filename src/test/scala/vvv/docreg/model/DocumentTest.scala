@@ -26,7 +26,7 @@ object DocumentTest extends Specification {
       val r4 = Revision.create.document(d).version(4).filename("foo.txt").author(u2).date(new Date()).comment("hmmm")
       r4.save
 
-      d.nextFileName("youyoui.odt") must be_==("0234-005-The Nameless City.odt")
+      d.nextFileName("Rainbow Fish", "youyoui.odt") must be_==("0234-005-Rainbow Fish.odt")
     }
 
     "check no file extension" in {
@@ -39,7 +39,7 @@ object DocumentTest extends Specification {
       val r4 = Revision.create.document(d).version(4).filename("foo.txt").author(u2).date(new Date()).comment("hmmm")
       r4.save
 
-      d.nextFileName("youyoui") must be_==("0234-005-The Nameless City")
+      d.nextFileName("The Nameless City", "youyoui") must be_==("0234-005-The Nameless City")
     }
 
     "check valid identifiers" >> {

@@ -30,13 +30,13 @@ class Document extends LongKeyedMapper[Document] with IdPK with ManyToMany {
   def infoLink: String = "/" + key.is
   def nextVersion: Long = latest.version.toLong + 1L
 
-  def nextFileName(userFileName: String): String =
+  def nextFileName(newTitle: String, userFileName: String): String =
   {
     prePadTo(key, 4, '0') +
       "-" +
       prePadTo(nextVersion.toString, 3, '0') +
       "-" +
-      retitleFile(title, userFileName).getOrElse("")
+      retitleFile(newTitle, userFileName).getOrElse("")
   }
 
   def editingFileName(username: String): String =

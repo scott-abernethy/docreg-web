@@ -14,21 +14,26 @@ import js.jquery.JqJE._
 import js._
 import js.jquery._
 import scala.xml.{NodeSeq, Text, Elem}
-import vvv.docreg.util.{Environment, TemplateParse}
 import net.liftweb.http.js.JsCmds._
 import java.util.Date
+import vvv.docreg.util.{StringUtil, Environment, TemplateParse}
 
-class DocumentSnippet extends Loggable {
+trait DocumentRequest
+{
+
+}
+
+class DocumentSnippet extends DocumentRequest with Loggable {
   val backend = Environment.env.backend
   val key = S.param("key") openOr ""
   val version = S.param("version") openOr "latest"
   val document: Box[Document] = try {
     Document.forKey(key)
   } catch {
-    case e:NumberFormatException => null 
+    case e:NumberFormatException => null
   }
   val revision: Box[Revision] = document match {
-    case Full(d) => 
+    case Full(d) =>
       if (version == "latest") {
         Full(d.latest)
       } else {
@@ -312,48 +317,61 @@ class DocumentSnippet extends Loggable {
     S.redirectTo(r.info)
   }
 
+  private val projects = Project.findAll()
+
+  private object name extends RequestVar(document.map(_.title.is).getOrElse("???"))
+  private object nameError extends RequestVar[Option[String]](None)
+  private object project extends RequestVar(document.map(_.projectName).getOrElse(projects.headOption.map(_.name.is).getOrElse("???")))
+  private object file extends RequestVar[Option[FileParamHolder]](None)
+  private object fileError extends RequestVar[Option[String]](None)
+  private object comment extends RequestVar("")
+
   def submit(in: NodeSeq) = forRequest(in, (in, d, r) => {
-    var comment = ""
-    var name = d.title.is
-    var projectName = d.projectName;
-    val projectList = Project.findAll().map( i =>(i.name.is, i.name.is))
-    var file: Option[FileParamHolder] = None
+    val projectList = projects.map(i => (i.name.is, i.name.is))
     (
-      ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
-      ".submission-project" #> SHtml.select(projectList, Option(projectName), projectName = _) &
-      ".submission-name" #> SHtml.text(name, name = _) &
+//      ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
+      ".submission-project" #> SHtml.select(projectList, Option(project.is), project(_)) &
+      ".submission-name" #> SHtml.text(name.is, name(_)) &
+      "#name-group [class+]" #> nameError.is.map(_ => "error").getOrElse("") &
       ".submission-version *" #> d.nextVersion &
-      ".submission-file" #> SHtml.fileUpload(ul => file = Some(ul)) &
+      ".submission-file" #> SHtml.fileUpload(ul => file(Some(ul))) &
+      "#file-group [class+]" #> fileError.is.map(_ => "error").getOrElse("") &
       ".submission-by *" #> Text(User.loggedInUser map (_.displayName) openOr "?") &
-      ".submission-comment" #> SHtml.textarea(comment, comment = _, "class" -> "input-xlarge") &
-      ".submission-submit" #> SHtml.submit("Submit", () => processSubmit(d, projectName, name, comment, file), "class" -> "btn primary") &
+      ".submission-comment" #> SHtml.textarea(comment.is, comment(_), "class" -> "input-xlarge") &
+      ".submission-submit" #> SHtml.submit("Submit", () => processSubmit(d, project.is, name.is, comment.is, file.is), "class" -> "btn primary") &
       ".submission-cancel" #> SHtml.submit("Cancel", () => S.redirectTo("/"), "class" -> "btn")
     ).apply(in)
   })
 
-  private object submitFile extends RequestVar[Box[FileParamHolder]](Empty)
-
   private def processSubmit(d: Document, projectName : String, name: String, comment: String, file: Option[FileParamHolder]) {
     file match {
       case Some(f: OnDiskFileParamHolder) if f.mimeType == null =>
-        S.error(<div class="alert-message error"><p>No file uploaded!</p></div>)
+      {
+        fileError(Some("No file uploaded!"))
+      }
       case Some(f: OnDiskFileParamHolder) if name == "" =>
-        S.error( <div class="alert-message error"><p>Document name is blank!</p></div>)
+      {
+        nameError(Some("Name must be entered!"))
+        fileError(Some("Please re-select file"))
+      }
       case Some(f: OnDiskFileParamHolder) =>
+      {
         User.loggedInUser.is match {
           case Full(user) =>
             println("send " + f.localFile + " as " + f.fileName + " to " + d.key + " ")
-            if (name != d.title.is)
-              d.title.apply(name)
 
-            Environment.env.backend ! Submit(d, projectName, f.localFile, f.fileName, comment, user)
+            Environment.env.backend ! Submit(d, projectName, f.localFile, d.nextFileName(name, f.fileName), comment, user)
             S.notice(<div class="alert-message info"><p>Document submitted, waiting for system to update...</p></div>)
             S.redirectTo(d.infoLink)
           case _ =>
             S.error(<div class="alert-message error"><p>Unable to submit, no user logged in!</p></div>)
+            S.redirectTo("/")
         }
-      case _ => 
-        S.error(<div class="alert-message error"><p>Failed to upload file!</p></div>)
+      }
+      case _ =>
+      {
+        fileError(Some("No file selected!"))
+      }
     }
   }
 }

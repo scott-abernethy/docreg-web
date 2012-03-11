@@ -20,7 +20,7 @@ class CreateDocumentSnippet
 
   def render =
   {
-    val projectList = Project.findAll().map(i => (i.name.is, i.name.is))
+    val projectList = projects.map(i => (i.name.is, i.name.is))
     ".submission-project" #> SHtml.select(projectList, Option(project.is), project(_)) &
     ".submission-name" #> SHtml.text(name.is, name(_)) &
     "#name-group [class+]" #> nameError.is.map(_ => "error").getOrElse("") &

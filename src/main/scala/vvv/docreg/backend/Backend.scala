@@ -148,16 +148,12 @@ trait BackendComponentImpl extends BackendComponent
         {
           daemonAgent ! RequestPackage(Actor.self, target, UneditRequest(d.latest.filename, user.shortUsername()))
         }
-        case Submit(d, projectName, localFile, userFileName, comment, user) =>
+        case msg @ Submit(d, projectName, localFile, userFileName, comment, user) =>
         {
           // todo check revision is latest?
-          // todo pass in new user title rather than setting d's title. similar to Create below
-          try {
-            agent.registerCopySubmit(localFile, d.nextFileName(userFileName), projectName, d.access.is, user.shortUsername(), user.host.is, comment)
-          } catch {
-            case a => logger.warn("Submit failed " + a)
-            a.printStackTrace()
-          }
+          val engine = new SubmitEngine(daemonAgent, target, user.host.is, clientVersion)
+          engine.start()
+          engine ! msg
         }
         case msg @ Create(projectName, localFile, userFileName, comment, user) =>
         {
