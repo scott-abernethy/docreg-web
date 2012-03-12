@@ -52,7 +52,8 @@ class CreateDocumentSnippet extends Loggable
           case Full(user) =>
             logger.info("send " + f.localFile + " as " + f.fileName + " new")
 
-            Environment.env.backend ! Create(project.is, f.localFile, StringUtil.retitleFile(name.is, f.fileName).getOrElse(f.fileName), comment.is, user)
+            // Note: OnDiskFileParamHolder will delete the local file on finalize, so pass the local file in a wrapper such that it is maintained til needed.
+            Environment.env.backend ! Create(project.is, () => f.localFile, StringUtil.retitleFile(name.is, f.fileName).getOrElse(f.fileName), comment.is, user)
             S.notice(<div class="alert-message info"><p>Document created, waiting for system to update...</p></div>)
             S.redirectTo("/")
           case _ =>

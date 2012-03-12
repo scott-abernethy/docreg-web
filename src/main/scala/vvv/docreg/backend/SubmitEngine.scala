@@ -57,7 +57,7 @@ class SubmitEngine(agent: DaemonAgent, target: String, clientHost: String, clien
             val submittedFileName = suggestedFileName
             var scpClient = new ScpClient(target)
             logger.info("Copying file")
-            scpClient.copy(cachedRequest.localFile.toString(), submittedFileName);
+            scpClient.copy(cachedRequest.localFile.apply().toString(), submittedFileName);
             logger.info("Copying file, done")
             // todo check file size
             agent ! RequestPackage(Actor.self, target, SubmitRequest(submittedFileName, -1))

@@ -25,8 +25,8 @@ case class SubscribeRequested(document: Document, user: User)
 case class UnsubscribeRequested(document: Document, user: User)
 case class Edit(document: Document, user: User)
 case class Unedit(document: Document, user: User)
-case class Submit(document: Document, projectName: String, localFile: java.io.File, userFileName: String, comment: String, user: User)
-case class Create(projectName: String, localFile: java.io.File, fileName: String, comment: String, user: User)
+case class Submit(document: Document, projectName: String, localFile: () => java.io.File, userFileName: String, comment: String, user: User)
+case class Create(projectName: String, localFile: () => java.io.File, fileName: String, comment: String, user: User)
 
 trait Backend extends Actor
 

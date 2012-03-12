@@ -9,7 +9,7 @@ import com.hstx.docregsx.ScpClient
 
 class SubmitNewEngine(agent: DaemonAgent, target: String, clientHost: String, clientVersion: String) extends Actor with Loggable
 {
-  var cachedLocalFile: File = null
+  var cachedRequest: Create = null
 
   def act()
   {
@@ -17,10 +17,10 @@ class SubmitNewEngine(agent: DaemonAgent, target: String, clientHost: String, cl
     {
       react
       {
-        case Create(projectName, localFile, userFileName, comment, user) =>
+        case msg @ Create(projectName, localFile, userFileName, comment, user) =>
         {
           // todo check the fields, including comment which should default to "[no description]"? Check default for approval etc also.
-          cachedLocalFile = localFile
+          cachedRequest = msg
           agent ! RequestPackage(Actor.self, target, RegisterRequest(userFileName, projectName, if (comment.length() < 1) "[no description]" else comment, "Everyone", user.displayName, user.shortUsername(), clientHost, clientVersion))
         }
         case RegisterReply(response, suggestedFileName) =>
@@ -36,7 +36,7 @@ class SubmitNewEngine(agent: DaemonAgent, target: String, clientHost: String, cl
             val submittedFileName = suggestedFileName
             var scpClient = new ScpClient(target)
             logger.info("Copying file")
-            scpClient.copy(cachedLocalFile.toString(), submittedFileName);
+            scpClient.copy(cachedRequest.localFile.apply().toString(), submittedFileName);
             logger.info("Copying file, done")
             // todo check file size
             agent ! RequestPackage(Actor.self, target, SubmitRequest(submittedFileName, -1))
@@ -87,7 +87,7 @@ object SubmitNewEngine
     agent.start()
     val x = new SubmitNewEngine(agent, "shelob", "10.16.2.0", "dr+w 0.7.0.dev")
     x.start()
-    x ! Create("DocReg", new File("/tmp/garbage.txt"), "New Document Test 4.txt", "Testing document addition with docregweb", u)
+    x ! Create("DocReg", () => new File("/tmp/garbage.txt"), "New Document Test 4.txt", "Testing document addition with docregweb", u)
     Actor.receiveWithin(30000) {
       case in => println("XX " + in)
     }
