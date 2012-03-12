@@ -34,5 +34,5 @@ git tag -a -m "$tag_message" $tag ; abort_check $?
 war=$(find target -iname '*.war')
 remote_war="$war_name$tag.war"
 scp $war $server_host:$war_name$tag.war ; abort_check $?
-ssh $server_host cp $remote_war /var/lib/jetty/webapps/docreg.war
-ssh $server_host touch /etc/jetty/contexts/docreg.xml
+#ssh $server_host cp $remote_war /var/lib/jetty/webapps/docreg.war
+#ssh $server_host touch /etc/jetty/contexts/docreg.xml
