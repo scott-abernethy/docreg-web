@@ -64,29 +64,37 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     )
   }
 
-  def forRequest(in: NodeSeq, op: (NodeSeq, Document, Revision) => NodeSeq): NodeSeq = {
-    document match {
-      case Full(d) => revision match {
-        case Full(r) =>
-          if (editor != Nil) S.notice(<div class="alert-message info"><p>Document is currently being edited</p></div>)
-          if (!d.latest_?(r.version.is)) S.warning(<p>Not the most recent version of this document</p>)
-          op(in, d, r)
-        case _ => 
-          <div class="alert-message error"><p><strong>Invalid</strong>{" version '" + version + "' for document '" + key + "'"}</p></div>
+  def header(in: NodeSeq): NodeSeq = {
+    (document, revision) match
+    {
+      case (Full(d), Full(r)) =>
+      {
+        if (editor != Nil) S.notice("edit-message", <div class="alert alert-warning"><strong>Under edit!</strong> This document is currently being edited.</div>)
+        if (!d.latest_?(r.version.is)) S.warning("out-of-date-message", <div class="alert alert-info"><strong>Out of date!</strong> This is not the most recent version of the document.</div>)
+        ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
+        ".doc-project" #> d.project.map(_.infoLink).getOrElse(<span>?</span>) apply(in)
+      }
+      case (Full(d), _) =>
+      {
+        <div class="alert alert-error">
+            <strong>Invalid Version</strong>{" '" + version + "' for document '" + key + "'. "}<a href={d.infoLink}>Get the latest version instead.</a>
+        </div>
       }
       case _ =>
-        <div class="alert-message error"><p><strong>Invalid</strong>{" document '" + key + "'"}</p></div>
+      {
+        <div class="alert alert-error">
+          <strong>Invalid Document</strong>{" '" + key + "'"}
+        </div>
+      }
     }
   }
 
-  def header(in: NodeSeq): NodeSeq = {
-    forRequest(in, (in, d, r) => {
-      ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
-      ".doc-project" #> d.project.map(_.infoLink).getOrElse(<span>?</span>) apply in
-    })
-  }
-
-  def info(in: NodeSeq): NodeSeq = forRequest(in, (in, d, r) => {
+  def info(in: NodeSeq): NodeSeq =
+  {
+    (document, revision) match
+    {
+      case (Full(d), Full(r)) =>
+      {
       val out = bind("doc", in,
         "key" -> d.key,
         "revised" -> r.date,
@@ -109,7 +117,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
               ".edit-requested" #> editPending.date &
               ".doc-next" #> d.nextVersion
             }
-            case _ => {
+           case _ => {
               "tr" #> NodeSeq.Empty
             }
           }
@@ -130,9 +138,17 @@ class DocumentSnippet extends DocumentRequest with Loggable {
           ".subscriber-info" #> u.profileLink
         }
       ).apply(in)
-    })
+      }
+      case  _ => NodeSeq.Empty
+    }
+  }
 
-  def edit(in: NodeSeq): NodeSeq = forRequest(in, (in, d, r) => {
+  def edit(in: NodeSeq): NodeSeq =
+  {
+    (document, revision) match
+    {
+      case (Full(d), Full(r)) =>
+      {
     (
       ClearClearable &
       ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
@@ -140,7 +156,10 @@ class DocumentSnippet extends DocumentRequest with Loggable {
       ".edit-submit-file [href]" #> (d.latest.info + "/submit") &
       ".edit-back [href]" #> (d.latest.info)
     ).apply(in)
-    })
+      }
+      case _ => NodeSeq.Empty
+    }
+  }
 
   private def docActions(d: Document, r: Revision): CssBindFunc = {
     ".doc-link [href]" #> r.link &
@@ -246,7 +265,12 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     }
   }
 
-  def approve(in: NodeSeq): NodeSeq = forRequest(in, (in, d, r) => {
+  def approve(in: NodeSeq): NodeSeq =
+  {
+    (document, revision) match
+    {
+      case (Full(d), Full(r)) =>
+      {
     val states = List(ApprovalState.approved, ApprovalState.notApproved) map (state => (state.toString, state.toString))
     var comment = ""
     var state = ApprovalState.approved
@@ -259,8 +283,11 @@ class DocumentSnippet extends DocumentRequest with Loggable {
       ".approval-submit" #> SHtml.submit("Submit", () => processApprove(d, r, state, comment), "class" -> "btn primary") &
       ".approval-cancel" #> SHtml.submit("Cancel", () => S.redirectTo(r.info), "class" -> "btn")
     ).apply(in)
-  })
-  
+      }
+      case _ => NodeSeq.Empty
+    }
+  }
+
   def processApprove(d: Document, r: Revision, state: ApprovalState, comment: String): JsCmd = {
     val user = User.loggedInUser.is openOr null
     val approval = Approval.create
@@ -284,7 +311,12 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     case _ => NodeSeq.Empty
   }
 
-  def requestApproval(in: NodeSeq): NodeSeq = forRequest(in, (in, d, r) => {
+  def requestApproval(in: NodeSeq): NodeSeq =
+  {
+    (document, revision) match
+    {
+      case (Full(d), Full(r)) =>
+      {
       ("#doc:title *" #> <a href={d.infoLink}>{r.fullTitle}</a> &
        "#doc:version *" #> r.version &
         ".approver:add" #> SHtml.ajaxButton(<span><i class="icon-plus"></i> Add</span>, () => {JqJsCmds.AppendHtml("approverList", approver(approverPartial))}, "class" -> "btn") &
@@ -292,7 +324,10 @@ class DocumentSnippet extends DocumentRequest with Loggable {
        "#submit" #> SHtml.submit("Submit", () => (processRequestApproval(d, r)), "class" -> "btn primary") &
        "#cancel" #> SHtml.submit("Cancel", () => S.redirectTo(r.info), "class" -> "btn") &
        ClearClearable) apply in
-  })
+      }
+      case _ => NodeSeq.Empty
+    }
+  }
 
   var approverCount: Int = 0
   object selected extends RequestVar[List[String]](Nil)
@@ -326,7 +361,12 @@ class DocumentSnippet extends DocumentRequest with Loggable {
   private object fileError extends RequestVar[Option[String]](None)
   private object comment extends RequestVar("")
 
-  def submit(in: NodeSeq) = forRequest(in, (in, d, r) => {
+  def submit(in: NodeSeq) =
+  {
+    (document, revision) match
+    {
+      case (Full(d), Full(r)) =>
+      {
     val projectList = projects.map(i => (i.name.is, i.name.is))
     (
 //      ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
@@ -341,7 +381,10 @@ class DocumentSnippet extends DocumentRequest with Loggable {
       ".submission-submit" #> SHtml.submit("Submit", () => processSubmit(d, project.is, name.is, comment.is, file.is), "class" -> "btn primary") &
       ".submission-cancel" #> SHtml.submit("Cancel", () => S.redirectTo("/"), "class" -> "btn")
     ).apply(in)
-  })
+      }
+      case _ => NodeSeq.Empty
+    }
+  }
 
   private def processSubmit(d: Document, projectName : String, name: String, comment: String, file: Option[FileParamHolder]) {
     file match {

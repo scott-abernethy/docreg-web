@@ -127,6 +127,14 @@ class Boot
         () => Download.downloadForEditing(key, user)
     }
 
+    LiftRules.noticesAutoFadeOut.default.set( (notices: NoticeType.Value) => {
+            notices match {
+              case NoticeType.Notice => Full((10 seconds, 2 seconds))
+              case _ => Empty
+            }
+         }
+        )
+
     val env = new EnvironmentImpl{}
     env.start()
     Environment.env = env

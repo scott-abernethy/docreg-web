@@ -21,14 +21,7 @@
   display: block;
   color: red;
 }
-#notices ul {
-	margin:0;
-	padding:0;
-      }
-#notices ul li {
-	margin:0;
-	padding:0;
-	list-style:none;
+#notices {
 }
 .baseline-align-cells th {
   vertical-align: baseline;
@@ -55,11 +48,14 @@
   color: #d33682;
 }
 #lift__noticesContainer__ {
-    margin-bottom: 1em;
+  background-color: #eee;
+    border-bottom: 1px solid #d5d5d5;
 }
 #lift__noticesContainer__ ul {
-	margin:0;
-	padding:0;
+	width: 938px;
+    margin: 0 auto;
+	padding-top: 8px;
+	padding-bottom: 8px;
 }
 #lift__noticesContainer__ ul li {
 	margin:0;
