@@ -64,6 +64,11 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     )
   }
 
+  def editing_?(): Boolean =
+  {
+    editor != Nil
+  }
+
   def header(in: NodeSeq): NodeSeq = {
     (document, revision) match
     {
@@ -122,8 +127,10 @@ class DocumentSnippet extends DocumentRequest with Loggable {
             }
           }
         } &
-        ".doc-revision" #> d.revisions.map { r =>User
-          ".rev-link" #> <a href={r.info}>{r.version.asHtml}</a> &
+        ".doc-revision" #> d.revisions.map { r =>
+          ".rev-number" #> r.version.is &
+          ".rev-download" #> <a href={r.downloadHref}>Download</a> &
+          ".rev-approve" #> <a href={r.approveHref}>Approve</a> &
           ".rev-author" #> r.authorLink &
           ".rev-comment" #> r.comment.is &
           ".rev-date" #> r.date & // TODO date only, hover for time
@@ -207,7 +214,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
         SHtml.a(() => { processUnedit(d, u) }, <span> Cancel Edit</span>, "class" -> "btn")
       }
       case Full(u) => {
-        SHtml.a(() => { processEdit(d, u) }, <i class="icon-edit icon-white"></i><span> Edit</span>, "class" -> "btn btn-warning")
+        SHtml.a(() => { processEdit(d, u) }, <i class="icon-edit icon-white"></i><span> Edit</span>, "class" -> (if (editing_?()) "btn btn-danger" else "btn btn-warning"))
       }
       case _ => {
         NodeSeq.Empty

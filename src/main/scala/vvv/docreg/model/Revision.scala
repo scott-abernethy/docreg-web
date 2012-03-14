@@ -41,6 +41,14 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
     info + "/download"
   }
 
+  def downloadHref: String = {
+    link
+  }
+
+  def approveHref: String = {
+    info + "/approve"
+  }
+
   def fullTitle: String = (document.obj.map(_.key.is) openOr "?") + ": " + (document.obj.map(_.title.is) openOr "?")
 
   def authorLink: NodeSeq = {
