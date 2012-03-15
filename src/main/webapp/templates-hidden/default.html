@@ -18,10 +18,13 @@
     <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
-          <div class="row">
-          <div class="span3"><a class="brand" href="/">DocReg<sup>beta</sup></a><img alt="" id="loading" style="display:none;margin-top:12px;" src="/static/ajax-loader.gif" /></div>
-
-            <div class="lift:snippet?type=UserSnippet.control pull-right">
+          <a class="brand" href="/">DocReg<sup>beta</sup></a><span style="width:43px;height:11px;"><img alt="" id="loading" style="display:none;margin-top:12px;" src="/static/ajax-loader.gif" /></span>
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+            <div class="lift:snippet?type=UserSnippet.control pull-right nav-collapse">
               <ul class="nav">
                   <li class="signed-in"><a href="/">Dashboard</a></li>
                   <li class="signed-in"><a href="/doc/create">Create Document</a></li>
@@ -42,7 +45,6 @@
                                   </form>
                   </li>
               </ul>
-          </div>
           </div>
         </div>
       </div>
