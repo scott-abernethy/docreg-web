@@ -109,7 +109,7 @@ class UserSnippet extends Loggable {
   def profileTransform(u: User) = {
     val t = ".profile-name" #> u.displayName &
     ".profile-username" #> u.username &
-    ".profile-email" #> u.email &
+    ".profile-email" #> <a href={"mailto:" + u.email}>{u.email} <i class="icon-envelope"></i></a> &
     ".profile-local-server" #> Server.description(u.localServer) &
     ".profile-time-zone" #> u.timeZone.is &
     ".profile-activity" #> <span>{ u.activity() } submits in { u.impact() } documents</span> &
