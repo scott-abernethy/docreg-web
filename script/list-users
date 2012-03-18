@@ -1,0 +1,2 @@
+#!/bin/bash
+mysql -u root -p --database=docregweb -e 'select id,name,localserver as "s",sessioncount as "#",date(lastsession) as "last",timezone as "tz" from user_t where sessioncount>0 order by lastsession asc; select count(*) as "active users" from user_t where sessioncount>0; select count(*) as "active users this week" from user_t where sessioncount>0 and lastsession > TIMESTAMP(DATE_SUB(CURDATE(),INTERVAL 7 DAY));'

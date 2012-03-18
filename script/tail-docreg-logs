@@ -1,0 +1,3 @@
+#!/bin/bash
+LOG=/var/cache/jetty/tmp/docreg-web.log
+multitail -M 1000 -ev "[INFO]" -ev "[DEBUG]" $LOG $LOG 
