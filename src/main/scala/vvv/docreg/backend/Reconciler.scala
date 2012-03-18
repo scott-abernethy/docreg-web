@@ -15,7 +15,7 @@ class Reconciler(private val backend: Backend) extends Actor with Loggable {
     loop {
       receive {
         case Prepare(document, agent) =>
-          logger.info("Preparing " + document.getKey)
+          logger.debug("Preparing " + document.getKey)
           val key = document.getKey
           val revisions = future { agent.loadRevisions(key).toList }
           val approvals = future { agent.loadApprovals(key).toList }

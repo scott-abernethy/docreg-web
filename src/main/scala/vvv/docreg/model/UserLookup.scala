@@ -49,7 +49,7 @@ object UserLookup extends UserLookup with LongKeyedMetaMapper[UserLookup] with L
           case _ => unknownUser
         }
         createLookup(usernameOption, emailOption, nameOption, x)
-        logger.info("UserLookup created for " + usernameOption + " " + emailOption + " " + nameOption + " due to " + why)
+        logger.debug("UserLookup created for " + x + " from " + List(usernameOption, emailOption, nameOption) + " due to " + why)
         x
     }
   }

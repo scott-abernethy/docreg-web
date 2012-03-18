@@ -408,7 +408,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
       {
         User.loggedInUser.is match {
           case Full(user) =>
-            logger.info("send " + f.localFile + " as " + f.fileName + " to " + d.key + " ")
+            logger.debug("Upload " + f.localFile + " as " + f.fileName + " to " + d.key + " ")
 
             // Note: OnDiskFileParamHolder will delete the local file on finalize, so pass the local file in a wrapper such that it is maintained til needed.
             Environment.env.backend ! Submit(d, projectName, () => f.localFile, d.nextFileName(name, f.fileName), comment, user)

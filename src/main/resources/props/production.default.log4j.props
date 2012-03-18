@@ -1,11 +1,5 @@
 ## log4j production default
-log4j.rootLogger=warn, file
-
-## CONSOLE APPENDER
-log4j.appender.console=org.apache.log4j.ConsoleAppender
-log4j.appender.console.Target=System.out
-log4j.appender.console.layout=org.apache.log4j.PatternLayout
-log4j.appender.console.layout.ConversionPattern=[%p] %m%n
+log4j.rootLogger=warn, file, debugfile
 
 ## FILE APPENDER
 log4j.appender.file=org.apache.log4j.RollingFileAppender
@@ -14,6 +8,16 @@ log4j.appender.file.MaxFileSize=5000KB
 log4j.appender.file.MaxBackupIndex=5
 log4j.appender.file.layout=org.apache.log4j.PatternLayout
 log4j.appender.file.layout.ConversionPattern=%d{yyyy-MM-dd HH:mm:ss} [%p] %m%n
+log4j.appender.file.Threshold=info
+
+## DEBUG FILE APPENDER
+log4j.appender.debugfile=org.apache.log4j.RollingFileAppender
+log4j.appender.debugfile.File=docreg-web-debug.log
+log4j.appender.debugfile.MaxFileSize=5000KB
+log4j.appender.debugfile.MaxBackupIndex=5
+log4j.appender.debugfile.layout=org.apache.log4j.PatternLayout
+log4j.appender.debugfile.layout.ConversionPattern=%d{yyyy-MM-dd HH:mm:ss} [%p] %m%n
+log4j.appender.debugfile.Threshold=debug
 
 ## LOGGER CONTROL
 log4j.logger.vvv.docreg=debug

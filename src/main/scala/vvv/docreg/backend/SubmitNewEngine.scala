@@ -35,9 +35,9 @@ class SubmitNewEngine(agent: DaemonAgent, target: String, clientHost: String, cl
               // Submit with suggested file name assuming, as long as it is version 001 and has same fileName part.
             val submittedFileName = suggestedFileName
             var scpClient = new ScpClient(target)
-            logger.info("Copying file")
+            logger.debug("Copying file")
             scpClient.copy(cachedRequest.localFile.apply().toString(), submittedFileName);
-            logger.info("Copying file, done")
+            logger.debug("Copying file, done")
             // todo check file size
             agent ! RequestPackage(Actor.self, target, SubmitRequest(submittedFileName, -1))
             // todo delete local file?

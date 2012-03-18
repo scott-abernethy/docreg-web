@@ -78,17 +78,17 @@ trait BackendComponentImpl extends BackendComponent
           this ! Loaded(ds)
         }
         case Loaded(Nil) => {
-          logger.info("Parsing docreg.txt for changes to reconcile complete")
+          logger.debug("Parsing docreg.txt for changes to reconcile complete")
         }
         case Changed(d) =>
         {
           // Todo: Apply what we know of the change now, then reconcile. Though the reconcile typically takes <1 second.
-          logger.info("Change received, sending to reconcile " + d.key)
+          logger.debug("Change received, sending to reconcile " + d.key)
           priorityReconciler ! Prepare(DaemonProtocol.documentInfoToAgentDocument(d), agent)
         }
         case msg @ Reconcile(d, revisions, approvals, subscriptions) =>
         {
-          logger.info("Reconcile " + d.getKey)
+          logger.debug("Reconcile " + d.getKey)
           Document.forKey(d.getKey) match
           {
             case Full(document) => updateDocument(document, msg)

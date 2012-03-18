@@ -56,9 +56,9 @@ class SubmitEngine(agent: DaemonAgent, target: String, clientHost: String, clien
             // todo for edit submit, filename should be same.
             val submittedFileName = suggestedFileName
             var scpClient = new ScpClient(target)
-            logger.info("Copying file")
+            logger.debug("Copying file")
             scpClient.copy(cachedRequest.localFile.apply().toString(), submittedFileName);
-            logger.info("Copying file, done")
+            logger.debug("Copying file, done")
             // todo check file size
             agent ! RequestPackage(Actor.self, target, SubmitRequest(submittedFileName, -1))
             // todo delete local file?

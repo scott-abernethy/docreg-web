@@ -50,7 +50,7 @@ class CreateDocumentSnippet extends Loggable
       {
         User.loggedInUser.is match {
           case Full(user) =>
-            logger.info("send " + f.localFile + " as " + f.fileName + " new")
+            logger.debug("Upload " + f.localFile + " as " + f.fileName + " new")
 
             // Note: OnDiskFileParamHolder will delete the local file on finalize, so pass the local file in a wrapper such that it is maintained til needed.
             Environment.env.backend ! Create(project.is, () => f.localFile, StringUtil.retitleFile(name.is, f.fileName).getOrElse(f.fileName), comment.is, user)
