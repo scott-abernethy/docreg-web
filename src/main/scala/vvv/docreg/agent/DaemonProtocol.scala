@@ -136,7 +136,7 @@ class DaemonProtocolHandler(consume: (Any) => Unit) extends SimpleChannelUpstrea
 
   override def exceptionCaught(ctx: ChannelHandlerContext, e: ExceptionEvent)
   {
-    logger.warn("Protocol exception " + e.getCause)
+    logger.warn("Protocol exception " + e.getCause, e.getCause)
   }
 }
 

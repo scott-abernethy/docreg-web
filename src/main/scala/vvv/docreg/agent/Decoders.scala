@@ -9,7 +9,15 @@ trait ReplyDecoder {
   def readString(b: ChannelBuffer, length: Int) =
   {
     val string: String = b.readBytes(length).toString(Charset.forName("UTF-8"))
-    string.substring(0, string.indexOf('\u0000'))
+    val end = string.indexOf('\u0000')
+    if (end > 0)
+    {
+      string.substring(0, end)
+    }
+    else
+    {
+      string
+    }
   }
 }
 
