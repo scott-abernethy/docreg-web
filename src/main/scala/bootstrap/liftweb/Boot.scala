@@ -112,8 +112,8 @@ class Boot
       case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: action :: Nil, _, _, _), _, _) if (action != "download") => {
         RewriteResponse("doc" :: action :: Nil, docIdParams(key, version))
       }
-      case RewriteRequest(ParsePath("user" :: user :: Nil, suffix, absolute, endSlash), _, _) => {
-        RewriteResponse(ParsePath("user" :: "profile" :: Nil, suffix, absolute, endSlash), Map("user" -> user), true)
+      case RewriteRequest(ParsePath("user" :: x :: Nil, suffix, absolute, endSlash), _, _) if (x != "signin" && x != "signout" && x != "profile") => {
+        RewriteResponse(ParsePath("user" :: "profile" :: Nil, suffix, absolute, endSlash), Map("user" -> x), true)
       }
       case RewriteRequest(ParsePath("user" :: user :: action :: Nil, suffix, absolute, endSlash), _, _) => {
         RewriteResponse(ParsePath("user" :: action :: Nil, suffix, absolute, endSlash), Map("user" -> user), true)
