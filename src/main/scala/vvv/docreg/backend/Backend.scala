@@ -138,6 +138,7 @@ trait BackendComponentImpl extends BackendComponent
         }
         case Edit(d, user) =>
         {
+          logger.info("Edit request, " + List(d.latest.filename, user.shortUsername()))
           daemonAgent ! RequestPackage(Actor.self, target, EditRequest(d.latest.filename, user.shortUsername()))
         }
         case EditReply(user) =>
@@ -146,6 +147,7 @@ trait BackendComponentImpl extends BackendComponent
         }
         case Unedit(d, user) =>
         {
+          logger.info("Unedit request, " + List(d.latest.filename, user.shortUsername()))
           daemonAgent ! RequestPackage(Actor.self, target, UneditRequest(d.latest.filename, user.shortUsername()))
         }
         case msg @ Submit(d, projectName, localFile, userFileName, comment, user) =>

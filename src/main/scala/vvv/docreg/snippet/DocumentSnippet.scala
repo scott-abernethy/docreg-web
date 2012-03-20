@@ -211,7 +211,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
   private def edit(d: Document): NodeSeq = {
     user match {
       case Full(u) if (userIsActingAsEditor) => {
-        SHtml.a(() => { processUnedit(d, u) }, <span> Cancel Edit</span>, "class" -> "btn")
+        SHtml.a(() => { processUnedit(d, u) }, <span>Cancel Edit</span>, "class" -> "btn")
       }
       case Full(u) => {
         SHtml.a(() => { processEdit(d, u) }, <i class="icon-edit icon-white"></i><span> Edit</span>, "class" -> (if (editing_?()) "btn btn-danger" else "btn btn-warning"))
