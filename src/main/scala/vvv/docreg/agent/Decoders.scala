@@ -10,7 +10,7 @@ trait ReplyDecoder {
   {
     val string: String = b.readBytes(length).toString(Charset.forName("UTF-8"))
     val end = string.indexOf('\u0000')
-    if (end > 0)
+    if (end >= 0)
     {
       string.substring(0, end)
     }
