@@ -162,6 +162,7 @@ object User extends User with LongKeyedMetaMapper[User] with Loggable {
       case Full(req: Req) => req.remoteAddr
       case _ => "?"
     }
+    logger.debug("Parsing host " + List(host, S.getRequestHeader("X-Real-IP"), S.getRequestHeader("X-Forwarded-For")))
     host
   }
 
