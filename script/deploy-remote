@@ -1,4 +1,5 @@
 #!/bin/bash
+SBT=./sbt
 server_host="webapp-vm01"
 war_name="docreg+web-"
 set -o nounset
@@ -11,9 +12,9 @@ abort_check() {
 }
 
 # build, test, package
-sbt clean ; abort_check $?
-sbt test ; abort_check $?
-sbt package ; abort_check $?
+$SBT clean ; abort_check $?
+$SBT test ; abort_check $?
+$SBT package ; abort_check $?
 
 # tag
 tag="0.0.0-1"
