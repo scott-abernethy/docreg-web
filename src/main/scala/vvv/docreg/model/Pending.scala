@@ -40,6 +40,7 @@ object Pending extends Pending with LongKeyedMetaMapper[Pending] {
 
   def unassignEditor(d: Document): Boolean = {
     unaction(d, PendingAction.editCancel) // don't care about these for change indication
+    unaction(d, PendingAction.editRequest) // fix bug where after submit use is still the editor.
     unaction(d, PendingAction.editing)
   }
 
