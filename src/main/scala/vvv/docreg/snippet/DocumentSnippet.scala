@@ -114,7 +114,6 @@ class DocumentSnippet extends DocumentRequest with Loggable {
         ".doc-next" #> d.nextVersion &
         ".doc-project" #> d.project.map(_.infoLink).getOrElse(<span>?</span>) &
         docActions(d, r) &
-        ".doc-subscribe" #> subscribe(d) &
         ".doc-pending" #> {
           editor.headOption match {
             case Some(editPending) => {
@@ -173,7 +172,8 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     ".doc-edit" #> edit(d) &
     ".doc-submit" #> submit(d) &
     ".doc-approve [href]" #> (r.info + "/approve") &
-    ".doc-request-approval [href]" #> (r.info + "/request-approval")
+    ".doc-request-approval [href]" #> (r.info + "/request-approval") &
+    ".doc-subscribe" #> subscribe(d)
   }
 
   private def subscribers(d: Document): NodeSeq =
@@ -249,13 +249,18 @@ class DocumentSnippet extends DocumentRequest with Loggable {
 
   private def subscribe(d: Document) = {
     User.loggedInUser.is match {
+      case Full(u) if (u.subscribed_?(d))  =>
+      {
+        SHtml.a(() => processSubscribe(d, u), <span id="subscribe"><i class="icon-eye-close"></i> Unsubscribe</span> , "class" -> "btn")
+      }
       case Full(u) =>
-        SHtml.a(() => { processSubscribe(d, u)
-                        (JsCmds.SetHtml("subscribers", subscribers(d)) &
-                         JsCmds.SetHtml("subscribe", Text( if (u.subscribed_?(d)) "Unsubscribe" else "Subscribe" ))) },
-                                   <span id="subscribe">{ if (u.subscribed_?(d)) "Unsubscribe" else "Subscribe" }</span> , "class" -> "btn")
+      {
+        SHtml.a(() => processSubscribe(d, u), <span id="subscribe"><i class="icon-eye-open"></i> Subscribe</span> , "class" -> "btn")
+      }
       case _ =>
+      {
         NodeSeq.Empty
+      }
     }
   }
 
@@ -263,12 +268,14 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     if (!u.subscribed_?(d)) {
       Subscription.subscribe(d, u)
       backend ! SubscribeRequested(d, u)
-      S.notice("Subscribe request sent")
+//      S.notice("Subscribe request sent")
+      S.redirectTo(d.infoLink)
     }
     else {
       Subscription.unsubscribe(d, u)
       backend ! UnsubscribeRequested(d, u)
-      S.notice("Unsubscribe request sent")
+//      S.notice("Unsubscribe request sent")
+      S.redirectTo(d.infoLink)
     }
   }
 
