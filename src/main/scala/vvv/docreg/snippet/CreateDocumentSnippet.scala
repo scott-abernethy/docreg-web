@@ -22,13 +22,13 @@ class CreateDocumentSnippet extends Loggable
   {
     val projectList = projects.map(i => (i.name.is, i.name.is))
     ".submission-project" #> SHtml.select(projectList, Option(project.is), project(_)) &
-    ".submission-name" #> SHtml.text(name.is, name(_)) &
+    ".submission-name" #> SHtml.text(name.is, name(_), "maxlength" -> "110") &
     "#name-group [class+]" #> nameError.is.map(_ => "error").getOrElse("") &
     ".submission-version *" #> "1" &
     ".submission-file" #> SHtml.fileUpload(ul => file(Some(ul))) &
     "#file-group [class+]" #> fileError.is.map(_ => "error").getOrElse("") &
     ".submission-by *" #> Text(User.loggedInUser map (_.displayName) openOr "?") &
-    ".submission-comment" #> SHtml.textarea(comment.is, comment(_), "class" -> "input-xlarge") &
+    ".submission-comment" #> SHtml.textarea(comment.is, comment(_), "class" -> "input-xlarge", "maxlength" -> "512") &
     ".submission-submit" #> SHtml.submit("Submit", () => processCreate(), "class" -> "btn primary") &
     ".submission-cancel" #> SHtml.submit("Cancel", () => S.redirectTo("/"), "class" -> "btn")
   }

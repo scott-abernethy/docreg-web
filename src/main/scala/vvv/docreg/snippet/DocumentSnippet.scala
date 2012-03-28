@@ -293,7 +293,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
       ".approval-version *" #> r.version &
       ".approval-by *" #> Text(User.loggedInUser map (_.displayName) openOr "?") &
       ".approval-state" #> SHtml.select(states, Full(state.toString), (selected) => (state = ApprovalState parse selected)) &
-      ".approval-comment" #> SHtml.textarea(comment, comment = _, "class" -> "input-xlarge") &
+      ".approval-comment" #> SHtml.textarea(comment, comment = _, "class" -> "input-xlarge", "maxlength" -> "128") &
       ".approval-submit" #> SHtml.submit("Submit", () => processApprove(d, r, state, comment), "class" -> "btn primary") &
       ".approval-cancel" #> SHtml.submit("Cancel", () => S.redirectTo(r.info), "class" -> "btn")
     ).apply(in)
@@ -351,7 +351,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     val id = "approver" + approverCount
     var approver = ""
     ".approval-approver [id]" #> id &
-    ".approver:email" #> (SHtml.text(approver, s => selected(s :: selected.is)) % ("style" -> "width: 250px")) &
+    ".approver:email" #> (SHtml.text(approver, s => selected(s :: selected.is), "maxlength" -> "64") % ("style" -> "width: 250px")) &
     ".approver:remove" #> SHtml.ajaxButton(<i class="icon-minus icon-white"></i>, () => {JsCmds.Replace(id, NodeSeq.Empty)}, "class" -> "btn btn-warning")
   }
 
@@ -385,13 +385,13 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     (
 //      ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
       ".submission-project" #> SHtml.select(projectList, Option(project.is), project(_)) &
-      ".submission-name" #> SHtml.text(name.is, name(_)) &
+      ".submission-name" #> SHtml.text(name.is, name(_), "maxlength" -> "110") &
       "#name-group [class+]" #> nameError.is.map(_ => "error").getOrElse("") &
       ".submission-version *" #> d.nextVersion &
       ".submission-file" #> SHtml.fileUpload(ul => file(Some(ul))) &
       "#file-group [class+]" #> fileError.is.map(_ => "error").getOrElse("") &
       ".submission-by *" #> Text(User.loggedInUser map (_.displayName) openOr "?") &
-      ".submission-comment" #> SHtml.textarea(comment.is, comment(_), "class" -> "input-xlarge") &
+      ".submission-comment" #> SHtml.textarea(comment.is, comment(_), "class" -> "input-xlarge", "maxlength" -> "512") &
       ".submission-submit" #> SHtml.submit("Submit", () => processSubmit(d, project.is, name.is, comment.is, file.is), "class" -> "btn primary") &
       ".submission-cancel" #> SHtml.submit("Cancel", () => S.redirectTo("/"), "class" -> "btn")
     ).apply(in)
