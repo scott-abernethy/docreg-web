@@ -5,6 +5,11 @@ import net.liftweb.common.Failure._
 import vvv.docreg.backend.{UserAttributes, Directory}
 import net.liftweb.common._
 
+trait UserLookupProvider
+{
+  def lookup(usernameOption: Option[String], emailOption: Option[String], nameOption: Option[String], why: String): Box[User]
+}
+
 class UserLookup extends LongKeyedMapper[UserLookup] with IdPK {
   def getSingleton = UserLookup
   object username extends MappedString(this, 64)

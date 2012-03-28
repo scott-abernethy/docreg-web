@@ -38,7 +38,7 @@ trait BackendComponentImpl extends BackendComponent
 {
   this: DocumentServerComponent with AgentComponent with DaemonAgentComponent with DirectoryComponent =>
 
-  val backend = new Backend with Loggable
+  val backend = new Backend with Loggable with ApprovalReconcile
   {
   val product = ProjectProps.get("project.name") openOr "drw"
   val version = ProjectProps.get("project.version") openOr "0.0"
@@ -47,8 +47,11 @@ trait BackendComponentImpl extends BackendComponent
   val reconciler = new Reconciler(this).start()
   val priorityReconciler = new Reconciler(this).start()
   var agent: vvv.docreg.backend.Agent = _
+  val userLookup = new UserLookupProvider {
+    def lookup(usernameOption: Option[String], emailOption: Option[String], nameOption: Option[String], why: String) = UserLookup.lookup(usernameOption, emailOption, nameOption, directory, why)
+  }
 
-  def act()
+    def act()
   {
     loop
     {
@@ -207,7 +210,7 @@ trait BackendComponentImpl extends BackendComponent
       assignEditor(document, reconcile.document)
 
       reconcile.revisions.foreach{createRevision(document, _)}
-      applyApprovals(document, reconcile.approvals)
+      reconcileApprovals(document, reconcile.approvals.map(x => ApprovalReconcile.agentToInfo(x)))
       updateSubscriptions(document, reconcile.subscriptions)
       
       documentServer ! DocumentAdded(document)
@@ -225,29 +228,11 @@ trait BackendComponentImpl extends BackendComponent
     revision
   }
 
-  private def applyApprovals(document: Document, approvals: Iterable[AgentApproval]) = approvals foreach { a =>
-    // The agent returns a single approval item per revision/user pair, so no need to cull.
-    Revision.forDocument(document, a.getVersion) match {
-      case Full(revision) =>
-        val user = UserLookup.lookup(Some(a.getUsername()), Some(a.getApproverEmail), Some(a.getApproverName), directory, "approval " + a + " on " + document) openOr null
-        val approval = Approval.forRevisionBy(revision, user) match {
-          case Full(a) => a
-          case _ => Approval.create.revision(revision).by(user)
-        } 
-        approval.state(ApprovalState.parse(a.getStatus.toString))
-        approval.date(a.getDate)
-        approval.comment(a.getComment)
-        approval.save
-      case _ => 
-        logger.warn("Approval found with no matching revision: " + a)
-    }
-  }
-
   private def updateDocument(document: Document, reconcile: Reconcile) {
     DB.use(DefaultConnectionIdentifier) { c =>
     updateRevisions(document, reconcile.revisions)
     updateSubscriptions(document, reconcile.subscriptions)
-    applyApprovals(document, reconcile.approvals)
+    reconcileApprovals(document, reconcile.approvals.map(x => ApprovalReconcile.agentToInfo(x)))
     
     val docChanged = assignDocument(document, reconcile.document)
     val editorChanged = assignEditor(document, reconcile.document)

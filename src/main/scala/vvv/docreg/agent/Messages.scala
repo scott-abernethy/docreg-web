@@ -1,6 +1,7 @@
 package vvv.docreg.agent
 
 import actors.Actor
+import java.util.Date
 
 // todo message type part of request case class? register handler for each type, gives case class encode and decode.
 object MessageType extends Enumeration
@@ -26,6 +27,8 @@ object MessageType extends Enumeration
 case class Header(version: Int, message: MessageType.Type, transactionId: Int, sequence: Int)
 
 case class DocumentInfo(key: Int, version: Int, fileName: String, projectName: String, title: String, description: String, access: String, author: String, date: String, server: String, client: String, editor: String, editorStart: String)
+
+case class ApprovalInfo(fileName: String, approverName: String, approverEmail: String, status: String,  comment: String, date: Date, clientIp: String, clientHost: String, clientUserName: String)
 
 sealed abstract class Request
 sealed abstract class Reply
