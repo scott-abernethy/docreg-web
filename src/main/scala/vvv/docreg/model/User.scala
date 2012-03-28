@@ -157,13 +157,10 @@ object User extends User with LongKeyedMetaMapper[User] with Loggable {
     }
   }
 
-  def parseHost: String = {
-    val host = S.request match {
-      case Full(req: Req) => req.remoteAddr
-      case _ => "?"
-    }
-    logger.debug("Parsing host " + List(host, S.getRequestHeader("X-Real-IP"), S.getRequestHeader("X-Forwarded-For")))
-    host
+  def parseHost: String = 
+  {
+    // Nginx wraps the request ip as X-Real-IP and X-Forwarded-For
+    S.getRequestHeader("X-Real-IP").getOrElse(S.getRequestHeader("X-Forwarded-For").getOrElse("?"))
   }
 
   def sort(a: User, b: User): Boolean =
