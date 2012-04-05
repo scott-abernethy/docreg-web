@@ -109,7 +109,7 @@ class Boot
       case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: Nil, _, _, _), _, _) => {
         RewriteResponse("doc" :: "info" :: Nil, docIdParams(key, version))
       }
-      case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: action :: Nil, _, _, _), _, _) if (action != "download") => {
+      case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: action :: Nil, _, _, _), _, _) if (action != "download" && action != "log") => {
         RewriteResponse("doc" :: action :: Nil, docIdParams(key, version))
       }
       case RewriteRequest(ParsePath("user" :: x :: Nil, suffix, absolute, endSlash), _, _) if (x != "signin" && x != "signout" && x != "profile") => {
@@ -128,6 +128,8 @@ class Boot
         () => Download.download(key, Option(version).map(_.substring(1)))
       case Req(Document.ValidIdentifier(key, version) :: "download" :: "editing" :: user :: Nil, _, GetRequest) =>
         () => Download.downloadForEditing(key, user)
+      case Req(Document.ValidIdentifier(key, version) :: "log" :: Nil, _, GetRequest) =>
+        () => Download.logFile(key)
     }
 
     LiftRules.noticesAutoFadeOut.default.set( (notices: NoticeType.Value) => {

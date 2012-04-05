@@ -44,6 +44,11 @@ object Download extends Loggable
     }
   }
 
+  def logFile(key: String): Box[LiftResponse] =
+  {
+    Full(RedirectResponse("http://" + userServer + "/docreg/log/" + key + ".log"))
+  }
+
   def tryRequest(url: String): Option[HttpEntity] = {
     tryo {
       val client = new DefaultHttpClient()
@@ -70,16 +75,21 @@ object Download extends Loggable
     }
   }
 
-  def fileUrl(fileName: String): String = {
+  def userServer: String =
+  {
     val userLocalServer: Box[String] = for {
       user <- User.loggedInUser.is
     }
     yield Server.address(user.localServer.is)
 
-    val server = userLocalServer match {
+    userLocalServer match {
       case Full(s) if (s != null && s.length() > 0) => s
       case _ => Backend.server
     }
-    ("http://" + server + "/docreg/release/" + fileName).replaceAll(" ", "%20")
+  }
+
+  def fileUrl(fileName: String): String =
+  {
+    ("http://" + userServer + "/docreg/release/" + fileName).replaceAll(" ", "%20")
   }
 }
