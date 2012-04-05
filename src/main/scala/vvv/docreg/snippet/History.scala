@@ -45,9 +45,9 @@ class History
     graph(in, historySeries(YearHistory.data(), 2))
   }
 
-  def tenYears(in: NodeSeq) =
+  def longTerm(in: NodeSeq) =
   {
-    graph(in, historySeries(TenYearHistory.data(), 3))
+    graph(in, historySeries(LongTermHistory.data(), 3))
   }
 
   private def historySeries(d: List[(Double, Double)], c: Int): FlotSerie =
@@ -181,7 +181,7 @@ object YearHistory
   }
 }
 
-object TenYearHistory
+object LongTermHistory
 {
   def data(): List[(Double, Double)] =
   {
@@ -191,7 +191,7 @@ object TenYearHistory
     cal.set(Calendar.HOUR_OF_DAY, 0)
     cal.set(Calendar.DAY_OF_YEAR, 1)
     cal.getTime
-    cal.add(Calendar.YEAR,-10)
+    cal.add(Calendar.YEAR,-15)
     val startDate = cal.getTime
 
     val rs = Revision.findAll(
@@ -205,7 +205,7 @@ object TenYearHistory
   def analyse(now: Calendar, revisions: Seq[Revision]): List[Sample] =
   {
     var range = Map.empty[Int, Sample]
-    for (i <- List.range(0, 10))
+    for (i <- List.range(0, 15))
     {
       val y = now.get(Calendar.YEAR)
       range = range + (y -> Sample(y, 0, y.toString))
