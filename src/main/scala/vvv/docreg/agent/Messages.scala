@@ -28,7 +28,11 @@ case class Header(version: Int, message: MessageType.Type, transactionId: Int, s
 
 case class DocumentInfo(key: Int, version: Int, fileName: String, projectName: String, title: String, description: String, access: String, author: String, date: String, server: String, client: String, editor: String, editorStart: String)
 
+case class RevisionInfo(fileName: String, project: String, comment: String, access: String, author: String, date: Date, server: String, clientIp: String, clientHost: String, clientUserName: String, clientVersion: String, crc: String)
+
 case class ApprovalInfo(fileName: String, approverName: String, approverEmail: String, status: String,  comment: String, date: Date, clientIp: String, clientHost: String, clientUserName: String)
+
+case class SubscriberInfo(userName: String, email: String, emailEvent: String)
 
 sealed abstract class Request
 sealed abstract class Reply
