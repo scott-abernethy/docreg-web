@@ -22,6 +22,7 @@ class Revision extends LongKeyedMapper[Revision] with IdPK {
     override def asHtml = Text(if (is != null) DatePresentation.formatDateTime(is) else "?")
   }
   object comment extends MappedTextarea(this, 512)
+
   def when: String = DatePresentation.short(date.is)
 
   def dateOnly(): String =
