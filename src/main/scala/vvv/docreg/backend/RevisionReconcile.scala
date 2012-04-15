@@ -3,13 +3,14 @@ package vvv.docreg.backend
 import vvv.docreg.agent.{ApprovalInfo, RevisionInfo}
 import net.liftweb.util.True
 import vvv.docreg.model.{UserLookupProvider, Subscription, Revision, Document}
+import net.liftweb.common.Loggable
 
 abstract class ReconcileAction
 case class ReconcileRevisionAdded(added: Long) extends ReconcileAction
 case object ReconcileRevisionUpdated extends ReconcileAction
 case object ReconcileDocumentRemoved extends ReconcileAction
 
-trait RevisionReconcile
+trait RevisionReconcile extends Loggable
 {
   val userLookup: UserLookupProvider
 
@@ -17,6 +18,7 @@ trait RevisionReconcile
   {
     if (isSmite(revisions))
     {
+      logger.warn("Smiting document " + document.id.is + " due to " + revisions)
       Subscription.forDocument(document).foreach(_.delete_!)
       Revision.forDocument(document).foreach(_.delete_!)
       document.delete_!
