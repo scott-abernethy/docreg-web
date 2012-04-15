@@ -5,9 +5,9 @@ import net.liftweb.util.True
 import vvv.docreg.model.{UserLookupProvider, Subscription, Revision, Document}
 
 abstract class ReconcileAction
-case object RevisionAdded extends ReconcileAction
-case object RevisionUpdated extends ReconcileAction
-case object DocumentRemoved extends ReconcileAction
+case class ReconcileRevisionAdded(added: Long) extends ReconcileAction
+case object ReconcileRevisionUpdated extends ReconcileAction
+case object ReconcileDocumentRemoved extends ReconcileAction
 
 trait RevisionReconcile
 {
@@ -20,7 +20,7 @@ trait RevisionReconcile
       Subscription.forDocument(document).foreach(_.delete_!)
       Revision.forDocument(document).foreach(_.delete_!)
       document.delete_!
-      Set(DocumentRemoved)
+      Set(ReconcileDocumentRemoved)
     }
     else
     {
@@ -46,7 +46,7 @@ trait RevisionReconcile
           record.comment(comment)
           if (record.dirty_?)
           {
-            results += (if (!record.id.defined_?) RevisionAdded else RevisionUpdated)
+            results += (if (!record.id.defined_?) ReconcileRevisionAdded(version.toLong) else ReconcileRevisionUpdated)
             record.save
           }
         }

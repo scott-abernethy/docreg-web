@@ -38,7 +38,7 @@ trait BackendComponentImpl extends BackendComponent
 {
   this: DocumentServerComponent with AgentComponent with DaemonAgentComponent with DirectoryComponent =>
 
-  val backend = new Backend with Loggable with ApprovalReconcile
+  val backend = new Backend with Loggable with RevisionReconcile with ApprovalReconcile
   {
   val product = ProjectProps.get("project.name") openOr "drw"
   val version = ProjectProps.get("project.version") openOr "0.0"
@@ -209,28 +209,26 @@ trait BackendComponentImpl extends BackendComponent
 
       assignEditor(document, reconcile.document)
 
-      reconcile.revisions.foreach{createRevision(document, _)}
-      reconcileApprovals(document, reconcile.approvals.map(x => ApprovalReconcile.agentToInfo(x)))
-      updateSubscriptions(document, reconcile.subscriptions)
-      
-      documentServer ! DocumentAdded(document)
+      val update = reconcileRevisions(document, reconcile.revisions.map(x => RevisionReconcile.agentToInfo(x)))
+      if (!update.contains(ReconcileDocumentRemoved))
+      {
+        reconcileApprovals(document, reconcile.approvals.map(x => ApprovalReconcile.agentToInfo(x)))
+        updateSubscriptions(document, reconcile.subscriptions)
+        documentServer ! DocumentAdded(document)
+      }
       }
     } catch {
       case e: java.lang.NullPointerException => logger.error("Exception " + e + " with " + reconcile.document.getKey); e.printStackTrace
     }
   }
 
-  private def createRevision(document: Document, r: AgentRevision): Revision = {
-    val revision = Revision.create
-    revision.document(document)
-    assignRevision(revision, r)
-    revision.save
-    revision
-  }
-
   private def updateDocument(document: Document, reconcile: Reconcile) {
     DB.use(DefaultConnectionIdentifier) { c =>
-    updateRevisions(document, reconcile.revisions)
+    val update = reconcileRevisions(document, reconcile.revisions.map(x => RevisionReconcile.agentToInfo(x)))
+    if (update.contains(ReconcileDocumentRemoved))
+    {
+      return
+    }
     updateSubscriptions(document, reconcile.subscriptions)
     reconcileApprovals(document, reconcile.approvals.map(x => ApprovalReconcile.agentToInfo(x)))
     
@@ -238,6 +236,11 @@ trait BackendComponentImpl extends BackendComponent
     val editorChanged = assignEditor(document, reconcile.document)
     if (docChanged || editorChanged) {
       document.save
+    }
+    update.collect{case ReconcileRevisionAdded(r) => r}.foreach{ id =>
+      document.revision(id).foreach(revision => documentServer ! DocumentRevised(document, revision))
+    }
+    if (docChanged || editorChanged || update.contains(ReconcileRevisionUpdated)) {
       documentServer ! DocumentChanged(document)
     }
     }
@@ -267,31 +270,6 @@ trait BackendComponentImpl extends BackendComponent
       }
       else {
         Pending.unassignEditor(document)
-      }
-    }
-  }
-
-  private def assignRevision(revision: Revision, r: AgentRevision) {
-    val author = UserLookup.lookup(Some(r.getUsername), None, Some(r.getAuthor), directory, "revision on " + revision + " for " + r)
-    revision.version(r.getVersion)
-    revision.filename(r.getFilename)
-    revision.author(author)
-    revision.date(r.getDate)
-    revision.comment(r.getComment)
-  }
-
-  private def updateRevisions(document: Document, revisions: List[AgentRevision]) {
-    revisions.foreach { r =>
-      document.revision(r.getVersion) match {
-        case Full(revision) =>
-          assignRevision(revision, r)
-          if (revision.dirty_?) {
-            revision.save
-            documentServer ! DocumentChanged(document)
-          }
-        case _ => 
-          val latest = createRevision(document, r)
-          documentServer ! DocumentRevised(document, latest)
       }
     }
   }

@@ -33,7 +33,7 @@ object RevisionReconcileTest extends Specification with Mockito
       // Reconcile with same key, but the smite info
       val result = x.reconcileRevisions(d, RevisionInfo("0234-000-Free Document Number!", "DocReg", "B4 First version", "Everyone", "System", new Date(), "boromir",	"10.16.9.68",	"smite", "smite", "smite", "") :: Nil)
 
-      result must containAll(DocumentRemoved :: Nil)
+      result must containAll(ReconcileDocumentRemoved :: Nil)
 
       // Delete the doco?
       Document.forKey("234").toOption must beNone
@@ -65,7 +65,7 @@ object RevisionReconcileTest extends Specification with Mockito
 
       val result = x.reconcileRevisions(d, RevisionInfo("0336-001-Foo bar.txt", "p2", "Initial version of foo bar baz doco.", "Everyone", "Johnty Roads", now, "boromir", "1.2.3.4", "pc983", "jroads", "v9", "1314324") :: Nil)
 
-      result must containAll(RevisionAdded :: Nil)
+      result must containAll(ReconcileRevisionAdded(1) :: Nil)
 
       Revision.forDocument(d) must haveSize(1)
       val r = Revision.forDocument(d, 1).getOrElse(null)
@@ -134,7 +134,7 @@ object RevisionReconcileTest extends Specification with Mockito
         RevisionInfo("0336-002-Foo bar baz.txt", "p2", "UPdated.", "Everyone", "Dr. Hawking", now, "boromir", "99.99.99.99", "pc111-ubu", "shawking", "v9.1", "989876") ::
           Nil)
 
-      result must containAll(RevisionUpdated :: RevisionAdded :: Nil)
+      result must containAll(ReconcileRevisionUpdated :: ReconcileRevisionAdded(2) :: Nil)
 
       Revision.forDocument(d) must haveSize(2)
       Revision.forDocument(d, 1).map(_.comment.is).toOption must beSome("Initial version.")
@@ -167,7 +167,7 @@ object RevisionReconcileTest extends Specification with Mockito
           RevisionInfo("0336-001-Foo bar.txt", "p2", "Initial version 2.", "Everyone", "Dr. Hawking", now, "boromir", "99.99.99.99", "pc111-ubu", "shawking", "v9.1", "989876") ::
           Nil)
 
-      result must containAll(RevisionUpdated :: Nil)
+      result must containAll(ReconcileRevisionUpdated :: Nil)
 
       Revision.forDocument(d) must haveSize(1)
       Revision.forDocument(d, 1).map(_.comment.is).toOption must beSome("Initial version 2.")
