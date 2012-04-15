@@ -11,6 +11,7 @@ class LiftProject(info: ProjectInfo) extends DefaultWebProject(info) with IdeaPr
   override def scanDirectories = Nil
 
   lazy val JavaNet = "Java.net Maven2 Repository" at "http://download.java.net/maven/2/"
+  lazy val Typesafe = "Typesafe Maven2 Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
   override def libraryDependencies = Set(
     "net.liftweb" %% "lift-webkit" % liftVersion.value.toString % "compile",
@@ -19,14 +20,16 @@ class LiftProject(info: ProjectInfo) extends DefaultWebProject(info) with IdeaPr
     "net.liftweb" %% "lift-widgets" % liftVersion.value.toString % "compile",
     "org.mortbay.jetty" % "jetty" % "6.1.26" % "test",
     "junit" % "junit" % "4.7" % "test",
-    "org.scala-tools.testing" %% "specs" % "1.6.8" % "test",
+    "org.scala-tools.testing" %% "specs" % "1.6.9" % "test",
     "com.h2database" % "h2" % "1.2.147",
     "mysql" % "mysql-connector-java" % "5.1.9",
     "org.mockito" % "mockito-all" % "1.8.5" % "test",
     "c3p0" % "c3p0" % "0.9.1.2",
     "org.jboss.netty" % "netty" % "3.2.3.Final",
+    "com.typesafe.akka" % "akka-actor" % "2.0.1",
+    "net.databinder" %% "dispatch-http" % "0.8.8",
     "ch.ethz.ganymed" % "ganymed-ssh2" % "build210",
-    "org.apache.httpcomponents" % "httpclient" % "4.1.2",
+//    "org.apache.httpcomponents" % "httpclient" % "4.1.2",  // <- comes in via dispatch-http now.
     "log4j" % "log4j" % "1.2.16",
     "org.slf4j" % "slf4j-log4j12" % "1.6.1"
   ) ++ super.libraryDependencies
