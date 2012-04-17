@@ -35,7 +35,6 @@ object RevisionReconcileTest extends Specification with Mockito
 
       result must containAll(ReconcileDocumentRemoved :: Nil)
 
-      // Delete the doco?
       Document.forKey("234").toOption must beNone
       Revision.forDocument(d.id.is) must beEmpty
       Subscription.forDocument(d) must beEmpty
@@ -44,6 +43,40 @@ object RevisionReconcileTest extends Specification with Mockito
     "Smite if there are Nil revisions?" >>
     {
 
+    }
+
+    "Remove missing revisions" >>
+    {
+      TestDbVendor.initAndClean()
+      val (p1, _, _) = TestDbVendor.createProjects
+      val (u1, u2) = TestDbVendor.createUsers
+      val (d, r1, r2, r3) = TestDbVendor.createDocument(p1, u1)
+      Subscription.create.document(d).user(u2).save
+
+      val lookup = mock[UserLookupProvider]
+      val x = new RevisionReconcile {
+        val userLookup = lookup
+      }
+
+      lookup.lookup(Matchers.eq(Some("aaa")), Matchers.eq(None), Matchers.eq(Some("foo")), Matchers.anyString()) returns(Full(u1))
+
+      Document.forKey("234").toOption must beSomething
+      Revision.forDocument(d.id.is) must haveSize(3)
+      Subscription.forDocument(d) must haveSize(1)
+
+      // only 2 revisions.
+      val result = x.reconcileRevisions(d,
+        RevisionInfo("0234-001-foo.txt", "p1", "ONe", "Everyone", "foo", new Date(), "boromir",	"10.16.9.68",	"pc123", "aaa", "123", "356345") ::
+        RevisionInfo("0234-002-foo.txt", "p1", "22222", "Everyone", "foo", new Date(), "boromir",	"10.16.9.68",	"pc123", "aaa", "123", "35352") ::
+          Nil
+      )
+
+      result must containAll(ReconcileRevisionUpdated :: Nil)
+
+      Document.forKey("234").toOption must beSomething
+      Revision.forDocument(d.id.is) must haveSize(2)
+      Revision.forDocument(d, 3).toOption must beNone
+      Subscription.forDocument(d) must haveSize(1)
     }
 
     "Add first revision" >>

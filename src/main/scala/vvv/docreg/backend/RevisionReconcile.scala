@@ -26,6 +26,8 @@ trait RevisionReconcile extends Loggable
     }
     else
     {
+      var existing = Revision.forDocument(document).toSet
+
       val filtered = revisions
       .groupBy{ _.fileName match {
         case Document.ValidDocumentFileName(_, version, _) => version.toLong
@@ -51,8 +53,16 @@ trait RevisionReconcile extends Loggable
             results += (if (!record.id.defined_?) ReconcileRevisionAdded(version.toLong) else ReconcileRevisionUpdated)
             record.save
           }
+          existing -= record
         }
       }
+
+      // Remove left overs
+      existing.foreach{ invalid =>
+        logger.warn("Purging invalid revision " + invalid)
+        invalid.delete_!
+      }
+
       results
     }
   }
