@@ -29,14 +29,9 @@ class Search extends Loggable with ProjectSelection {
     }
   }
 
-  def bindResults(in: NodeSeq): NodeSeq = {
-    import vvv.docreg.util.StringUtil._
-    // todo better parsing of search string, from 
-    results(in,
-      FilteredDocument.searchLike(Document.title, formatSearch(searchInput.is)) :::
-      FilteredDocument.searchAuthor(formatSearch(searchInput.is)) :::
-      FilteredDocument.searchLike(Document.key, prePadTo(searchInput.is, 4, '0'))
-    )
+  def bindResults(in: NodeSeq): NodeSeq =
+  {
+    results(in, FilteredDocument.search(searchInput.is))
   }
 
   var html: NodeSeq = NodeSeq.Empty
@@ -50,29 +45,23 @@ class Search extends Loggable with ProjectSelection {
     items(in, ds)
   }
 
-  def items(in: NodeSeq, ds: List[Document]): NodeSeq = {
+  def items(in: NodeSeq, ds: List[Document]): NodeSeq =
+  {
     (
       ".match-count" #> pluralise(ds.size, "match", "es") &
       ".search-item" #> ds.map { d =>
-      ".doc-project" #> d.projectName &
-        ".doc-author" #> d.latest.authorLink &
+        val latest = d.latest
+        ".doc-project" #> d.projectName &
+        ".doc-author" #> latest.authorLink &
         ".doc-key" #> <a href={d.infoLink}>{d.key}</a> &
-        ".doc-date" #> d.latest.dateOnly &
+        ".doc-date" #> latest.dateOnly &
         ".doc-title" #> <a href={d.infoLink}>{d.title}</a>
-    }).apply(in)
+      }
+    ).apply(in)
   }
 
   override def projectSelectionUpdate(): JsCmd = {
     CurrentLog.foreach(_ ! ReloadLog())
     Replace("search_results", bindResults(html))
-  }
-
-  def formatSearch(in: String): String = {
-    val out: Option[String] = for {
-      s <- Option(in)
-      surrounded = "%" + s + "%"
-    } yield surrounded.replaceAll("[ *]", "%").replaceAll("[%]+", "%")
-
-    out.getOrElse("%")
   }
 }

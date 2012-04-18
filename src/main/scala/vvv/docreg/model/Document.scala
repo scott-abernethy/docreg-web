@@ -21,6 +21,7 @@ class Document extends LongKeyedMapper[Document] with IdPK with ManyToMany {
 
   def subscriber(user: User) = Subscription.forDocumentBy(this, user)
 
+  // TODO this is lame, loads every time, as does revisions above!
   def latest = if (revisions nonEmpty) revisions head else EmptyRevision
   def latest_?(version: Long): Boolean = {
     val r = latest
@@ -77,25 +78,74 @@ object Document extends Document with LongKeyedMetaMapper[Document] {
   }
 }
 
-object FilteredDocument {
+object FilteredDocument
+{
   import vvv.docreg.helper.ProjectSelection
-  def search(request: String): List[Document] = searchLike(Document.title, "%" + request + "%")
-  def searchLike(field: MappedField[String, Document], value: String): List[Document] = {
+
+  def search(request: String): List[Document] =
+  {
+    if (request == null || request.isEmpty)
+    {
+      all()
+    }
+    else
+    {
+      val search: String = formatSearch(request)
+      (
+        searchLike(Document.title, search) :::
+        searchAuthor(search) :::
+        searchLike(Document.key, prePadTo(request, 4, '0'))
+      ).distinct
+    }
+  }
+
+  def formatSearch(in: String): String =
+  {
+    val out: Option[String] = for {
+      s <- Option(in)
+      surrounded = "%" + s + "%"
+    } yield surrounded.replaceAll("[ *]", "%").replaceAll("[%]+", "%")
+
+    out.getOrElse("%")
+  }
+
+  def all(): List[Document] =
+  {
+    if (ProjectSelection.showAll.is) {
+      Document.findAll(
+        OrderBy(Document.id, Descending),
+        PreCache(Document.project)
+      )
+    } else {
+      val checked = ProjectSelection.projects.is.toList
+      Document.findAll(
+        In(Document.project, Project.id, ByList(Project.id, checked.map( _.id.is))),
+        OrderBy(Document.id, Descending)
+      )
+    }
+  }
+
+  def searchLike(field: MappedField[String, Document], value: String): List[Document] =
+  {
     if (ProjectSelection.showAll.is) {
       Document.findAll(
         Like(field, value),
-        OrderBy(Document.id, Descending)
+        OrderBy(Document.id, Descending),
+        PreCache(Document.project)
       )
     } else {
       val checked = ProjectSelection.projects.is.toList
       Document.findAll(
         Like(field, value),
         In(Document.project, Project.id, ByList(Project.id, checked.map( _.id.is))),
-        OrderBy(Document.id, Descending)
+        OrderBy(Document.id, Descending),
+        PreCache(Document.project)
       )
     }
   }
-  def searchAuthor(value: String): List[Document] = {
+
+  def searchAuthor(value: String): List[Document] =
+  {
     val users : List[User] = User.findAll(
         Like(User.name, "%" + value + "%"),
         OrderBy(User.name, Descending)
