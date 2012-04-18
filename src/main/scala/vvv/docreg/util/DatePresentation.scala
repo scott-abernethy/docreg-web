@@ -18,7 +18,9 @@ object DatePresentation {
 
   def now = new Date
 
-  def short(date: Date) = {
+  def short(date: Date): String =
+  {
+    if (date == null) return "---"
     if (formatDay(now) == formatDay(date)) {
       "Today " + formatTime(date)
     } else {
@@ -26,28 +28,36 @@ object DatePresentation {
     }
   }
 
-  def formatDateTime(date: Date): String = {
+  def formatDateTime(date: Date): String =
+  {
+    if (date == null) return "---"
     User.loggedInUser.is.foreach(u =>
       dateTimeF.setTimeZone(u.getTimeZone)
     )
     dateTimeF.format(date)
   }
 
-  def formatDay(date: Date): String = {
+  def formatDay(date: Date): String =
+  {
+    if (date == null) return "---"
     User.loggedInUser.is.foreach(u =>
       dayF.setTimeZone(u.getTimeZone)
     )
     dayF.format(date)
   }
 
-  def formatTime(date: Date): String = {
+  def formatTime(date: Date): String =
+  {
+    if (date == null) return "---"
     User.loggedInUser.is.foreach(u =>
       timeF.setTimeZone(u.getTimeZone)
     )
     timeF.format(date)
   }
 
-  def formatDate(date: Date): String = {
+  def formatDate(date: Date): String =
+  {
+    if (date == null) return "---"
     User.loggedInUser.is.foreach(u =>
       dateF.setTimeZone(u.getTimeZone)
     )
