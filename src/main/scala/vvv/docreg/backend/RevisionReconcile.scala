@@ -18,7 +18,7 @@ trait RevisionReconcile extends Loggable
   {
     if (isSmite(revisions))
     {
-      logger.warn("Smiting document " + document.id.is + " due to " + revisions)
+      logger.warn("Smiting document " + document.key.is + " due to " + revisions)
       Subscription.forDocument(document).foreach(_.delete_!)
       Revision.forDocument(document).foreach(_.delete_!)
       document.delete_!
