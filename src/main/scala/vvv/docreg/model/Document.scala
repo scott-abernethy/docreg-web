@@ -135,16 +135,35 @@ object FilteredDocument
 {
   import vvv.docreg.helper.ProjectSelection
 
-  def search(request: String): List[(Document,Revision,User,Project)] = {
-    if (request == null || request.isEmpty) {
-      List.empty
-//      join(Document.dbTable, Revision.dbTable, Project.dbTable)( (d,r,p) =>
-//
-//      )
+  def search(request: String): List[(Document,Project,Revision,User)] = {
+    // TODO project selection!
+    val start = System.currentTimeMillis()
+    val result = if (request == null || request.isEmpty) {
+      inTransaction{
+        join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
+          select( (d,p,r,u) )
+          orderBy(d.id asc, r.version desc)
+          on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
+        ).toList
+      }.groupBy(_._1).flatMap(x => x._2.headOption).toList
     }
     else {
-      List.empty
+      val searchString: String = formatSearch(request)
+      val number: String = prePadTo(request, 4, '0')
+      inTransaction{
+        join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
+          where((d.title like searchString) or (u.name like searchString) or (d.number === number))
+          select( (d,p,r,u) )
+          orderBy(d.id asc, r.version desc)
+          on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
+        ).toList
+      }.groupBy(_._1).flatMap(x => x._2.headOption).toList
     }
+    val sorted = result.sortWith{ (a,b) =>
+      a._3.date.getTime > b._3.date.getTime
+    }
+    println("Search took: " + (System.currentTimeMillis() - start))
+    sorted
   }
 
 //  def search(request: String): List[Document] =

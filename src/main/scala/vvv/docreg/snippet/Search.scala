@@ -15,7 +15,7 @@ import vvv.docreg.helper.ProjectSelection
 import vvv.docreg.comet._
 import vvv.docreg.util.StringUtil._
 import vvv.docreg.model._
-import xml.NodeSeq
+import xml.{Text, NodeSeq}
 
 class Search extends Loggable with ProjectSelection {
   object searchInput extends SessionVar("")
@@ -41,19 +41,19 @@ class Search extends Loggable with ProjectSelection {
     bindResults(html)
   }
 
-  def results(in: NodeSeq, ds: List[(Document, Revision, User, Project)]): NodeSeq = {
+  def results(in: NodeSeq, ds: List[(Document, Project, Revision, User)]): NodeSeq = {
     items(in, ds)
   }
 
-  def items(in: NodeSeq, ds: List[(Document, Revision, User, Project)]): NodeSeq =
+  def items(in: NodeSeq, ds: List[(Document, Project, Revision, User)]): NodeSeq =
   {
     (
       ".match-count" #> pluralise(ds.size, "match", "es") &
       ".search-item" #> ds.map { x =>
-        val (d,r,u,p) = x
+        val (d,p,r,u) = x
         ".doc-project" #> p.name &
         ".doc-author" #> u.profileLink &
-        ".doc-key" #> <a href={d.infoLink}>{d.key}</a> &
+        ".doc-key" #> <a href={d.infoLink}>{d.number}</a> &
         ".doc-date" #> r.dateOnly &
         ".doc-title" #> <a href={d.infoLink}>{d.title}</a>
       }
