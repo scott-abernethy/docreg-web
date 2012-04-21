@@ -101,6 +101,20 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     {
       case (Full(d), Full(r)) =>
       {
+        import org.squeryl.PrimitiveTypeMode._
+        val rs = inTransaction{
+          join(Revision.dbTable, User.dbTable, Approval.dbTable.leftOuter, User.dbTable.leftOuter)( (r,u,a,u2) =>
+            where(r.documentId === d.id)
+              select( (r, u, a, u2 ))
+              orderBy(r.version desc)
+              on(r.authorId === u.id, r.id === a.map(_.revisionId), a.map(_.userId) === u2.map(_.id))
+          ).toList
+        }.foldRight(List.empty[(Revision,User,List[(Option[Approval],Option[User])])]){ (x, out) =>
+          out match {
+            case head :: tail if (head._1 == x._1) => (head._1, head._2, (x._3, x._4) :: head._3) :: tail
+            case list => (x._1, x._2, (x._3, x._4) :: Nil) :: list
+          }
+        }
       val out = bind("doc", in,
         "key" -> d.key,
         "revised" -> r.dateAsDT(),
@@ -127,15 +141,20 @@ class DocumentSnippet extends DocumentRequest with Loggable {
             }
           }
         } &
-        ".doc-revision" #> d.revisions.map { r =>
+        ".doc-revision" #> rs.map { x =>
+          val r = x._1
+          val u = x._2
+          val as = x._3.collect{case (Some(a),b) => (a,b)}
           ".rev-number" #> r.version &
           ".rev-download" #> <a href={d.downloadHref(r.version)}>Download</a> &
           ".rev-approve" #> <a href={d.approveHref(r.version)}>Approve</a> &
-          ".rev-author" #> r.author().map(_.profileLink).getOrElse(Text("?")) &
+          ".rev-author" #> u.profileLink &
           ".rev-comment" #> r.comment &
           ".rev-date" #> r.dateAsDT & // TODO date only, hover for time
-          ".rev-approval" #> Approval.forRevision(r).map { a =>
-            ".approval-by" #> (a.user().map(_.profileLink) getOrElse Text("?")) &
+          ".rev-approval" #> as.map { y =>
+            val a = y._1
+            val u2 = y._2
+            ".approval-by" #> (u2.map(_.profileLink).getOrElse(Text("?"))) &
             ".approval-state" #> <span class={ApprovalState.style(a.state)}>{a.state}</span> &
             ".approval-comment" #> <span>{ if (a.comment == "No Comment") "" else a.comment }</span> &
             ".approval-date" #> a.dateAsDT
