@@ -49,10 +49,22 @@ object UserProject extends UserProject {
       }
       case Some(user) => {
         inTransaction {
+          /*
+          p1
+          p2  u1
+          p3
+          p4  u1  u2
+
+          p1
+          p2 u1
+          p3
+          p4 u1
+          p4 u2
+           */
           join(Project.dbTable, UserProject.dbTable.leftOuter)( (p, up) =>
-            where(up.map(_.userId) === Some(user.id))
-              select(p, up.map(_.selected).getOrElse(false))
-              on(p.id === up.map(_.projectId))
+            where((up.map(_.userId).get.isNull) or (up.map(_.userId) === Some(user.id)))
+            select(p, up.map(_.selected).getOrElse(false))
+            on(p.id === up.map(_.projectId))
           ).toList
         }
       }

@@ -136,34 +136,71 @@ object FilteredDocument
   import vvv.docreg.helper.ProjectSelection
 
   def search(request: String): List[(Document,Project,Revision,User)] = {
-    // TODO project selection!
     val start = System.currentTimeMillis()
-    val result = if (request == null || request.isEmpty) {
-      inTransaction{
-        join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
-          select( (d,p,r,u) )
-          orderBy(d.id asc, r.version desc)
-          on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
-        ).toList
-      }.groupBy(_._1).flatMap(x => x._2.headOption).toList
-    }
-    else {
-      val searchString: String = formatSearch(request)
-      val number: String = prePadTo(request, 4, '0')
-      inTransaction{
-        join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
-          where((d.title like searchString) or (u.name like searchString) or (d.number === number))
-          select( (d,p,r,u) )
-          orderBy(d.id asc, r.version desc)
-          on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
-        ).toList
-      }.groupBy(_._1).flatMap(x => x._2.headOption).toList
-    }
+    val result = if (request == null || request.isEmpty) searchAll() else searchFor(request)
     val sorted = result.sortWith{ (a,b) =>
       a._3.date.getTime > b._3.date.getTime
     }
     println("Search took: " + (System.currentTimeMillis() - start))
     sorted
+  }
+
+  private def searchAll() = {
+    val checked = ProjectSelection.projects.is.map(_.id)
+    if (ProjectSelection.showAll.is) {
+      inTransaction{
+        join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
+          select( (d,p,r,u) )
+            orderBy(d.id asc, r.version desc)
+            on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
+        ).toList
+      }.groupBy(_._1).flatMap(x => x._2.headOption).toList
+    }
+    else if (checked.isEmpty) {
+      Nil
+    }
+    else {
+      inTransaction{
+        join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
+          where(p.id in checked)
+          select( (d,p,r,u) )
+          orderBy(d.id asc, r.version desc)
+          on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
+        ).toList
+      }.groupBy(_._1).flatMap(x => x._2.headOption).toList
+    }
+  }
+
+  private def searchFor(request: String) = {
+    val searchString: String = formatSearch(request)
+    val number: String = prePadTo(request, 4, '0')
+    val checked = ProjectSelection.projects.is.map(_.id)
+    if (ProjectSelection.showAll.is) {
+        inTransaction{
+        join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
+          where((d.title like searchString) or (u.name like searchString) or (d.number === number))
+            select( (d,p,r,u) )
+            orderBy(d.id asc, r.version desc)
+            on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
+        ).toList
+      }.groupBy(_._1).flatMap(x => x._2.headOption).toList
+    }
+    else if (checked.isEmpty) {
+      Nil
+    }
+    else {
+      inTransaction{
+        join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
+          where(
+            ((d.title like searchString) or (u.name like searchString) or (d.number === number)) and
+            (p.id in checked)
+          )
+          select( (d,p,r,u) )
+          orderBy(d.id asc, r.version desc)
+          on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
+        ).toList
+      }.groupBy(_._1).flatMap(x => x._2.headOption).toList
+    }
   }
 
 //  def search(request: String): List[Document] =

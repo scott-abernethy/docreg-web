@@ -68,5 +68,5 @@ object FilteredRevision {
 }
 
 object EmptyRevision extends Revision {
-  authorId = UserLookup.unknownUser.map(_.id).getOrElse(0)
+  authorId = inTransaction( UserLookup.unknownUser.map(_.id).getOrElse(0L) )
 }
