@@ -1,33 +1,60 @@
 package vvv.docreg.model
 
-import _root_.net.liftweb.mapper._
-import _root_.net.liftweb.util._
-import _root_.net.liftweb.common._
 import xml.NodeSeq
+import vvv.docreg.db.{DbSchema, DbObject}
+import org.squeryl.PrimitiveTypeMode._
+import org.squeryl.dsl.OneToMany
+import org.squeryl.Query
 
-class Project extends LongKeyedMapper[Project] with IdPK {
-  def getSingleton = Project
-
-  object name extends MappedString(this, 60)
+class Project extends DbObject[Project] {
+  def dbTable = DbSchema.projects
+  var name: String = ""
 
   def infoLink(): NodeSeq = {
-    <a href={ "/project/" + id }>{ name.is }</a>
+    <a href={ "/project/" + id }>{ name }</a>
   }
 
+  lazy val documentsQuery: OneToMany[Document] = DbSchema.projectsToDocuments.left(this)
+
   def documents(): List[Document] = {
-    Document.findAll(By(Document.project, this), OrderBy(Document.key, Descending))
+    inTransaction{
+      from(Document.dbTable)(d =>
+        where(d.projectId === id)
+        select(d)
+        orderBy(d.number)
+      ).toList
+    }
   }
 
   def contributors(): List[User] = {
-    documents().flatMap(_.latest.author.obj).distinct.sortWith(User.sort)
+    inTransaction{
+      join(Document.dbTable, Revision.dbTable, User.dbTable)( (d,r,u) =>
+        where(d.projectId === id)
+          select(u)
+          orderBy(u.email)
+          on(d.id === r.documentId, r.authorId === u.id)
+      ).distinct.toList
+    }
   }
 }
 
-object Project extends Project with LongKeyedMetaMapper[Project] {
-  override def dbIndexes = UniqueIndex(name) :: super.dbIndexes
-  def forName(name: String) = {
-    val xs = findAll(By(Project.name, name), OrderBy(Project.name, Ascending))
-    if (xs isEmpty) null else xs head
+object Project extends Project {
+  def forName(name: String): Option[Project] = {
+    inTransaction{
+      from(DbSchema.projects)( p =>
+        where(p.name === name)
+        select(p)
+        orderBy(p.name asc)
+      ).headOption
+    }
   }
-  override def findAll = findAll(OrderBy(Project.name, Ascending))
+
+  def findAll(): List[Project] = {
+    inTransaction{
+      from(DbSchema.projects)( p =>
+        select(p)
+        orderBy(p.name asc)
+      ).toList
+    }
+  }
 }

@@ -1,26 +1,25 @@
 package vvv.docreg.model
 
-import net.liftweb.mapper._
 import net.liftweb.common.Failure._
 import vvv.docreg.backend.{UserAttributes, Directory}
 import net.liftweb.common._
+import vvv.docreg.db.{DbSchema, DbObject}
+import org.squeryl.PrimitiveTypeMode._
 
 trait UserLookupProvider
 {
   def lookup(usernameOption: Option[String], emailOption: Option[String], nameOption: Option[String], why: String): Box[User]
 }
 
-class UserLookup extends LongKeyedMapper[UserLookup] with IdPK {
-  def getSingleton = UserLookup
-  object username extends MappedString(this, 64)
-  object email extends MappedString(this, 64)
-  object name extends MappedString(this, 64)
-  object user extends MappedLongForeignKey(this, User)
+class UserLookup extends DbObject[UserLookup] {
+  def dbTable = DbSchema.userLookups
+  var username: Option[String] = None
+  var email: Option[String] = None
+  var name: Option[String] = None
+  var userId: Long = 0
 }
 
-object UserLookup extends UserLookup with LongKeyedMetaMapper[UserLookup] with Loggable {
-  override def dbIndexes = UniqueIndex(username, email, name) :: super.dbIndexes
-
+object UserLookup extends UserLookup with Loggable {
   val unknownUserAttributes = UserAttributes("unknown.docreg", "unknown@docreg.x", "[Unknown]")
   val systemUserAttributes = UserAttributes("system.docreg", "system@docreg.x", "[System]")
   lazy val unknownUser = fromAttributes(unknownUserAttributes, false)
@@ -39,15 +38,23 @@ object UserLookup extends UserLookup with LongKeyedMetaMapper[UserLookup] with L
   def lookup(usernameOption: Option[String], emailOption: Option[String], nameOption: Option[String], directory: Directory, why: String): Box[User] = {
     if (usernameOption.isEmpty && emailOption.isEmpty && nameOption.isEmpty) return Failure("Invalid input")
     
-    val existing = UserLookup.find(
-      By(UserLookup.username, usernameOption.getOrElse("")),
-      By(UserLookup.email, emailOption.getOrElse("")),
-      By(UserLookup.name, nameOption.getOrElse(""))
+    val existing = from(dbTable)(l =>
+      where(
+        l.username === usernameOption and
+        l.email === emailOption and
+        l.name === nameOption
+      )
+      select(l)
     )
-    existing match {
-      case Full(record) =>
+
+    val found = for {
+      l <- existing.headOption
+      u <- User.lookup(l.userId)
+    } yield u
+    found match {
+      case Some(u) =>
         //logger.debug((usernameOption :: emailOption :: nameOption :: Nil) + " *** " + (record.user.map(_.username.is) :: record.user.map(_.email.is) :: record.user.map(_.name.is) :: Nil))
-        record.user
+        Full(u)
       case _ =>
         val x = directoryLookup(usernameOption, emailOption, nameOption, directory) match {
           case Full(user) => Full(user)
@@ -62,7 +69,12 @@ object UserLookup extends UserLookup with LongKeyedMetaMapper[UserLookup] with L
   def createLookup(usernameOption: Option[String], emailOption: Option[String], nameOption: Option[String], userOption: Option[User]) {
     userOption.foreach { i =>
       try {
-        UserLookup.create.username(usernameOption.getOrElse("")).email(emailOption.getOrElse("")).name(nameOption.getOrElse("")).user(i).save
+        val x = new UserLookup
+        x.username = usernameOption
+        x.email = emailOption
+        x.name = nameOption
+        x.userId = i.id
+        dbTable.insertOrUpdate(x)
         //logger.debug((usernameOption :: emailOption :: nameOption :: Nil) + " ??? " + (i.username.is :: i.email.is :: i.name.is :: Nil))
       } catch {
         case _ =>
@@ -97,15 +109,18 @@ object UserLookup extends UserLookup with LongKeyedMetaMapper[UserLookup] with L
   // todo move to User?
   def fromAttributes(attributes: UserAttributes, active: Boolean): Box[User] = {
     // todo put back to find via username when other email dependant user creation tasks have gone.
-    User.find(
-      By(User.email, attributes.mail)
-    ) match {
-      case Full(existing) =>
+    from(User.dbTable)(u => where(u.email === attributes.mail) select(u)).headOption match {
+      case Some(existing) =>
         Full(existing)
       case _ =>
-        val created = User.create.name(attributes.displayName).email(attributes.mail).username(attributes.userName).active(active).localServer("boromir").timeZone("US/Pacific")
-        created.save
-        Full(created)
+        val created = new User
+        created.name = attributes.displayName
+        created.email = attributes.mail
+        created.username = attributes.userName
+        created.active = active
+        created.localServer = "boromir"
+        created.timeZone = "US/Pacific"
+        Full( User.dbTable.insert(created) )
     }
   }
 }

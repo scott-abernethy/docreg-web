@@ -48,8 +48,8 @@ class Log extends DocumentSubscriber {
     case DocumentRevised(document, latest) =>
       add(document, latest)
     case DocumentChanged(document) =>
-      revisions = revisions map {r => if (r.document == document) r.reload else r}
-      val update = revisions filter {r => r.document == document} map {r => JsCmds.Replace(r.id.is.toString, bindRevision(r, false))}
+      revisions = revisions flatMap {r => if (r.documentId == document.id) r.reload else Some(r)}
+      val update = revisions filter {r => r.documentId == document.id} map {r => JsCmds.Replace(r.id.toString, bindRevision(r, false))}
       partialUpdate(update)
     case ReloadLog() =>
       revisions = FilteredRevision.findRecent(limit)
@@ -58,14 +58,13 @@ class Log extends DocumentSubscriber {
   }
 
   private def add(d: Document, r: Revision) = {
-    if (d.project.map(ProjectSelection.isSelected(_)) openOr false) {
+    if (d.project.map(ProjectSelection.isSelected(_)) getOrElse false) {
       revisions.lastOption match {
         case Some(remove) if revisions.size > limit =>
           revisions = r :: revisions.dropRight(1)
-          partialUpdate(PrependHtml("log", bindRevision(r, true)) & FadeIn(r.id.is.toString) & Replace(remove.id.is.toString, Text("")))
-        case _ => 
+          partialUpdate(PrependHtml("log", bindRevision(r, true)) & FadeIn(r.id.toString) & Replace(remove.id.toString, Text("")))        case _ =>
           revisions = r :: revisions
-          partialUpdate(PrependHtml("log", bindRevision(r, true)) & FadeIn(r.id.is.toString))
+          partialUpdate(PrependHtml("log", bindRevision(r, true)) & FadeIn(r.id.toString))
       }
     }
   }
@@ -80,13 +79,13 @@ class Log extends DocumentSubscriber {
 
   private def transformRevision(hidden: Boolean)(r: Revision): CssBindFunc = {
     val blank: Option[String] = None
-    r.document.obj match {
-      case Full(d) => {
-        ".log-item [id]" #> r.id.is.toString &
+    r.document match {
+      case Some(d) => {
+        ".log-item [id]" #> r.id.toString &
         ".log-item [class+]" #> (if (hidden) Some("hide") else blank) &
-        ".doc-title"  #> <a href={d.infoLink}>{r.fullTitle}</a> &
-        ".doc-author" #> r.authorLink &
-        ".doc-comment" #> r.comment.is &
+        ".doc-title"  #> <a href={d.infoLink}>{d.fullTitle}</a> &
+        ".doc-author" #> r.author().map(_.profileLink()).getOrElse(Text("?")) &
+        ".doc-comment" #> r.comment &
         ".doc-when" #> r.when &
         ".doc-info [href]" #> d.infoLink
       }

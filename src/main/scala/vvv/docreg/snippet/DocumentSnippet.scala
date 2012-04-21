@@ -1,14 +1,13 @@
 package vvv.docreg.snippet
 
 import vvv.docreg.backend._
-import vvv.docreg.model._
 import vvv.docreg.model.ApprovalState._
 import net.liftweb._
+import http._
 import mapper._
 import util._
 import common._
 import Helpers._
-import http._
 import js.JE.JsRaw
 import js.jquery.JqJE._
 import js._
@@ -16,7 +15,9 @@ import js.jquery._
 import scala.xml.{NodeSeq, Text, Elem}
 import net.liftweb.http.js.JsCmds._
 import java.util.Date
-import vvv.docreg.util.{StringUtil, Environment, TemplateParse}
+import vvv.docreg.util.{Environment, StringUtil, TemplateParse}
+import vvv.docreg.model._
+import java.sql.Timestamp
 
 trait DocumentRequest
 {
@@ -75,9 +76,9 @@ class DocumentSnippet extends DocumentRequest with Loggable {
       case (Full(d), Full(r)) =>
       {
         if (editor != Nil) S.notice("edit-message", <div class="alert alert-warning"><strong>Under edit!</strong> This document is currently being edited.</div>)
-        if (!d.latest_?(r.version.is)) S.warning("out-of-date-message", <div class="alert alert-info"><strong>Out of date!</strong> This is not the most recent version of the document.</div>)
-        ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
-        ".doc-project" #> d.project.map(_.infoLink).getOrElse(<span>?</span>) apply(in)
+        if (!d.latest_?(r.version)) S.warning("out-of-date-message", <div class="alert alert-info"><strong>Out of date!</strong> This is not the most recent version of the document.</div>)
+        ".doc-title" #> <a href={d.infoLink}>{d.fullTitle}</a> &
+        ".doc-project" #> d.project().map(_.infoLink).getOrElse(<span>?</span>) apply(in)
       }
       case (Full(d), _) =>
       {
@@ -102,14 +103,14 @@ class DocumentSnippet extends DocumentRequest with Loggable {
       {
       val out = bind("doc", in,
         "key" -> d.key,
-        "revised" -> r.date,
-        "link" -> ((in: NodeSeq) => <a href={r.link}>{in}</a>),
+        "revised" -> r.dateAsDT(),
+        "link" -> ((in: NodeSeq) => <a href={d.downloadHref(r.version)}>{in}</a>),
         "version" -> r.version,
         "subscriber" -> subscribers(d)
       )
       (
-        ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
-        ".doc-number" #> r.number &
+        ".doc-title" #> <a href={d.infoLink}>{d.fullTitle}</a> &
+        ".doc-number" #> d.keyAndVersion(r.version) &
         ".doc-version" #> r.version &
         ".doc-next" #> d.nextVersion &
         ".doc-project" #> d.project.map(_.infoLink).getOrElse(<span>?</span>) &
@@ -117,8 +118,8 @@ class DocumentSnippet extends DocumentRequest with Loggable {
         ".doc-pending" #> {
           editor.headOption match {
             case Some(editPending) => {
-              ".doc-editor" #> editPending.user.obj.map(_.profileLink()).getOrElse(<span>???</span>) &
-              ".edit-requested" #> editPending.date &
+              ".doc-editor" #> editPending.user().map(_.profileLink()).getOrElse(<span>???</span>) &
+              ".edit-requested" #> editPending.dateAsDT &
               ".doc-next" #> d.nextVersion
             }
            case _ => {
@@ -127,20 +128,20 @@ class DocumentSnippet extends DocumentRequest with Loggable {
           }
         } &
         ".doc-revision" #> d.revisions.map { r =>
-          ".rev-number" #> r.version.is &
-          ".rev-download" #> <a href={r.downloadHref}>Download</a> &
-          ".rev-approve" #> <a href={r.approveHref}>Approve</a> &
-          ".rev-author" #> r.authorLink &
-          ".rev-comment" #> r.comment.is &
-          ".rev-date" #> r.date & // TODO date only, hover for time
+          ".rev-number" #> r.version &
+          ".rev-download" #> <a href={d.downloadHref(r.version)}>Download</a> &
+          ".rev-approve" #> <a href={d.approveHref(r.version)}>Approve</a> &
+          ".rev-author" #> r.author().map(_.profileLink).getOrElse(Text("?")) &
+          ".rev-comment" #> r.comment &
+          ".rev-date" #> r.dateAsDT & // TODO date only, hover for time
           ".rev-approval" #> Approval.forRevision(r).map { a =>
-            ".approval-by" #> (a.by.obj.map(_.profileLink) openOr Text("?")) &
-            ".approval-state" #> <span class={ApprovalState.style(a.state.is)}>{a.state}</span> &
-            ".approval-comment" #> <span>{ if (a.comment.is == "No Comment") "" else a.comment }</span> &
-            ".approval-date" #> a.date
+            ".approval-by" #> (a.user().map(_.profileLink) getOrElse Text("?")) &
+            ".approval-state" #> <span class={ApprovalState.style(a.state)}>{a.state}</span> &
+            ".approval-comment" #> <span>{ if (a.comment == "No Comment") "" else a.comment }</span> &
+            ".approval-date" #> a.dateAsDT
           }
         } &
-        ".doc-subscriber" #> d.subscribers.toList.sortWith(User.sort).map { u =>
+        ".doc-subscriber" #> Subscription.usersFor(d).map { u =>
           ".subscriber-info" #> u.profileLink
         }
       ).apply(in)
@@ -157,10 +158,10 @@ class DocumentSnippet extends DocumentRequest with Loggable {
       {
     (
       ClearClearable &
-      ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
+      ".doc-title" #> <a href={d.infoLink}>{d.fullTitle}</a> &
       ".edit-download [href]" #> d.linkForEditing(user.map(_.shortUsername).getOrElse("unknown")) &
-      ".edit-submit-file [href]" #> (d.latest.info + "/submit") &
-      ".edit-back [href]" #> (d.latest.info)
+      ".edit-submit-file [href]" #> (d.submitHref()) &
+      ".edit-back [href]" #> (d.infoHref())
     ).apply(in)
       }
       case _ => NodeSeq.Empty
@@ -168,18 +169,17 @@ class DocumentSnippet extends DocumentRequest with Loggable {
   }
 
   private def docActions(d: Document, r: Revision): CssBindFunc = {
-    ".doc-link [href]" #> r.link &
+    ".doc-link [href]" #> d.downloadHref(r.version) &
     ".doc-edit" #> edit(d) &
     ".doc-submit" #> submit(d) &
-    ".doc-approve [href]" #> (r.info + "/approve") &
-    ".doc-request-approval [href]" #> (r.info + "/request-approval") &
+    ".doc-approve [href]" #> (d.approveHref(r.version)) &
+    ".doc-request-approval [href]" #> (d.requestApprovalHref(r.version)) &
     ".doc-subscribe" #> subscribe(d)
   }
 
   private def subscribers(d: Document): NodeSeq =
   {
-    val users: List[User] = d.subscribers.toList
-    users match
+    Subscription.usersFor(d) match
     {
       case Nil =>
       {
@@ -225,7 +225,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
   private def submit(d: Document): NodeSeq = {
     user match {
       case Full(u) if (userIsActingAsEditor) => {
-        <a class="btn btn-success" href={d.latest.info + "/submit"}><i class="icon-share icon-white"></i> Submit</a>
+        <a class="btn btn-success" href={d.submitHref()}><i class="icon-share icon-white"></i> Submit</a>
       }
       case _ => {
         NodeSeq.Empty
@@ -237,7 +237,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     Pending.editRequest(u, d)
     // TODO remove explicit call, make backend listen for pendings
     backend ! Edit(d, u)
-    S.redirectTo(d.latest.info + "/edit")
+    S.redirectTo(d.editHref())
   }
 
   private def processUnedit(d: Document, u: vvv.docreg.model.User): JsCmd = {
@@ -289,13 +289,13 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     var comment = ""
     var state = ApprovalState.approved
     (
-      ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
+      ".doc-title" #> <a href={d.infoLink}>{d.fullTitle}</a> &
       ".approval-version *" #> r.version &
       ".approval-by *" #> Text(User.loggedInUser map (_.displayName) openOr "?") &
       ".approval-state" #> SHtml.select(states, Full(state.toString), (selected) => (state = ApprovalState parse selected)) &
       ".approval-comment" #> SHtml.textarea(comment, comment = _, "class" -> "input-xlarge", "maxlength" -> "128") &
       ".approval-submit" #> SHtml.submit("Submit", () => processApprove(d, r, state, comment), "class" -> "btn primary") &
-      ".approval-cancel" #> SHtml.submit("Cancel", () => S.redirectTo(r.info), "class" -> "btn")
+      ".approval-cancel" #> SHtml.submit("Cancel", () => S.redirectTo(d.infoHref()), "class" -> "btn")
     ).apply(in)
       }
       case _ => NodeSeq.Empty
@@ -304,16 +304,16 @@ class DocumentSnippet extends DocumentRequest with Loggable {
 
   def processApprove(d: Document, r: Revision, state: ApprovalState, comment: String): JsCmd = {
     val user = User.loggedInUser.is openOr null
-    val approval = Approval.create
-    approval.revision(r)
-    approval.by(user)
-    approval.state(state)
-    approval.comment(if (comment.trim == "") "No Comment" else comment)
-    approval.date(new java.util.Date)
-    approval.save
+    val approval = new Approval
+    approval.revisionId = r.id
+    approval.userId = user.id
+    approval.state = state
+    approval.comment = if (comment.trim == "") "No Comment" else comment
+    approval.date = new Timestamp(System.currentTimeMillis())
+    Approval.dbTable.insert(approval)
     backend ! ApprovalApproved(d, r, user, state, comment)
     S.notice("Document " + state)
-    S.redirectTo(r.info)
+    S.redirectTo(d.infoHref())
   }
 
   lazy val approverPartial = Templates("doc" :: "request-approval" :: Nil) match {
@@ -331,12 +331,12 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     {
       case (Full(d), Full(r)) =>
       {
-      ("#doc:title *" #> <a href={d.infoLink}>{r.fullTitle}</a> &
+      ("#doc:title *" #> <a href={d.infoLink}>{d.fullTitle}</a> &
        "#doc:version *" #> r.version &
         ".approver:add" #> SHtml.ajaxButton(<span><i class="icon-plus"></i> Add</span>, () => {JqJsCmds.AppendHtml("approverList", approver(approverPartial))}, "class" -> "btn") &
        ".approval-approver" #> approver &
        "#submit" #> SHtml.submit("Submit", () => (processRequestApproval(d, r)), "class" -> "btn primary") &
-       "#cancel" #> SHtml.submit("Cancel", () => S.redirectTo(r.info), "class" -> "btn") &
+       "#cancel" #> SHtml.submit("Cancel", () => S.redirectTo(d.infoHref()), "class" -> "btn") &
        ClearClearable) apply in
       }
       case _ => NodeSeq.Empty
@@ -363,14 +363,14 @@ class DocumentSnippet extends DocumentRequest with Loggable {
         backend ! ApprovalRequested(d, r, xs)
         S.notice("Approval requested for " + (xs.map(_.displayName).reduceRight((a, b) => a + "; " + b)))
     }
-    S.redirectTo(r.info)
+    S.redirectTo(d.infoHref())
   }
 
   private val projects = Project.findAll()
 
-  private object name extends RequestVar(document.map(_.title.is).getOrElse("???"))
+  private object name extends RequestVar(document.map(_.title).getOrElse("???"))
   private object nameError extends RequestVar[Option[String]](None)
-  private object project extends RequestVar(document.map(_.projectName).getOrElse(projects.headOption.map(_.name.is).getOrElse("???")))
+  private object project extends RequestVar(document.flatMap(_.project()).map(_.name).getOrElse(projects.headOption.map(_.name).getOrElse("???")))
   private object file extends RequestVar[Option[FileParamHolder]](None)
   private object fileError extends RequestVar[Option[String]](None)
   private object comment extends RequestVar("")
@@ -381,7 +381,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     {
       case (Full(d), Full(r)) =>
       {
-    val projectList = projects.map(i => (i.name.is, i.name.is))
+    val projectList = projects.map(i => (i.name, i.name))
     (
 //      ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
       ".submission-project" #> SHtml.select(projectList, Option(project.is), project(_)) &

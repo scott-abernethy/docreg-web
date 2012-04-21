@@ -80,7 +80,7 @@ object Download extends Loggable
     val userLocalServer: Box[String] = for {
       user <- User.loggedInUser.is
     }
-    yield Server.address(user.localServer.is)
+    yield Server.address(user.localServer)
 
     userLocalServer match {
       case Full(s) if (s != null && s.length() > 0) => s

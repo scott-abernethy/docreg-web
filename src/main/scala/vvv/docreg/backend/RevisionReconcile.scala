@@ -2,8 +2,10 @@ package vvv.docreg.backend
 
 import vvv.docreg.agent.{ApprovalInfo, RevisionInfo}
 import net.liftweb.util.True
-import vvv.docreg.model.{UserLookupProvider, Subscription, Revision, Document}
 import net.liftweb.common.Loggable
+import org.squeryl.PrimitiveTypeMode._
+import vvv.docreg.model._
+import java.sql.Timestamp
 
 abstract class ReconcileAction
 case class ReconcileRevisionAdded(added: Long) extends ReconcileAction
@@ -18,10 +20,12 @@ trait RevisionReconcile extends Loggable
   {
     if (isSmite(revisions))
     {
-      logger.warn("Smiting document " + document.key.is + " due to " + revisions)
-      Subscription.forDocument(document).foreach(_.delete_!)
-      Revision.forDocument(document).foreach(_.delete_!)
-      document.delete_!
+      logger.warn("Smiting document " + document.key + " due to " + revisions)
+      Subscription.dbTable.deleteWhere(s => s.documentId === document.id)
+      Pending.dbTable.deleteWhere(p => p. documentId === document.id)
+      // Approvals
+      Revision.dbTable.deleteWhere(r => r.documentId === document.id)
+      Document.dbTable.deleteWhere(d => d.id === document.id)
       Set(ReconcileDocumentRemoved)
     }
     else
@@ -40,27 +44,28 @@ trait RevisionReconcile extends Loggable
       filtered.foreach{
         case r @ RevisionInfo(fullFileName @ Document.ValidDocumentFileName(key, version, file), project, comment, access, author, date, _, _, _, clientUserName, _, _) =>
         {
-          val record = document.revision(version.toLong).getOrElse(Revision.create)
-          record.document(document)
+          val record = document.revision(version.toLong).getOrElse(new Revision)
+          record.documentId = document.id
           val user = userLookup.lookup(Some(r.clientUserName), None, Some(r.author), "revision on " + record + " for " + r)
-    record.version(version.toLong)
-          record.filename(fullFileName)
-          record.author(user)
-          record.date(date)
-          record.comment(comment)
-          if (record.dirty_?)
-          {
-            results += (if (!record.id.defined_?) ReconcileRevisionAdded(version.toLong) else ReconcileRevisionUpdated)
-            record.save
-          }
+          record.version = version.toLong
+          record.filename = fullFileName
+          record.authorId = user.map(_.id).getOrElse(-1)
+          record.date = new Timestamp(date.getTime)
+          record.comment = comment
+
+          Revision.dbTable.insertOrUpdate(record)
+//          {
+//            results += (if (!record.id.defined_?) ReconcileRevisionAdded(version.toLong) else ReconcileRevisionUpdated)
+//            record.save
+//          }
           existing -= record
         }
       }
 
       // Remove left overs
-      existing.foreach{ invalid =>
-        logger.warn("Purging invalid revision " + invalid)
-        invalid.delete_!
+      if (existing.size > 0) {
+        logger.warn("Purging invalid revisions " + existing)
+        Revision.dbTable.deleteWhere(r => r.id in existing.map(_.id))
       }
 
       results

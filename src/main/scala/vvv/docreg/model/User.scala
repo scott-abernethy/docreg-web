@@ -1,7 +1,6 @@
 package vvv.docreg.model
 
 import net.liftweb._
-import mapper._
 import util._
 import common._
 import Helpers._
@@ -11,36 +10,40 @@ import vvv.docreg.util.{Environment, StringUtil}
 import vvv.docreg.util.StringUtil.ValidEmail
 import xml.NodeSeq
 import java.util.{TimeZone, Date}
-
+import java.sql.Timestamp
+import vvv.docreg.db.{DbObject, DbSchema}
+import org.squeryl.PrimitiveTypeMode._
+import vvv.docreg.model.User.loggedInUser
+import scala.Predef._
 
 // http://www.assembla.com/wiki/show/liftweb/How_to_use_Container_Managed_Security
 // http://wiki.eclipse.org/Jetty/Tutorial/JAAS#LdapLoginModule
 // http://www.mail-archive.com/openbd@googlegroups.com/msg05268.html
 
 // Custom simple user, authentication handled against domain by jetty.
-class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
-  def getSingleton = User
-  object name extends MappedString(this, 64)
-  object username extends MappedString(this, 64)
-  object email extends MappedEmail(this, 64) {
-    override def apply(s: String) = super.apply(s.toLowerCase)
-    override def validations = valUnique(S.??("unique.email.address")) _ :: super.validations // Doesn't seem to work.
+class User extends DbObject[User] {
+  def dbTable = DbSchema.users
+  var username: String = ""
+  var name: String =  ""
+  var email: String = ""
+  var active: Boolean = true
+  var host: String = ""
+  var lastSession: Timestamp = new Timestamp(0)
+  var sessionCount: Long = 0
+  var localServer: String = ""
+  var timeZone: String = ""
+
+  //var subscriptions = MappedManyToMany(Subscription, Subscription.user, Subscription.document, Document)
+
+  def subscribed_?(d: Document) = {
+    inTransaction( Subscription.dbTable.where(s => s.userId === id and s.documentId === d.id).isEmpty )
   }
-  object active extends MappedBoolean(this)
-  object host extends MappedString(this, 64)
-  object lastSession extends MappedDateTime(this)
-  object sessionCount extends MappedLong(this)
-  object localServer extends MappedString(this, 64)
-  object subscriptions extends MappedManyToMany(Subscription, Subscription.user, Subscription.document, Document)
-  object timeZone extends MappedTimeZone(this)
 
-  def subscribed_?(d: Document) = Subscription.forDocumentBy(d, this).nonEmpty
-
-  def displayName = name.is
+  def displayName = name
 
   def shortUsername(): String =
   {
-    username.is match {
+    username match {
       case ValidEmail(name, domain) => name
       case other => other
     }
@@ -57,56 +60,58 @@ class User extends LongKeyedMapper[User] with IdPK with ManyToMany {
   }
 
   def revisions(): List[Revision] = {
-    Revision.findAll(By(Revision.author, this), OrderBy(Revision.date, Descending), PreCache(Revision.document))
+    inTransaction( from(Revision.dbTable)(r => where(r.authorId === id) select(r) orderBy(r.date desc)).toList )
   }
 
   def activity(): Long = {
-    Revision.count(By(Revision.author, this))
+    inTransaction( from(Revision.dbTable)(r => where(r.authorId === id) compute(countDistinct(r.id))) )
   }
 
   def impact(): Long = {
-    Document.count(In(Document.id, Revision.document, By(Revision.author, this)))
+    inTransaction( from(Revision.dbTable)(r => where(r.authorId === id) compute(countDistinct(r.documentId))) )
   }
 
   def history(): List[Document] = {
-    val documents = for {
-      revision <- Revision.findAll(By(Revision.author, this), OrderBy(Revision.date, Descending), PreCache(Revision.document))
-      document <- revision.document.obj
-    } yield document
-    documents.distinct
+    inTransaction {
+      join(Document.dbTable, Revision.dbTable)( (d, r) =>
+        where(r.authorId === id)
+        select(d)
+        orderBy(r.date desc)
+        on(d.id === r.documentId)
+      ).toList.distinct
+    }
   }
 
   def editing(): List[Document] = {
-    val documents = for {
-      pending <- Pending.forUserAction(this, PendingAction.editing)
-      document <- pending.document.obj
-    } yield document
-    documents.distinct
+    inTransaction {
+      join(Pending.dbTable, Document.dbTable)( (p, d) =>
+        where(p.action === PendingAction.editing and p.userId === id)
+        select(d)
+        orderBy(p.date desc)
+        on(p.documentId === d.id)
+      ).toList.distinct
+    }
   }
-  
+
   def getTimeZone(): TimeZone = {
-    if (timeZone.is == null){
+    if (timeZone == null){
       TimeZone.getDefault
     } else {
-      timeZone.isAsTimeZone
+      TimeZone.getTimeZone(timeZone)
     }
   }
 }
 
-object User extends User with LongKeyedMetaMapper[User] with Loggable {
+object User extends User with Loggable {
   val docRegUserCookie = "DocRegWebUser"
   val domain = "@GNET.global.vpn"
 
   object loggedInUser extends SessionVar[Box[User]](checkForUserCookie)
   object requestUri extends SessionVar[Option[String]](None)
   
-  override def dbIndexes = UniqueIndex(email) :: UniqueIndex(username) :: super.dbIndexes
-  override def fieldOrder = List(id, name, email)
-
   def reloadLoggedInUser() {
-    for (u <- loggedInUser.is) {
-      loggedInUser(Full(u.reload))
-    }
+    val u = loggedInUser.toOption.flatMap(_.reload())
+    loggedInUser(u)
   }
 
   def loggedIn_? = !loggedInUser.is.isEmpty
@@ -120,19 +125,24 @@ object User extends User with LongKeyedMetaMapper[User] with Loggable {
     loggedInUser(Empty)
   }
 
+  def forUsername(username: String): Option[User] = {
+    inTransaction( dbTable.where(u => u.username like username).headOption )
+  }
+
   private def markSession(in: User)
   {
-    val u = in.reload
-    u.lastSession(new Date)
-    u.sessionCount(u.sessionCount.is + 1L)
-    u.host(User.parseHost)
-    u.save
-    logger.info("User '" + u.displayName + "' started session " + host)
+    for (u <- in.reload()) {
+      u.lastSession = new Timestamp(System.currentTimeMillis())
+      u.sessionCount = u.sessionCount + 1L
+      u.host = User.parseHost
+      User.dbTable.update(u)
+      logger.info("User '" + u.displayName + "' started session " + host)
+    }
   }
 
   def forUsernameOrCreate(username: String): Box[User] = {
-    find(By(User.username, username + domain)) match {
-      case Full(user) =>
+    forUsername(username + domain) match {
+      case Some(user) =>
         Full(user)
       case _ =>
         UserLookup.lookup(Some(username), None, None, Environment.env.directory, "forUsernameOrCreate")
@@ -141,7 +151,7 @@ object User extends User with LongKeyedMetaMapper[User] with Loggable {
 
   def saveUserCookie() {
     loggedInUser.is match {
-      case Full(u) => S.addCookie(HTTPCookie(docRegUserCookie, u.username.is).setMaxAge(3600 * 24 * 365).setPath("/"))
+      case Full(u) => S.addCookie(HTTPCookie(docRegUserCookie, u.username).setMaxAge(3600 * 24 * 365).setPath("/"))
       case _ => S.addCookie(HTTPCookie(docRegUserCookie, "###").setPath("/"))
     }
   }
@@ -149,7 +159,7 @@ object User extends User with LongKeyedMetaMapper[User] with Loggable {
   def checkForUserCookie: Box[User] = {
     S.cookieValue(docRegUserCookie) match {
       case Full(id) =>
-        val existing: Box[User] = User.find(By(User.username, id))
+        val existing: Box[User] = User.forUsername(id)
         existing.foreach { u => markSession(u) }
         existing
       case _ =>

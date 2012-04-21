@@ -7,7 +7,6 @@ import vvv.docreg.model._
 import vvv.docreg.model.ApprovalState._
 import vvv.docreg.util._
 
-import _root_.net.liftweb.mapper._
 import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
 import java.io.IOException
@@ -15,6 +14,7 @@ import com.hstx.docregsx.{Document => AgentDocument, Revision => AgentRevision, 
 import vvv.docreg.db.DbVendor
 import java.util.Date
 import vvv.docreg.agent._
+import org.squeryl.PrimitiveTypeMode._
 
 case class Connect()
 case class Reload(d: Document)
@@ -104,7 +104,7 @@ trait BackendComponentImpl extends BackendComponent
             ApprovalRequest(
               r.filename,
               user.shortUsername(), // todo this was user.displayName?!
-              user.email.is,
+              user.email,
               state match {
                 case ApprovalState.approved => AgentApprovalState.Approved.toString()
                 case ApprovalState.notApproved => AgentApprovalState.NotApproved.toString()
@@ -125,7 +125,7 @@ trait BackendComponentImpl extends BackendComponent
         }
         case SubscribeRequested(d, user) =>
         {
-          daemonAgent ! RequestPackage(Actor.self, target, SubscribeRequest(d.latest.filename, user.shortUsername(), user.email.is, "always"))
+          daemonAgent ! RequestPackage(Actor.self, target, SubscribeRequest(d.latest.filename, user.shortUsername(), user.email, "always"))
         }
         case SubscribeReply(response, fileName, userName) =>
         {
@@ -133,7 +133,7 @@ trait BackendComponentImpl extends BackendComponent
         }
         case UnsubscribeRequested(d, user) =>
         {
-          daemonAgent ! RequestPackage(Actor.self, target, UnsubscribeRequest(d.latest.filename, user.shortUsername(), user.email.is))
+          daemonAgent ! RequestPackage(Actor.self, target, UnsubscribeRequest(d.latest.filename, user.shortUsername(), user.email))
         }
         case UnsubscribeReply(response, fileName, userName) =>
         {
@@ -156,13 +156,13 @@ trait BackendComponentImpl extends BackendComponent
         case msg @ Submit(d, projectName, localFile, userFileName, comment, user) =>
         {
           // todo check revision is latest?
-          val engine = new SubmitEngine(daemonAgent, target, user.host.is, clientVersion)
+          val engine = new SubmitEngine(daemonAgent, target, user.host, clientVersion)
           engine.start()
           engine ! msg
         }
         case msg @ Create(projectName, localFile, userFileName, comment, user) =>
         {
-          val engine = new SubmitNewEngine(daemonAgent, target, user.host.is, clientVersion)
+          val engine = new SubmitNewEngine(daemonAgent, target, user.host, clientVersion)
           engine.start()
           engine ! msg
         }
@@ -187,25 +187,24 @@ trait BackendComponentImpl extends BackendComponent
       }
     }
 
-    private def projectWithName(name: String) = {
-    val existing = Project.forName(name) 
-    if (existing == null) {
-      val project = Project.create
-      project.name(name)
-      project.save
-      project
-      // TODO notify new project? Or do it as notification on save.
-    } else {
-      existing
-    }
+    private def projectWithName(name: String): Project = {
+      Project.forName(name) match {
+        case Some(p) => p
+        case _ => {
+          val project = new Project
+          project.name = name
+          Project.dbTable.insert(project)
+          project
+        }
+      }
   }
 
   private def createDocument(reconcile: Reconcile) {
     try {
-      DB.use(DefaultConnectionIdentifier) { c =>
-      val document = Document.create
+      transaction {
+      val document = new Document
       assignDocument(document, reconcile.document)
-      document.save
+      Document.dbTable.insert(document)
 
       assignEditor(document, reconcile.document)
 
@@ -223,7 +222,7 @@ trait BackendComponentImpl extends BackendComponent
   }
 
   private def updateDocument(document: Document, reconcile: Reconcile) {
-    DB.use(DefaultConnectionIdentifier) { c =>
+    transaction {
     val update = reconcileRevisions(document, reconcile.revisions.map(x => RevisionReconcile.agentToInfo(x)))
     if (update.contains(ReconcileDocumentRemoved))
     {
@@ -235,7 +234,7 @@ trait BackendComponentImpl extends BackendComponent
     val docChanged = assignDocument(document, reconcile.document)
     val editorChanged = assignEditor(document, reconcile.document)
     if (docChanged || editorChanged) {
-      document.save
+      Document.dbTable.update(document)
     }
     update.collect{case ReconcileRevisionAdded(r) => r}.foreach{ id =>
       document.revision(id).foreach(revision => documentServer ! DocumentRevised(document, revision))
@@ -247,16 +246,16 @@ trait BackendComponentImpl extends BackendComponent
   }
 
   private def assignDocument(document: Document, d: AgentDocument): Boolean = {
-    document.key(d.getKey)
-    document.project(projectWithName(d.getProject))
-    document.title(d.getTitle)
-    document.access(d.getAccess)
-    document.dirty_?
+    document.number = d.getKey
+    document.projectId = projectWithName(d.getProject).id
+    document.title = d.getTitle
+    document.access = d.getAccess
+    true
+//    document.dirty_?
     // todo check that revision based info here, such as access, is correct in the AgentDocument object.
   }
 
   private def assignEditor(document: Document, d: AgentDocument): Boolean = {
-    DB.use(DefaultConnectionIdentifier) { c =>
       if (d.getEditor != null && d.getEditor.length > 0) {
         UserLookup.lookup(Some(d.getEditor()), None, None, directory, "editor on " + document + " with " + d) match {
           case Full(u) => {
@@ -271,7 +270,6 @@ trait BackendComponentImpl extends BackendComponent
       else {
         Pending.unassignEditor(document)
       }
-    }
   }
 
   def updateSubscriptions(document: Document, subscriptions: List[AgentSubscriber])
@@ -282,21 +280,20 @@ trait BackendComponentImpl extends BackendComponent
     } yield u
 
     val listed = subscribers.distinct.toSet
-    val existing = document.subscribers.toSet
+    val existing = Subscription.usersFor(document).toSet
     val remove = existing.diff(listed)
     val create = listed.diff(existing)
 
     for (u <- create)
     {
-      val subscription = Subscription.create
-      subscription.document(document)
-      subscription.user(u)
-      subscription.save
+      val subscription = new Subscription
+      subscription.documentId = document.id
+      subscription.userId = u.id
+      Subscription.dbTable.insert(subscription)
     }
 
-    for (u <- remove; s <- Subscription.find(By(Subscription.document, document), By(Subscription.user, u)))
-    {
-      s.delete_!
+    if (remove.size > 0) {
+      Subscription.dbTable.deleteWhere(s => (s.documentId === document.id) and (s.userId in remove.map(_.id)))
     }
   }
 

@@ -1,6 +1,5 @@
 package vvv.docreg.snippet
 
-import vvv.docreg.model._
 import net.liftweb._
 import mapper.{Like, MappedTimeZone}
 import util._
@@ -11,9 +10,8 @@ import js._
 import scala.xml.{NodeSeq, Text}
 import vvv.docreg.util.{Environment, StringUtil}
 import vvv.docreg.util.StringUtil._
-
-
-
+import org.squeryl.PrimitiveTypeMode._
+import vvv.docreg.model._
 
 class UserSnippet extends Loggable {
   val signInHint = ""
@@ -48,11 +46,13 @@ class UserSnippet extends Loggable {
   }
 
   private def tryLogin(username: String) {
-    User.forUsernameOrCreate(username) match {
-      case Full(u) if u.active.is =>
-        doSignIn(u)
-      case _ =>
-        loginError(<p><strong>Failed</strong>{" to login as user '" + username + User.domain + "'"}</p>)
+    inTransaction{
+      User.forUsernameOrCreate(username) match {
+        case Full(u) if u.active =>
+          doSignIn(u)
+        case _ =>
+          loginError(<p><strong>Failed</strong>{" to login as user '" + username + User.domain + "'"}</p>)
+      }
     }
   }
 
@@ -92,11 +92,11 @@ class UserSnippet extends Loggable {
 
   def profile(in: NodeSeq): NodeSeq = {
     val user = S.param("user") match {
-      case Full(uname) => User.find(Like(User.username, uname + "@%"))
-      case _ => User.loggedInUser.is
+      case Full(uname) => User.forUsername(uname + "@%")
+      case _ => User.loggedInUser.is.toOption
     }
     user match {
-      case Full(u) => {
+      case Some(u) => {
         profileTransform(u).apply(in)
       }
       case _ => {
@@ -111,10 +111,10 @@ class UserSnippet extends Loggable {
     ".profile-username" #> u.username &
     ".profile-email" #> <a href={"mailto:" + u.email}>{u.email} <i class="icon-envelope"></i></a> &
     ".profile-local-server" #> Server.description(u.localServer) &
-    ".profile-time-zone" #> u.timeZone.is &
+    ".profile-time-zone" #> u.timeZone &
     ".profile-activity" #> <span>{ u.activity() } submits in { u.impact() } documents</span> &
     ".profile-preferences [href]" #> u.preferences() &
-    ".subscription-item" #> u.subscriptions.sortWith(Document.sort).map { s =>
+    ".subscription-item" #> Subscription.documentsForUser(u).map { s =>
       "li *" #> s.info()
     } &
     ".history-item" #> u.history.map { h =>
@@ -134,17 +134,17 @@ class UserSnippet extends Loggable {
 
   def preferences = {
     val user = S.param("user") match {
-      case Full(uname) => User.find(Like(User.username, uname + "@%"))
-      case _ => User.loggedInUser.is
+      case Full(uname) => User.forUsername(uname + "@%")
+      case _ => User.loggedInUser.is.toOption
     }
     user match {
-      case Full(u) if (User.loggedInUser.is.exists(_ == u)) => {
-        var selectedServer = u.localServer.is
+      case Some(u) if (User.loggedInUser.is.exists(_ == u)) => {
+        var selectedServer = u.localServer
         var selectedTime = ""
         ClearClearable &
         ".profile-name" #> u.displayName &
         ".local-server" #> SHtml.select(Server.select.toSeq, Full(selectedServer), selectedServer = _) &
-        ".local-time" #> SHtml.select(MappedTimeZone.timeZoneList, Option(u.timeZone.is), selectedTime = _) &
+        ".local-time" #> SHtml.select(MappedTimeZone.timeZoneList, Option(u.timeZone), selectedTime = _) &
         "#submit" #> SHtml.onSubmit( x => savePreferences(u, selectedServer, selectedTime) ) &
         "#cancel" #> SHtml.onSubmit( x => S.redirectTo(u.profile()) )
       }
@@ -156,8 +156,13 @@ class UserSnippet extends Loggable {
   }
 
   def savePreferences(u: User, server: String, timeZone: String) {
-    u.reload.localServer(server).save
-    u.timeZone(timeZone).save
+    inTransaction{
+      User.dbTable.update(x =>
+        where(x.id === u.id)
+        set(x.localServer := server, x.timeZone := timeZone)
+      )
+    }
+
     User.reloadLoggedInUser()
     S.session.foreach(_.destroySession())
     S.redirectTo(u.profile)
@@ -167,7 +172,7 @@ class UserSnippet extends Loggable {
     User.loggedInUser.is match {
       case Full(u) => {
         ".history-user [href]" #> u.profile() &
-        ".history-item" #> u.reload.history().take(10).map { d =>
+        ".history-item" #> u.history().take(10).map { d =>
           "li *" #> d.info()
         }
       }
@@ -181,7 +186,7 @@ class UserSnippet extends Loggable {
     User.loggedInUser.is match {
       case Full(u) => {
         ".editing-user [href]" #> u.profile() &
-        ".editing-item" #> u.reload.editing().map { d =>
+        ".editing-item" #> u.editing().map { d =>
           "li *" #> d.info()
         }
       }
@@ -193,17 +198,20 @@ class UserSnippet extends Loggable {
 
   def subscriptions = {
     User.loggedInUser.is match {
-      case Full(u) => ".subscription:item" #> bindSubscriptions(u.reload) _
+      case Full(u) => ".subscription:item" #> bindSubscriptions(u.reload)
       case _ => ".subscription:item" #> NodeSeq.Empty
     }
   }
 
-  def bindSubscriptions(user: vvv.docreg.model.User)(in: NodeSeq): NodeSeq = {
-    user.subscriptions.sortWith(Document.sort).flatMap( d =>
-      (
-        ".item:title" #> d.fullTitle &
-        "a [href]" #> d.infoLink
-      ).apply(in)
-    )
+  def bindSubscriptions(user: Option[vvv.docreg.model.User]) = {
+    user match {
+      case Some(u) => {
+        Subscription.documentsForUser(u).map(d =>
+          ".item:title" #> d.fullTitle &
+          "a [href]" #> d.infoLink
+        )
+      }
+      case _ => List(ClearClearable)
+    }
   }
 }

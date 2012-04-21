@@ -1,4 +1,5 @@
 db.driver=org.h2.Driver
+db.adapter=org.squeryl.adapters.H2Adapter
 db.url=jdbc:h2:docreg-web
 db.user=
 db.password=

@@ -1,43 +1,49 @@
 package vvv.docreg.model
 
-import _root_.net.liftweb.mapper._
 import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
 import scala.xml.Text
 import vvv.docreg.util.DatePresentation
+import vvv.docreg.db.{DbSchema, DbObject}
+import java.sql.Timestamp
+import org.squeryl.PrimitiveTypeMode._
+import org.squeryl.Query
 
-class Approval extends LongKeyedMapper[Approval] with IdPK {
-  def getSingleton = Approval
-  object revision extends MappedLongForeignKey(this, Revision)
-  object by extends MappedLongForeignKey(this, User)
-  object state extends MappedEnum(this, ApprovalState)
-  object date extends MappedDateTime(this) {
-    override def asHtml = Text(if (is != null) DatePresentation.formatDateTime(is) else "?")
+class Approval extends DbObject[Approval] {
+  def dbTable = DbSchema.approvals
+  var revisionId: Long = 0
+  var userId: Long = 0
+  var state: ApprovalState.Value = ApprovalState.pending
+  var date: Timestamp = new Timestamp(0)
+  var comment: String = ""
+
+  def user(): Option[User] = {
+    inTransaction( DbSchema.usersToApprovals.right(this).headOption )
   }
-  object comment extends MappedString(this, 128)
+
+  def dateAsDT(): String = DatePresentation.formatDateTime(date)
 }
 
-object Approval extends Approval with LongKeyedMetaMapper[Approval] with Loggable {
-  override def fieldOrder = List(revision, state, by, date, comment)
-  override def dbIndexes = UniqueIndex(revision, by) :: super.dbIndexes
-  
-  def forRevision(r: Revision): List[Approval] = 
+object Approval extends Approval with Loggable {
+  def forRevision(r: Revision): List[Approval] =
   {
-    findAll(By(Approval.revision, r))
+    inTransaction( dbTable.where(a => a.revisionId === r.id).toList )
   }
   
-  def forRevisionBy(r: Revision, by: User): Box[Approval] = 
+  def forRevisionBy(r: Revision, by: User): Option[Approval] =
   {
-    findAll(By(Approval.revision, r), By(Approval.by, by)) match {
-      case Nil => Empty
-      case a :: Nil => Full(a)
-      case a :: as => logger.warn("Found duplicate approvals for " + r + " by " + by) ; Full(a)
-    }
+    inTransaction( dbTable.where(a => a.revisionId === r.id and a.userId === by.id).headOption )
   }
-  
-  def forDocument(d: Document): List[Approval] =
+
+  def forDocument(document: Document): List[Approval] =
   {
-    findAll(In(Approval.revision, Revision.id, In(Revision.document, Document.id, By(Document.id,  d.id.is))))
+    inTransaction(
+      join(Document.dbTable, Revision.dbTable, Approval.dbTable)( (d,r,a) =>
+        where(d.id === document.id)
+        select(a)
+        on(d.id === r.documentId, r.id === a.revisionId)
+      ).toList
+    )
   }
 }
 

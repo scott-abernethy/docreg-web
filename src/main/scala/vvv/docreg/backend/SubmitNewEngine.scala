@@ -81,7 +81,9 @@ object SubmitNewEngine
 {
   def main(args: Array[String])
   {
-    val u = User.create.name("Scott Abernethy").username("sabernethy@GNET.global.vpn")
+    val u = new User
+    u.name = "Scott Abernethy"
+    u.username = "sabernethy@GNET.global.vpn"
 
     val agent = new DaemonAgentImpl()
     agent.start()

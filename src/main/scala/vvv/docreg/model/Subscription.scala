@@ -2,41 +2,66 @@ package vvv.docreg.model
 
 import net.liftweb._
 import net.liftweb.common._
-import mapper._
+import vvv.docreg.db.{DbObject, DbSchema}
+import org.squeryl.PrimitiveTypeMode._
 
-object Subscription extends Subscription with LongKeyedMetaMapper[Subscription] {
+class Subscription extends DbObject[Subscription] {
+  def dbTable = DbSchema.subscriptions
+  var documentId: Long = 0
+  var userId: Long = 0
+}
 
-  def subscribe(d: Document, u: User) = this.create.document(d).user(u).save
+object Subscription extends Subscription {
 
-  def unsubscribe(d: Document, u: User) = {
-    forDocumentBy(d, u) match {
-      case Full(sub) =>
-        sub.delete_!
-        sub.save()
-      case _ =>
-        Nil
+  def subscribe(d: Document, u: User) {
+    val s = new Subscription
+    s.documentId = d.id
+    s.userId = u.id
+    inTransaction( dbTable.insert(s) )
+  }
+
+  def unsubscribe(d: Document, u: User) {
+    inTransaction( dbTable.deleteWhere(s => s.documentId === d.id and s.userId === u.id) )
+  }
+
+//  def forDocumentBy(document: Document, user: User): Box[Subscription] = {
+//    val ss = Subscription.findAll(By(Subscription.document, document.id), By(Subscription.user, user))
+//    if (ss nonEmpty) Full(ss head) else Empty
+//  }
+//
+//  def forDocument(document: Document): List[Subscription] = {
+//    val ss = Subscription.findAll(By(Subscription.document, document.id))
+//    if (ss nonEmpty) ss else List.empty
+//  }
+//
+//  def forUser(user: User): List[Subscription] = {
+//    val ss = Subscription.findAll(By(Subscription.user, user))
+//    if (ss nonEmpty) ss else List.empty
+//  }
+
+  def documentsForUser(user: User): List[Document] = {
+    inTransaction{
+      join(Subscription.dbTable, Document.dbTable)( (s,d) =>
+        where(s.userId === user.id)
+        select(d)
+        orderBy(d.key asc)
+        on(s.documentId === d.id)
+      ).toList
     }
   }
 
-  def forDocumentBy(document: Document, user: User): Box[Subscription] = {
-    val ss = Subscription.findAll(By(Subscription.document, document.id), By(Subscription.user, user))
-    if (ss nonEmpty) Full(ss head) else Empty
+  def usersFor(document: Document): List[User] = {
+    inTransaction{
+      join(Subscription.dbTable, User.dbTable)( (s,u) =>
+        where(s.documentId === document.id)
+          select(u)
+          orderBy(u.email asc)
+          on(s.userId === u.id)
+      ).toList
+    }
   }
 
   def forDocument(document: Document): List[Subscription] = {
-    val ss = Subscription.findAll(By(Subscription.document, document.id))
-    if (ss nonEmpty) ss else List.empty
+    inTransaction( from(dbTable)(s => where(s.documentId === document.id) select(s)).toList )
   }
-
-  def forUser(user: User): List[Subscription] = {
-    val ss = Subscription.findAll(By(Subscription.user, user))
-    if (ss nonEmpty) ss else List.empty
-  }
-
-}
-
-class Subscription extends LongKeyedMapper[Subscription] with IdPK {
-  def getSingleton = Subscription
-  object document extends MappedLongForeignKey(this, Document)
-  object user extends MappedLongForeignKey(this, User)
 }

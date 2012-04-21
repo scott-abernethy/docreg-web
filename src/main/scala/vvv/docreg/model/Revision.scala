@@ -1,81 +1,50 @@
 package vvv.docreg.model
 
-import _root_.net.liftweb.mapper._
 import _root_.net.liftweb.common._
 import java.text._
 import java.util.TimeZone
 import scala.xml.{NodeSeq, Text}
 import vvv.docreg.util.DatePresentation
 import net.liftweb.util._
+import java.sql.Timestamp
+import vvv.docreg.db.{DbSchema, DbObject}
+import org.squeryl.PrimitiveTypeMode._
 
+class Revision extends DbObject[Revision] {
+  def dbTable = DbSchema.revisions
+  var documentId: Long = 0
+  var version: Long = 0
+  var filename: String = ""
+  var authorId: Long = 0
+  var date: Timestamp = new Timestamp(0)
+  var comment: String = ""
 
-class Revision extends LongKeyedMapper[Revision] with IdPK {
-  def getSingleton = Revision
-
-  object document extends MappedLongForeignKey(this, Document) {
-    override def dbIndexed_? = true
-  }
-  object version extends MappedLong(this)
-  object filename extends MappedString(this, 200)
-  object author extends MappedLongForeignKey(this, User)
-  object date extends MappedDateTime(this) {
-    override def asHtml = Text(if (is != null) DatePresentation.formatDateTime(is) else "?")
-  }
-  object comment extends MappedTextarea(this, 512)
-
-  def when: String = DatePresentation.short(date.is)
-
-  def dateOnly(): String =
-  {
-    DatePresentation.formatDay(date.is)
+  def document(): Option[Document] = {
+    inTransaction( DbSchema.documentsToRevisions.right(this).headOption )
   }
 
-  def number: String = {
-    (document.obj.map(_.key.is) openOr "?") + "-" + version.is
+  def author(): Option[User] = {
+    inTransaction( DbSchema.usersToRevisions.right(this).headOption )
   }
 
-  def info: String = {
-    "/" + number
-  }
+  def when() = DatePresentation.short(date)
 
-  def link: String = {
-    info + "/download"
-  }
+  def dateOnly() = DatePresentation.formatDay(date)
 
-  def downloadHref: String = {
-    link
-  }
-
-  def approveHref: String = {
-    info + "/approve"
-  }
-
-  def fullTitle: String = (document.obj.map(_.key.is) openOr "?") + ": " + (document.obj.map(_.title.is) openOr "?")
-
-  def authorLink: NodeSeq = {
-    author.obj match {
-      case Full(a) => a.profileLink
-      case _ => Text("?")
-    }
-  }
+  def dateAsDT(): String = DatePresentation.formatDateTime(date)
 }
 
-object Revision extends Revision with LongKeyedMetaMapper[Revision] {
-  override def dbIndexes = UniqueIndex(document, version) :: super.dbIndexes
-  override def fieldOrder = List(version, filename, author, date, comment)
-
+object Revision extends Revision {
   def forDocument(document: Document): List[Revision] = forDocument(document.id)
 
   def forDocument(documentId: Long): List[Revision] =
   {
-    Revision.findAll(By(Revision.document, documentId), OrderBy(Revision.version, Descending))
+    inTransaction( from(dbTable)(r => where(r.documentId === documentId) select(r) orderBy(r.version desc)).toList )
   }
 
-  def forDocument(document: Document, version: Long): Box[Revision] =
+  def forDocument(document: Document, version: Long): Option[Revision] =
   {
-    // Use find instead?
-    val rs = Revision.findAll(By(Revision.document, document.id), By(Revision.version, version))
-    if (rs nonEmpty) Full(rs head) else Empty
+    inTransaction( from(dbTable)(r => where(r.documentId === document.id and r.version === version) select(r)).headOption )
   }
 }
 
@@ -83,20 +52,21 @@ object FilteredRevision {
   import vvv.docreg.helper.ProjectSelection
   def findRecent(limit: Long): List[Revision] = {
     if (ProjectSelection.showAll.is) {
-      Revision.findAll(OrderBy(Revision.date, Descending), MaxRows(limit))
+      inTransaction( from(Revision.dbTable)(r => select(r) orderBy(r.date desc)).page(0, limit.toInt).toList )
     } else {
       val checked = ProjectSelection.projects.is.toList
-      Revision.findAll(In(Revision.document, Document.id, In(Document.project, Project.id, ByList(Project.id, checked map ( _.id.is )))), OrderBy(Revision.date, Descending), MaxRows(limit))
+      inTransaction(
+        join(Revision.dbTable, Document.dbTable)( (r, d) =>
+          where(d.projectId in checked.map(_.id))
+          select(r)
+          orderBy(r.date desc)
+          on(r.documentId === d.id)
+        ).page(0, limit.toInt).toList
+      )
     }
   }
 }
 
 object EmptyRevision extends Revision {
-  def EmptyRevision {
-    version(0)
-    date(new java.util.Date(0))
-    author(UserLookup.unknownUser)
-    filename("")
-    comment("")
-  }
+  authorId = UserLookup.unknownUser.map(_.id).getOrElse(0)
 }

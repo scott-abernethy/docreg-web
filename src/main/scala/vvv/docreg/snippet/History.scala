@@ -6,6 +6,8 @@ import vvv.docreg.model.Revision
 import net.liftweb.mapper._
 import java.util.{Calendar}
 import net.liftweb.common.{Empty, Full}
+import org.squeryl.PrimitiveTypeMode._
+import java.sql.Timestamp
 
 case class Sample(index: Int, count: Int, label: String)
 {
@@ -94,12 +96,15 @@ object MonthHistory
     cal.set(Calendar.HOUR_OF_DAY, 1)
     cal.getTime
     cal.add(Calendar.DAY_OF_YEAR, -30)
-    val startDate = cal.getTime
+    val startDate = new Timestamp(cal.getTimeInMillis)
 
-    val rs = Revision.findAll(
-      BySql("DATE_C >= ?", IHaveValidatedThisSQL("me", "now"), startDate),
-      OrderBy(Revision.date, Ascending)
-    )
+    val rs = inTransaction{
+      from(Revision.dbTable)(r =>
+        where(r.date >= startDate)
+        select(r)
+        orderBy(r.date asc)
+      ).toList
+    }
 
     analyse(Calendar.getInstance, rs).map(s => (s.index.toDouble, s.count.toDouble))
   }
@@ -145,12 +150,15 @@ object YearHistory
     cal.set(Calendar.DAY_OF_MONTH, 1)
     cal.getTime
     cal.add(Calendar.MONTH,-11)
-    val startDate = cal.getTime
+    val startDate = new Timestamp(cal.getTimeInMillis)
 
-    val rs = Revision.findAll(
-      BySql("DATE_C >= ?", IHaveValidatedThisSQL("me", "now"), startDate),
-      OrderBy(Revision.date, Ascending)
-    )
+    val rs = inTransaction{
+      from(Revision.dbTable)(r =>
+        where(r.date >= startDate)
+        select(r)
+        orderBy(r.date asc)
+      ).toList
+    }
 
     analyse(Calendar.getInstance, rs).map(s => (s.index.toDouble, s.count.toDouble))
   }
@@ -192,12 +200,15 @@ object LongTermHistory
     cal.set(Calendar.DAY_OF_YEAR, 1)
     cal.getTime
     cal.add(Calendar.YEAR,-15)
-    val startDate = cal.getTime
+    val startDate = new Timestamp(cal.getTimeInMillis)
 
-    val rs = Revision.findAll(
-      BySql("DATE_C >= ?", IHaveValidatedThisSQL("me", "now"), startDate),
-      OrderBy(Revision.date, Ascending)
-    )
+    val rs = inTransaction{
+      from(Revision.dbTable)(r =>
+        where(r.date >= startDate)
+        select(r)
+        orderBy(r.date asc)
+      ).toList
+    }
 
     analyse(Calendar.getInstance, rs).map(s => (s.index.toDouble, s.count.toDouble))
   }

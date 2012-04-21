@@ -9,7 +9,6 @@ import common._
 import http._
 import sitemap._
 import Loc._
-import mapper._
 
 import _root_.vvv.docreg.model._
 import _root_.vvv.docreg.util._
@@ -18,7 +17,7 @@ import vvv.docreg.db.DbVendor
 import net.liftweb.widgets.flot._
 import actors.Actor
 import vvv.docreg.agent.{ChangePoller, DaemonAgentImpl, DaemonAgentComponentImpl}
-
+import org.squeryl.PrimitiveTypeMode._
 
 /**
  * A class that's instantiated early and run.  It allows the application
@@ -78,8 +77,12 @@ class Boot
       new Html5Properties(r.userAgent))
 
     // Make a transaction span the whole HTTP request
-    // todo
-    S.addAround(DB.buildLoanWrapper)
+    //S.addAround(DB.buildLoanWrapper)
+    S.addAround(new LoanWrapper{
+      override def apply[T](f: => T): T = {
+        inTransaction(f)
+      }
+    })
 
     LiftRules.ajaxStart = Full( () => LiftRules.jsArtifacts.show("loading").cmd )
     LiftRules.ajaxEnd = Full( () => LiftRules.jsArtifacts.hide("loading").cmd )
@@ -145,5 +148,8 @@ class Boot
     env.start()
     Environment.env = env
     LiftRules.unloadHooks.append(() => env.exit())
+
+    LiftRules.unloadHooks.append(() => DbVendor.close())
+
   }
 }

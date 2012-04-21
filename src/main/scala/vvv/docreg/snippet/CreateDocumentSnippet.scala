@@ -13,14 +13,14 @@ class CreateDocumentSnippet extends Loggable
   private val projects = Project.findAll()
   private object name extends RequestVar("")
   private object nameError extends RequestVar[Option[String]](None)
-  private object project extends RequestVar(projects.headOption.map(_.name.is).getOrElse("???"))
+  private object project extends RequestVar(projects.headOption.map(_.name).getOrElse("???"))
   private object file extends RequestVar[Option[FileParamHolder]](None)
   private object fileError extends RequestVar[Option[String]](None)
   private object comment extends RequestVar("")
 
   def render =
   {
-    val projectList = projects.map(i => (i.name.is, i.name.is))
+    val projectList = projects.map(i => (i.name, i.name))
     ".submission-project" #> SHtml.select(projectList, Option(project.is), project(_)) &
     ".submission-name" #> SHtml.text(name.is, name(_), "maxlength" -> "110") &
     "#name-group [class+]" #> nameError.is.map(_ => "error").getOrElse("") &

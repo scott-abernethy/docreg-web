@@ -1,35 +1,44 @@
 package vvv.docreg.model
 
-import _root_.net.liftweb.mapper._
 import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
+import vvv.docreg.db.{DbSchema, DbObject}
+import net.liftweb.mapper.{OrderBy, By}
+import org.squeryl.PrimitiveTypeMode._
 
-class UserProject extends LongKeyedMapper[UserProject] with IdPK {
-  def getSingleton = UserProject
-
-  object user extends MappedLongForeignKey(this, User) {
-    override def dbIndexed_? = true
-  }
-  object project extends MappedLongForeignKey(this, Project) {
-    override def dbIndexed_? = true
-  }
-  object selected extends MappedBoolean(this)
+class UserProject extends DbObject[UserProject] {
+  def dbTable = DbSchema.userProjects
+  var userId: Long = 0
+  var projectId: Long = 0
+  var selected: Boolean = true
 }
 
-object UserProject extends UserProject with LongKeyedMetaMapper[UserProject] {
-  override def dbIndexes = UniqueIndex(user, project) :: super.dbIndexes
-
+object UserProject extends UserProject {
   def userSelected(user: User): Seq[Project] = {
-    for {
-      userProject <- findAll(By(UserProject.user, user.id), By(UserProject.selected, true))
-      project <- userProject.project.obj
-    } yield project 
+    inTransaction(
+      join(UserProject.dbTable, Project.dbTable)( (up,p) =>
+        where(up.userId === user.id and up.selected === true)
+        select(p)
+        on(up.projectId === p.id)
+      ).toSeq
+    )
   }
 
   def set(user: User, project: Project, s: Boolean) {
-    UserProject.find(By(UserProject.user, user), By(UserProject.project, project)) match {
-      case Full(up) => up.selected(s).save
-      case _ => UserProject.create.user(user).project(project).selected(s).save
+    inTransaction {
+      UserProject.dbTable.where(up => up.userId === user.id and up.projectId === project.id).headOption match {
+        case Some(x) => {
+          x.selected = s
+          dbTable.update(x)
+        }
+        case _ => {
+          val x = new UserProject
+          x.userId = user.id
+          x.projectId = project.id
+          x.selected = s
+          dbTable.insert(x)
+        }
+      }
     }
   }
 
@@ -39,12 +48,14 @@ object UserProject extends UserProject with LongKeyedMetaMapper[UserProject] {
         Nil
       }
       case Some(user) => {
-        val selectedProjects = userSelected(user).toSet
-        for {
-          project <- Project.findAll(OrderBy(Project.name, Ascending))
-        } yield (project, selectedProjects.contains(project))
+        inTransaction {
+          join(Project.dbTable, UserProject.dbTable.leftOuter)( (p, up) =>
+            where(up.map(_.userId) === Some(user.id))
+              select(p, up.map(_.selected).getOrElse(false))
+              on(p.id === up.map(_.projectId))
+          ).toList
+        }
       }
     }
-
   }
 }

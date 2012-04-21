@@ -8,16 +8,16 @@ import net.liftweb.http._
 
 class ProjectSnippet extends Loggable {
   val key = S.param("key") openOr ""
-  val project: Box[Project] = try {
-    Project.find(key.toLong)
+  val project: Option[Project] = try {
+    Project.lookup(key.toLong)
   } catch {
     case e:NumberFormatException => None
   }
 
   def info(in: NodeSeq): NodeSeq = {
     project match {
-      case Full(p) => {
-        val documents: List[Document] = p.documents()
+      case Some(p) => {
+        val documents: List[Document] = p.documents
         val contributors: List[User] = p.contributors()
         val t = ".p-name" #> p.name &
           ".d-count" #> documents.size &

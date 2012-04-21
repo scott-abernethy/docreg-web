@@ -3,6 +3,8 @@ package vvv.docreg.backend
 import vvv.docreg.agent.ApprovalInfo
 import vvv.docreg.model._
 import net.liftweb.common.{Box, Loggable, Full}
+import java.sql.Timestamp
+import org.squeryl.PrimitiveTypeMode._
 
 /*
   private def applyApprovals(document: Document, approvals: Iterable[AgentApproval]) = approvals foreach { a =>
@@ -39,24 +41,27 @@ trait ApprovalReconcile extends Loggable
         // The agent returns a single approval item per revision/user pair, so no need to cull.
         Revision.forDocument(document, version.toLong) match 
         {
-          case Full(revision) =>
+          case Some(revision) =>
           {
             val user = userLookup.lookup(None, Some(email), Some(name), "approval " + i + " on " + document) openOr null
             val approval = Approval.forRevisionBy(revision, user) match {
-              case Full(a) => 
+              case Some(a) =>
               {
                 existing -= a
                 a
               }
               case _ =>
               {
-                Approval.create.revision(revision).by(user)
+                val a = new Approval
+                a.revisionId = revision.id
+                a.userId = user.id
+                a
               }
             } 
-            approval.state(ApprovalState.parse(status))
-            approval.date(date)
-            approval.comment(comment)
-            approval.save
+            approval.state = ApprovalState.parse(status)
+            approval.date = new Timestamp(date.getTime)
+            approval.comment = comment
+            Approval.dbTable.insertOrUpdate(approval)
           }
           case _ =>
           {
@@ -68,9 +73,9 @@ trait ApprovalReconcile extends Loggable
 
     // Remove left overs
     // TODO perhaps this is a bit harsh? Replace with invalid db flag? Either that or only reconcile when file successfully received? This will probably remove the approval that the user just added.
-    existing.foreach{ invalid =>
-      logger.warn("Purging invalid approval " + invalid)
-      invalid.delete_!
+    if (existing.size > 0) {
+      logger.warn("Purging invalid approvals " + existing)
+      Approval.dbTable.deleteWhere(a => a.id in existing.map(_.id))
     }
   }
 }

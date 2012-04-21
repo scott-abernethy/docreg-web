@@ -27,7 +27,7 @@ trait EnvironmentImpl extends Environment with BackendComponentImpl with Documen
   def exit()
   {
     documentServer ! 'Die
-    backend ! 'Die
+    backend !? (5000L, 'Die)
     poller ! 'Die
     daemonAgent ! 'Die
   }

@@ -23,7 +23,7 @@ class SubmitEngine(agent: DaemonAgent, target: String, clientHost: String, clien
           // todo pass in new user title rather than setting d's title. similar to Create below
           // todo check the fields, including comment which should default to "[no description]"? Check default for approval etc also.
           cachedRequest = msg
-          val request = RegisterRequest(userFileName, projectName, if (comment.length() < 1) "[no description]" else comment, document.access.is, user.displayName, user.shortUsername(), clientHost, clientVersion)
+          val request = RegisterRequest(userFileName, projectName, if (comment.length() < 1) "[no description]" else comment, document.access, user.displayName, user.shortUsername(), clientHost, clientVersion)
           logger.info("SubmitEngine register " + request)
           agent ! RequestPackage(Actor.self, target, request)
         }

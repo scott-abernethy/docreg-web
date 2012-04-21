@@ -1,4 +1,5 @@
 db.driver=com.mysql.jdbc.Driver
+db.adapter=org.squeryl.adapters.MySQLAdapter
 db.url=jdbc:mysql://localhost/docregweb
 db.user=root
 db.password=
