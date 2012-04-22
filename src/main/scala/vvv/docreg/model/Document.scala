@@ -101,7 +101,7 @@ class Document extends DbObject[Document] {
   }
 
   def submitHref(): String = {
-    infoHref() + "/approve"
+    infoHref() + "/submit"
   }
 
   def editHref(): String = {
