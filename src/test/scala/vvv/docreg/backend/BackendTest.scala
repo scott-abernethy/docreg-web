@@ -3,12 +3,14 @@ package vvv.docreg.backend
 import org.specs._
 import org.specs.matcher._
 import org.specs.specification._
-import actors.Actor
+import scala.actors.Actor
 import org.specs.mock.Mockito
 import vvv.docreg.db.TestDbVendor
 import com.hstx.docregsx.{TabLine, Subscriber => AgentSubscriber}
 import vvv.docreg.model.{Subscription, UserLookup, User, Document}
 import vvv.docreg.agent.DaemonAgentComponent
+import scala._
+import org.squeryl.PrimitiveTypeMode._
 
 object BackendTest extends Specification with Mockito
 {
@@ -25,53 +27,93 @@ object BackendTest extends Specification with Mockito
     "not add subscriptions when no agent subscriptions exist" >>
     {
       TestDbVendor.initAndClean()
+      transaction{
       val (p1, _, _) = TestDbVendor.createProjects
-      val d: Document = Document.create.key("1234").project(p1).title("FooBarBaz")
-      d.save
+      val d: Document = new Document
+      d.number = ("1234")
+      d.projectId = (p1.id)
+      d.title = ("FooBarBaz")
+      Document.dbTable.insert(d)
 
       x.backend.updateSubscriptions(d, Nil)
 
-      d.reload.subscribers must haveSize(0)
+      Subscription.forDocument(d) must haveSize(0)
+      }
     }
 
     "add subscriptions for a agent subscribers, ignoring duplicates" >>
     {
       TestDbVendor.initAndClean()
+      transaction{
       val (p1, _, _) = TestDbVendor.createProjects
       val (u1, u2) = TestDbVendor.createUsers
-      val d: Document = Document.create.key("1234").project(p1).title("FooBarBaz")
-      d.save
+      val d: Document = new Document
+      d.number = ("1234")
+      d.projectId = (p1.id)
+      d.title = ("FooBarBaz")
+      Document.dbTable.insert(d)
 
       val subsA = new AgentSubscriber(new TabLine("Asutherl\talan.sutherland@hstx.com\talways"))
       val subsB = new AgentSubscriber(new TabLine("Sabernethy\tscott_abernethy@stratexnet.com\talways"))
       val subsC = new AgentSubscriber(new TabLine("scott.abernethy@aviatnet.com\tscott.abernethy@Aviatnet.com\talways"))
 
-      UserLookup.create.username("Asutherl").email("alan.sutherland@hstx.com").name("").user(u1).save
-      UserLookup.create.username("Sabernethy").email("scott_abernethy@stratexnet.com").name("").user(u2).save
-      UserLookup.create.username("scott.abernethy@aviatnet.com").email("scott.abernethy@Aviatnet.com").name("").user(u2).save
+      val ul1 = new UserLookup
+      ul1.username = Some("Asutherl")
+      ul1.email = Some("alan.sutherland@hstx.com")
+      ul1.name = None
+      ul1.userId = (u1.id)
+      UserLookup.dbTable.insert(ul1)
+      val ul2 = new UserLookup
+      ul2.username = Some("Sabernethy")
+      ul2.email = Some("scott_abernethy@stratexnet.com")
+      ul2.name = None
+      ul2.userId = (u2.id)
+      UserLookup.dbTable.insert(ul2)
+      val ul3 = new UserLookup
+      ul3.username = Some("scott.abernethy@aviatnet.com")
+      ul3.email = Some("scott.abernethy@Aviatnet.com")
+      ul3.name = None
+      ul3.userId = (u2.id)
+      UserLookup.dbTable.insert(ul3)
 
       x.backend.updateSubscriptions(d, subsA :: subsB :: subsC :: Nil)
 
-      d.reload.subscribers must haveTheSameElementsAs(u1 :: u2 :: Nil)
+      Subscription.usersFor(d) must haveTheSameElementsAs(u1 :: u2 :: Nil)
+      }
     }
 
     "not duplicate existing subscriptions, and purge existing that a no longer listed" >>
     {
       TestDbVendor.initAndClean()
+      transaction{
       val (p1, _, _) = TestDbVendor.createProjects
       val (u1, u2) = TestDbVendor.createUsers
-      val d: Document = Document.create.key("1234").project(p1).title("FooBarBaz")
-      d.save
+      val d: Document = new Document
+      d.number = ("1234")
+      d.projectId = (p1.id)
+      d.title = ("FooBarBaz")
+      Document.dbTable.insert(d)
 
       val subsA = new AgentSubscriber(new TabLine("Asutherl\talan.sutherland@hstx.com\talways"))
-      UserLookup.create.username("Asutherl").email("alan.sutherland@hstx.com").name("").user(u1).save
+      val ul = new UserLookup
+      ul.username = Some("Asutherl")
+      ul.email = Some("alan.sutherland@hstx.com")
+      ul.name = None
+      ul.userId = (u1.id)
+      UserLookup.dbTable.insert(ul)
 
-      Subscription.create.document(d).user(u1).save
-      Subscription.create.document(d).user(u2).save
+      val s1 = new Subscription
+      s1.documentId = (d.id)
+      s1.userId = (u1.id)
+      val s2 = new Subscription
+      s2.documentId = (d.id)
+      s2.userId = (u2.id)
+      Subscription.dbTable.insert(List(s1,s2))
 
       x.backend.updateSubscriptions(d, subsA :: Nil)
 
-      d.reload.subscribers must haveTheSameElementsAs(u1 :: Nil)
+      Subscription.usersFor(d) must haveTheSameElementsAs(u1 :: Nil)
+      }
     }
 
     "Do TabLines work?" >>

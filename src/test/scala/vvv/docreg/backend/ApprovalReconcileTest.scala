@@ -9,6 +9,8 @@ import java.util.Date
 import net.liftweb.common.{Full, Empty}
 import org.mockito.Matchers
 import vvv.docreg.model.{ApprovalState, UserLookupProvider, Approval, Document}
+import java.sql.Timestamp
+import org.squeryl.PrimitiveTypeMode._
 
 object ApprovalReconcileTest extends Specification with Mockito
 {
@@ -18,6 +20,7 @@ object ApprovalReconcileTest extends Specification with Mockito
     {
       TestDbVendor.initAndClean()
 
+      transaction{
       val (p1, _, _) = TestDbVendor.createProjects
       val (u1, u2) = TestDbVendor.createUsers
       val (d, r1, r2, r3) = TestDbVendor.createDocument(p1, u1)
@@ -32,13 +35,15 @@ object ApprovalReconcileTest extends Specification with Mockito
 
       x.reconcileApprovals(d, approvals)
       
-      Approval.findAll() must haveSize(0)
+      Approval.forDocument(d) must haveSize(0)
+      }
     }
 
     "Add new approvals" >>
     {
       TestDbVendor.initAndClean()
 
+      transaction{
       val (p1, _, _) = TestDbVendor.createProjects
       val (u1, u2) = TestDbVendor.createUsers
       val (d, r1, r2, r3) = TestDbVendor.createDocument(p1, u1)
@@ -50,27 +55,29 @@ object ApprovalReconcileTest extends Specification with Mockito
         val userLookup = lookup
       }
 
-      val date1 = new Date()
+      val date1 = new Timestamp(45677)
       
       val approvals: List[ApprovalInfo] = List(
-        ApprovalInfo(r1.filename.is, "aname", "aemail", "Approved", "Just because", date1, "1.2.3.4", "pcFoo", "me"),
-        ApprovalInfo(r3.filename.is, "aname", "aemail", "Not Approved", "Spelling is terrible!", date1, "1.2.3.4", "pcFoo", "me")
+        ApprovalInfo(r1.filename, "aname", "aemail", "Approved", "Just because", date1, "1.2.3.4", "pcFoo", "me"),
+        ApprovalInfo(r3.filename, "aname", "aemail", "Not Approved", "Spelling is terrible!", date1, "1.2.3.4", "pcFoo", "me")
       )
 
       x.reconcileApprovals(d, approvals)
 
-      Approval.findAll() must haveSize(2)
-      Approval.forRevision(r1).head.revision.obj must be_==(Full(r1))
-      Approval.forRevision(r1).head.by.obj must be_==(Full(u2))
-      Approval.forRevision(r1).head.comment.is must be_==("Just because")
-      Approval.forRevision(r1).head.state.is must be_==(ApprovalState.approved)
-      Approval.forRevision(r1).head.date.is must be_==(date1)
+      Approval.forDocument(d) must haveSize(2)
+      Approval.forRevision(r1).head.revisionId must be_==(Full(r1.id))
+      Approval.forRevision(r1).head.userId must be_==(Full(u2.id))
+      Approval.forRevision(r1).head.comment must be_==("Just because")
+      Approval.forRevision(r1).head.state must be_==(ApprovalState.approved)
+      Approval.forRevision(r1).head.date must be_==(date1)
+      }
     }
 
     "Do nothing for existing approvals" >>
     {
       TestDbVendor.initAndClean()
 
+      transaction{
       val (p1, _, _) = TestDbVendor.createProjects
       val (u1, u2) = TestDbVendor.createUsers
       val (d, r1, r2, r3) = TestDbVendor.createDocument(p1, u1)
@@ -82,24 +89,32 @@ object ApprovalReconcileTest extends Specification with Mockito
         val userLookup = lookup
       }
 
-      val date1 = new Date()
+      val date1 = new Timestamp(System.currentTimeMillis())
       
-      Approval.create.revision(r1).by(u2).state(ApprovalState.approved).comment("Just because").date(date1).save
+      val aa = new Approval
+      aa.revisionId = (r1.id)
+      aa.userId = (u2.id)
+      aa.state = (ApprovalState.approved)
+      aa.comment = ("Just because")
+      aa.date = (date1)
+      Approval.dbTable.insert(aa)
       
       val approvals: List[ApprovalInfo] = List(
-        ApprovalInfo(r1.filename.is, "aname", "aemail", "Approved", "Just because", date1, "1.2.3.4", "pcFoo", "me"),
-        ApprovalInfo(r3.filename.is, "aname", "aemail", "Not Approved", "Spelling is terrible!", date1, "1.2.3.4", "pcFoo", "me")
+        ApprovalInfo(r1.filename, "aname", "aemail", "Approved", "Just because", date1, "1.2.3.4", "pcFoo", "me"),
+        ApprovalInfo(r3.filename, "aname", "aemail", "Not Approved", "Spelling is terrible!", date1, "1.2.3.4", "pcFoo", "me")
       )
 
       x.reconcileApprovals(d, approvals)
 
-      Approval.findAll() must haveSize(2)
+      Approval.forDocument(d) must haveSize(2)
+      }
     }
 
     "Purge non-existant approvals" >>
     {
       TestDbVendor.initAndClean()
 
+      transaction{
       val (p1, _, _) = TestDbVendor.createProjects
       val (u1, u2) = TestDbVendor.createUsers
       val (d, r1, r2, r3) = TestDbVendor.createDocument(p1, u1)
@@ -111,13 +126,20 @@ object ApprovalReconcileTest extends Specification with Mockito
         val userLookup = lookup
       }
 
-      val date1 = new Date()
+      val date1 = new Timestamp(System.currentTimeMillis())
 
-      Approval.create.revision(r1).by(u2).state(ApprovalState.approved).comment("Just because").date(date1).save
+      val aa = new Approval
+      aa.revisionId = (r1.id)
+      aa.userId = (u2.id)
+      aa.state = (ApprovalState.approved)
+      aa.comment = ("Just because")
+      aa.date = (date1)
+      Approval.dbTable.insert(aa)
 
       x.reconcileApprovals(d, List.empty)
 
-      Approval.findAll() must haveSize(0)
+      Approval.forDocument(d) must haveSize(0)
+      }
     }
 
     "Correct updated approvals" >>
@@ -125,6 +147,7 @@ object ApprovalReconcileTest extends Specification with Mockito
       // Bug reported by Robert Brown 28.03.2012 where approval username changed from system to RB.
       TestDbVendor.initAndClean()
 
+      transaction{
       val (p1, _, _) = TestDbVendor.createProjects
       val (u1, u2) = TestDbVendor.createUsers
       val (d, r1, r2, r3) = TestDbVendor.createDocument(p1, u1)
@@ -138,18 +161,19 @@ object ApprovalReconcileTest extends Specification with Mockito
       }
 
       x.reconcileApprovals(d, List(
-        ApprovalInfo(r3.filename.is, "aname", "aemail", "Pending", "", new Date(), "1.2.3.4", "pcFoo", "me2")
+        ApprovalInfo(r3.filename, "aname", "aemail", "Pending", "", new Date(), "1.2.3.4", "pcFoo", "me2")
       ))
 
-      Approval.findAll() must haveSize(1)
-      Approval.forRevision(r3).head.by.obj must be_==(Full(u1))
+      Approval.forDocument(d) must haveSize(1)
+      Approval.forRevision(r3).headOption.map(_.userId) must beSome(u1.id)
 
       x.reconcileApprovals(d, List(
-        ApprovalInfo(r3.filename.is, "bname", "bemail", "Pending", "", new Date(), "1.2.3.4", "pcFoo", "me2")
+        ApprovalInfo(r3.filename, "bname", "bemail", "Pending", "", new Date(), "1.2.3.4", "pcFoo", "me2")
       ))
 
-      Approval.findAll() must haveSize(1)
-      Approval.forRevision(r3).head.by.obj must be_==(Full(u2))
+      Approval.forDocument(d) must haveSize(1)
+      Approval.forRevision(r3).head.userId must be_==(Full(u2.id))
+      }
     }
   }
 }

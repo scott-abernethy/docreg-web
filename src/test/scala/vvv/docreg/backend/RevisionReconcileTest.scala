@@ -5,9 +5,12 @@ import org.specs.mock.Mockito
 import vvv.docreg.db.TestDbVendor
 import vvv.docreg.agent.RevisionInfo
 import java.util.Date
-import vvv.docreg.model.{Subscription, Revision, Document, UserLookupProvider}
 import net.liftweb.common.Full
 import org.mockito.Matchers
+import vvv.docreg.model._
+import java.sql.Timestamp
+import vvv.docreg.util.T
+import org.squeryl.PrimitiveTypeMode._
 
 object RevisionReconcileTest extends Specification with Mockito
 {
@@ -16,10 +19,14 @@ object RevisionReconcileTest extends Specification with Mockito
     "Handle smite" >>
     {
       TestDbVendor.initAndClean()
+      transaction{
       val (p1, _, _) = TestDbVendor.createProjects
       val (u1, u2) = TestDbVendor.createUsers
       val (d, r1, r2, r3) = TestDbVendor.createDocument(p1, u1)
-      Subscription.create.document(d).user(u2).save
+      val s = new Subscription
+      s.documentId = (d.id)
+      s.userId = (u2.id)
+      Subscription.dbTable.insert(s)
 
       val lookup = mock[UserLookupProvider]
       val x = new RevisionReconcile {
@@ -27,7 +34,7 @@ object RevisionReconcileTest extends Specification with Mockito
       }
 
       Document.forKey("234").toOption must beSomething
-      Revision.forDocument(d.id.is) must haveSize(3)
+      Revision.forDocument(d) must haveSize(3)
       Subscription.forDocument(d) must haveSize(1)
 
       // Reconcile with same key, but the smite info
@@ -36,8 +43,9 @@ object RevisionReconcileTest extends Specification with Mockito
       result must containAll(ReconcileDocumentRemoved :: Nil)
 
       Document.forKey("234").toOption must beNone
-      Revision.forDocument(d.id.is) must beEmpty
+      Revision.forDocument(d) must beEmpty
       Subscription.forDocument(d) must beEmpty
+      }
     }
 
     "Smite if there are Nil revisions?" >>
@@ -48,10 +56,14 @@ object RevisionReconcileTest extends Specification with Mockito
     "Remove missing revisions" >>
     {
       TestDbVendor.initAndClean()
+      transaction{
       val (p1, _, _) = TestDbVendor.createProjects
       val (u1, u2) = TestDbVendor.createUsers
       val (d, r1, r2, r3) = TestDbVendor.createDocument(p1, u1)
-      Subscription.create.document(d).user(u2).save
+      val s = new Subscription
+      s.documentId = (d.id)
+      s.userId = (u2.id)
+      Subscription.dbTable.insert(s)
 
       val lookup = mock[UserLookupProvider]
       val x = new RevisionReconcile {
@@ -61,7 +73,7 @@ object RevisionReconcileTest extends Specification with Mockito
       lookup.lookup(Matchers.eq(Some("aaa")), Matchers.eq(None), Matchers.eq(Some("foo")), Matchers.anyString()) returns(Full(u1))
 
       Document.forKey("234").toOption must beSomething
-      Revision.forDocument(d.id.is) must haveSize(3)
+      Revision.forDocument(d) must haveSize(3)
       Subscription.forDocument(d) must haveSize(1)
 
       // only 2 revisions.
@@ -74,18 +86,24 @@ object RevisionReconcileTest extends Specification with Mockito
       result must containAll(ReconcileRevisionUpdated :: Nil)
 
       Document.forKey("234").toOption must beSomething
-      Revision.forDocument(d.id.is) must haveSize(2)
-      Revision.forDocument(d, 3).toOption must beNone
+      Revision.forDocument(d) must haveSize(2)
+      Revision.forDocument(d, 3) must beNone
       Subscription.forDocument(d) must haveSize(1)
+      }
     }
 
     "Add first revision" >>
     {
       TestDbVendor.initAndClean()
+      transaction{
       val (p1, p2, p3) = TestDbVendor.createProjects
       val (u1, u2) = TestDbVendor.createUsers
-      val d = Document.create.key("336").project(p2).title("Foo bar").access("Everyone")
-      d.save;
+      var d = new Document
+      d.number = ("336")
+      d.projectId = (p2.id)
+      d.title = ("Foo bar")
+      d.access = ("Everyone")
+      d = Document.dbTable.insert(d)
 
       val lookup = mock[UserLookupProvider]
       val x = new RevisionReconcile {
@@ -102,24 +120,37 @@ object RevisionReconcileTest extends Specification with Mockito
 
       Revision.forDocument(d) must haveSize(1)
       val r = Revision.forDocument(d, 1).getOrElse(null)
-      r.document.is must be_==(d.id.is)
-      r.version.is must be_==(1)
-      r.filename.is must be_==("0336-001-Foo bar.txt")
-      r.author.is must be_==(u1.id.is)
-      r.date.is must be_==(now)
-      r.comment.is must be_==("Initial version of foo bar baz doco.")
+      r.documentId must be_==(d.id)
+      r.version must be_==(1)
+      r.filename must be_==("0336-001-Foo bar.txt")
+      r.authorId must be_==(u1.id)
+      r.date must be_==(now)
+      r.comment must be_==("Initial version of foo bar baz doco.")
+      }
     }
 
     "Do nothing for existing revision that has not changed" >>
     {
       TestDbVendor.initAndClean()
+      transaction{
       val (p1, p2, p3) = TestDbVendor.createProjects
       val (u1, u2) = TestDbVendor.createUsers
-      val d = Document.create.key("336").project(p2).title("Foo bar").access("Everyone")
-      d.save;
+      var d = new Document
+      d.number = ("336")
+      d.projectId = (p2.id)
+      d.title = ("Foo bar")
+      d.access = ("Everyone")
+      d = Document.dbTable.insert(d)
 
-      val now: Date = new Date()
-      Revision.create.document(d).version(1).filename("0336-001-Foo bar.txt").author(u1).date(now).comment("Initial version of foo bar baz doco.").save
+      val now = T.now()
+      val r = new Revision
+      r.documentId = (d.id)
+      r.version = (1)
+      r.filename = ("0336-001-Foo bar.txt")
+      r.authorId = (u1.id)
+      r.date = (now)
+      r.comment = ("Initial version of foo bar baz doco.")
+      Revision.dbTable.insert(r)
 
       val lookup = mock[UserLookupProvider]
       val x = new RevisionReconcile {
@@ -133,26 +164,39 @@ object RevisionReconcileTest extends Specification with Mockito
       result must beEmpty
 
       Revision.forDocument(d) must haveSize(1)
-      val r = Revision.forDocument(d, 1).getOrElse(null)
-      r.document.is must be_==(d.id.is)
-      r.version.is must be_==(1)
-      r.filename.is must be_==("0336-001-Foo bar.txt")
-      r.author.is must be_==(u1.id.is)
-      r.date.is must be_==(now)
-      r.comment.is must be_==("Initial version of foo bar baz doco.")
+      val r2 = Revision.forDocument(d, 1).getOrElse(null)
+      r2.documentId must be_==(d.id)
+      r2.version must be_==(1)
+      r2.filename must be_==("0336-001-Foo bar.txt")
+      r2.authorId must be_==(u1.id)
+      r2.date must be_==(now)
+      r2.comment must be_==("Initial version of foo bar baz doco.")
+      }
     }
 
     "Add and update if detected" >>
     {
       TestDbVendor.initAndClean()
+      transaction{
       val (p1, p2, p3) = TestDbVendor.createProjects
       val (u1, u2) = TestDbVendor.createUsers
-      val d = Document.create.key("336").project(p2).title("Foo bar").access("Everyone")
-      d.save;
+      var d = new Document
+      d.number = ("336")
+      d.projectId = (p2.id)
+      d.title = ("Foo bar")
+      d.access = ("Everyone")
+      d = Document.dbTable.insert(d)
 
-      val now: Date = new Date()
-      val earlier: Date = new Date(now.getTime - 100000)
-      Revision.create.document(d).version(1).filename("0336-001-Foo bar.txt").author(u1).date(earlier).comment("Initial version of foo bar baz doco.").save
+      val now = T.now
+      val earlier = T.ago(100000)
+      val r = new Revision
+      r.documentId = (d.id)
+      r.version = (1)
+      r.filename = ("0336-001-Foo bar.txt")
+      r.authorId = (u1.id)
+      r.date = (earlier)
+      r.comment = ("Initial version of foo bar baz doco.")
+      Revision.dbTable.insert(r)
 
       val lookup = mock[UserLookupProvider]
       val x = new RevisionReconcile {
@@ -170,21 +214,34 @@ object RevisionReconcileTest extends Specification with Mockito
       result must containAll(ReconcileRevisionUpdated :: ReconcileRevisionAdded(2) :: Nil)
 
       Revision.forDocument(d) must haveSize(2)
-      Revision.forDocument(d, 1).map(_.comment.is).toOption must beSome("Initial version.")
-      Revision.forDocument(d, 2).map(_.comment.is).toOption must beSome("UPdated.")
+      Revision.forDocument(d, 1).map(_.comment) must beSome("Initial version.")
+      Revision.forDocument(d, 2).map(_.comment) must beSome("UPdated.")
+      }
     }
 
     "When duplicate info found for a revision, ignore earlier ones" >>
     {
       TestDbVendor.initAndClean()
+      transaction{
       val (p1, p2, p3) = TestDbVendor.createProjects
       val (u1, u2) = TestDbVendor.createUsers
-      val d = Document.create.key("336").project(p2).title("Foo bar").access("Everyone")
-      d.save;
+      var d = new Document
+      d.number = ("336")
+      d.projectId = (p2.id)
+      d.title = ("Foo bar")
+      d.access = ("Everyone")
+      d = Document.dbTable.insert(d)
 
-      val now: Date = new Date()
-      val earlier: Date = new Date(now.getTime - 100000)
-      Revision.create.document(d).version(1).filename("0336-001-Foo bar.txt").author(u1).date(earlier).comment("Initial version of foo bar baz doco.").save
+      val now = T.now()
+      val earlier = T.ago(100000)
+      val r = new Revision
+      r.documentId = (d.id)
+      r.version = (1)
+      r.filename = ("0336-001-Foo bar.txt")
+      r.authorId = (u1.id)
+      r.date = (earlier)
+      r.comment = ("Initial version of foo bar baz doco.")
+      Revision.dbTable.insert(r)
 
       val lookup = mock[UserLookupProvider]
       val x = new RevisionReconcile {
@@ -203,7 +260,8 @@ object RevisionReconcileTest extends Specification with Mockito
       result must containAll(ReconcileRevisionUpdated :: Nil)
 
       Revision.forDocument(d) must haveSize(1)
-      Revision.forDocument(d, 1).map(_.comment.is).toOption must beSome("Initial version 2.")
+      Revision.forDocument(d, 1).map(_.comment) must beSome("Initial version 2.")
+      }
     }
   }
 }

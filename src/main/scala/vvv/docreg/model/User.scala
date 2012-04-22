@@ -36,7 +36,7 @@ class User extends DbObject[User] {
   //var subscriptions = MappedManyToMany(Subscription, Subscription.user, Subscription.document, Document)
 
   def subscribed_?(d: Document) = {
-    inTransaction( Subscription.dbTable.where(s => s.userId === id and s.documentId === d.id).isEmpty )
+    inTransaction( Subscription.dbTable.where(s => s.userId === id and s.documentId === d.id).isEmpty ) == false
   }
 
   def displayName = name

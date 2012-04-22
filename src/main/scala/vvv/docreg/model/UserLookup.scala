@@ -38,7 +38,7 @@ object UserLookup extends UserLookup with Loggable {
   def lookup(usernameOption: Option[String], emailOption: Option[String], nameOption: Option[String], directory: Directory, why: String): Box[User] = {
     if (usernameOption.isEmpty && emailOption.isEmpty && nameOption.isEmpty) return Failure("Invalid input")
     
-    val existing = from(dbTable)(l =>
+    val existing = from(UserLookup.dbTable)(l =>
       where(
         l.username === usernameOption and
         l.email === emailOption and

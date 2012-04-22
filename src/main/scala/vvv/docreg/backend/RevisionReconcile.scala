@@ -6,6 +6,7 @@ import net.liftweb.common.Loggable
 import org.squeryl.PrimitiveTypeMode._
 import vvv.docreg.model._
 import java.sql.Timestamp
+import vvv.docreg.util.T
 
 abstract class ReconcileAction
 case class ReconcileRevisionAdded(added: Long) extends ReconcileAction
@@ -23,7 +24,7 @@ trait RevisionReconcile extends Loggable
       logger.warn("Smiting document " + document.key + " due to " + revisions)
       Subscription.dbTable.deleteWhere(s => s.documentId === document.id)
       Pending.dbTable.deleteWhere(p => p. documentId === document.id)
-      // Approvals
+      // todo approvals
       Revision.dbTable.deleteWhere(r => r.documentId === document.id)
       Document.dbTable.deleteWhere(d => d.id === document.id)
       Set(ReconcileDocumentRemoved)
@@ -44,20 +45,39 @@ trait RevisionReconcile extends Loggable
       filtered.foreach{
         case r @ RevisionInfo(fullFileName @ Document.ValidDocumentFileName(key, version, file), project, comment, access, author, date, _, _, _, clientUserName, _, _) =>
         {
-          val record = document.revision(version.toLong).getOrElse(new Revision)
-          record.documentId = document.id
-          val user = userLookup.lookup(Some(r.clientUserName), None, Some(r.author), "revision on " + record + " for " + r)
-          record.version = version.toLong
-          record.filename = fullFileName
-          record.authorId = user.map(_.id).getOrElse(-1)
-          record.date = new Timestamp(date.getTime)
-          record.comment = comment
+          val record = document.revision(version.toLong).getOrElse{
+            val x = new Revision
+            x.documentId = document.id
+            x.version = version.toLong
+            x
+          }
+          val user = userLookup.lookup(Some(r.clientUserName), None, Some(r.author), "revision on " + record + " for " + r).map(_.id).getOrElse(-1L)
+          var changed = false
+          if (record.filename != fullFileName) {
+            record.filename = fullFileName
+            changed = true
+          }
+          if (record.authorId != user) {
+            record.authorId = user
+            changed = true
+          }
+          if (record.date != T.at(date)) {
+            record.date = T.at(date)
+            changed = true
+          }
+          if (record.comment != comment) {
+            record.comment = comment
+            changed = true
+          }
 
-          Revision.dbTable.insertOrUpdate(record)
-//          {
-//            results += (if (!record.id.defined_?) ReconcileRevisionAdded(version.toLong) else ReconcileRevisionUpdated)
-//            record.save
-//          }
+          if (!record.isPersisted) {
+            Revision.dbTable.insert(record)
+            results += ReconcileRevisionAdded(version.toLong)
+          }
+          else if (changed) {
+            Revision.dbTable.update(record)
+            results += ReconcileRevisionUpdated
+          }
           existing -= record
         }
       }

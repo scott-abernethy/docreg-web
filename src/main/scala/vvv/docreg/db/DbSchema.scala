@@ -50,7 +50,7 @@ object DbSchema extends org.squeryl.Schema {
   ))
 
   on(userProjects)(u => declare(
-    u.userId is (indexed),
+    u.userId is(indexed),
     u.projectId is(indexed),
     columns(u.userId, u.projectId) are(indexed, unique)
   ))

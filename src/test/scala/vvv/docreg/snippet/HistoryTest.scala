@@ -3,6 +3,7 @@ package vvv.docreg.snippet
 import org.specs.Specification
 import java.util.Calendar
 import vvv.docreg.model.Revision
+import java.sql.Timestamp
 
 object HistoryTest extends Specification
 {
@@ -13,18 +14,23 @@ object HistoryTest extends Specification
       val d = Calendar.getInstance
 
       d.set(2012, Calendar.JANUARY, 5, 11, 49, 58)
-      val r1 = Revision.create.date(d.getTime)
+      val r1 = new Revision
+      r1.date = new Timestamp(d.getTimeInMillis)
 
       d.set(2012, Calendar.JANUARY, 2, 11, 49, 58)
-      val r2 = Revision.create.date(d.getTime)
-      val r3 = Revision.create.date(d.getTime)
+      val r2 = new Revision
+      r2.date = new Timestamp(d.getTimeInMillis)
+      val r3 = new Revision
+      r3.date = new Timestamp(d.getTimeInMillis)
 
       d.set(2011, Calendar.DECEMBER, 27, 3, 4, 5)
-      val r4 = Revision.create.date(d.getTime)
+      val r4 = new Revision
+      r4.date = new Timestamp(d.getTimeInMillis)
 
       d.set(2011, Calendar.DECEMBER, 1, 3, 4, 5)
-      val r5 = Revision.create.date(d.getTime)
-      
+      val r5 = new Revision
+      r5.date = new Timestamp(d.getTimeInMillis)
+
       val revisions = List(r1, r2, r3, r4, r5)
 
       val now = Calendar.getInstance

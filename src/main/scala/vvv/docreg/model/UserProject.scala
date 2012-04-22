@@ -70,4 +70,8 @@ object UserProject extends UserProject {
       }
     }
   }
+
+  def find(user: User, project: Project): Option[UserProject] = {
+    inTransaction( dbTable.where(up => up.userId === user.id and up.projectId === project.id).headOption )
+  }
 }

@@ -3,43 +3,75 @@ package vvv.docreg.model
 import org.specs._
 import java.util.Date
 import vvv.docreg.db.TestDbVendor
+import net.liftweb.http.js.JsCmds._Noop
+import vvv.docreg.util.T
+import org.squeryl.PrimitiveTypeMode._
 
 object DocumentTest extends Specification {
   "Document Model" should {
     "next version is 1 if no revisions" >> {
       TestDbVendor.initAndClean()
-      val p = Project.create.name("p")
-      p.save
-      val d = Document.create.key("999").project(p).title("hellow world").access("all")
-      d.save
+      transaction{
+      val (p,_,_) = TestDbVendor.createProjects
+      val d = new Document
+      d.number = ("336")
+      d.projectId = (p.id)
+      d.title = ("Foo bar")
+      d.access = ("Everyone")
+      Document.dbTable.insert(d)
 
       d.nextVersion must be_==(1)
+      }
     }
 
     "create next version file name" in {
       TestDbVendor.initAndClean()
+      transaction{
       val (u1, u2) = TestDbVendor.createUsers
-      val p = Project.create.name("Cthulhu")
-      p.save
-      val d: Document = Document.create.key("234").project(p).title("The Nameless City").access("Forbidden")
-      d.save
-      val r4 = Revision.create.document(d).version(4).filename("foo.txt").author(u2).date(new Date()).comment("hmmm")
-      r4.save
+      val (p,_,_) = TestDbVendor.createProjects
+      val d = new Document
+      d.number = ("234")
+      d.projectId = (p.id)
+      d.title = ("The Nameless City")
+      d.access = ("Forbidden")
+      Document.dbTable.insert(d)
+
+      val r4 = new Revision
+      r4.documentId = (d.id)
+      r4.version = (4)
+      r4.filename = ("foo.txt")
+      r4.authorId = (u2.id)
+      r4.date = (T.now)
+      r4.comment = ("hmmm")
+      Revision.dbTable.insert(r4)
 
       d.nextFileName("Rainbow Fish", "youyoui.odt") must be_==("0234-005-Rainbow Fish.odt")
+      }
     }
 
     "check no file extension" in {
       TestDbVendor.initAndClean()
+      transaction{
       val (u1, u2) = TestDbVendor.createUsers
-      val p = Project.create.name("Cthulhu")
-      p.save
-      val d: Document = Document.create.key("234").project(p).title("The Nameless City").access("Forbidden")
-      d.save
-      val r4 = Revision.create.document(d).version(4).filename("foo.txt").author(u2).date(new Date()).comment("hmmm")
-      r4.save
+      val (p,_,_) = TestDbVendor.createProjects
+      val d = new Document
+      d.number = ("234")
+      d.projectId = (p.id)
+      d.title = ("The Nameless City")
+      d.access = ("Forbidden")
+      Document.dbTable.insert(d)
+
+      val r4 = new Revision
+      r4.documentId = (d.id)
+      r4.version = (4)
+      r4.filename = ("foo.txt")
+      r4.authorId = (u2.id)
+      r4.date = (T.now)
+      r4.comment = ("hmmm")
+      Revision.dbTable.insert(r4)
 
       d.nextFileName("The Nameless City", "youyoui") must be_==("0234-005-The Nameless City")
+      }
     }
 
     "check valid identifiers" >> {
