@@ -1,6 +1,8 @@
 package vvv.docreg.agent
 
 import org.specs.Specification
+import akka.testkit.TestActorRef
+import akka.actor.ActorSystem
 
 object DaemonProtocolTest extends Specification
 {
@@ -8,7 +10,8 @@ object DaemonProtocolTest extends Specification
   {
     "have valid transaction ids" >>
     {
-      val x = new DaemonAgentImpl()
+      implicit val system = ActorSystem()
+      val x = TestActorRef(new DaemonAgentImpl()).underlyingActor
       x.previousTransaction = 0
       x.nextTransaction() must be_==(1)
 

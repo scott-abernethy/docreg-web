@@ -10,16 +10,13 @@ import vvv.docreg.model.{Subscription, UserLookup, User, Document}
 import scala._
 import org.squeryl.PrimitiveTypeMode._
 import vvv.docreg.agent.{SubscriberInfo, DaemonAgentComponent}
+import akka.testkit.TestActorRef
+import akka.actor.{ActorSystem, Props}
 
 object BackendTest extends Specification with Mockito
 {
-  val x = new BackendComponentImpl with DocumentServerComponent with DirectoryComponent with DaemonAgentComponent
-  {
-    val directory = null
-    val documentServer = null
-    val daemonAgent = null
-    def createAgent(version: String, server: String, user: String, backend: Actor) = null
-  }
+  implicit val system = ActorSystem()
+  val x = TestActorRef(new Backend(null, null, null)).underlyingActor
 
   "Backend" should
   {
@@ -34,7 +31,7 @@ object BackendTest extends Specification with Mockito
       d.title = ("FooBarBaz")
       Document.dbTable.insert(d)
 
-      x.backend.updateSubscriptions(d, Nil)
+      x.updateSubscriptions(d, Nil)
 
       Subscription.forDocument(d) must haveSize(0)
       }
@@ -75,7 +72,7 @@ object BackendTest extends Specification with Mockito
       ul3.userId = (u2.id)
       UserLookup.dbTable.insert(ul3)
 
-      x.backend.updateSubscriptions(d, subsA :: subsB :: subsC :: Nil)
+      x.updateSubscriptions(d, subsA :: subsB :: subsC :: Nil)
 
       Subscription.usersFor(d) must haveTheSameElementsAs(u1 :: u2 :: Nil)
       }
@@ -109,7 +106,7 @@ object BackendTest extends Specification with Mockito
       s2.userId = (u2.id)
       Subscription.dbTable.insert(List(s1,s2))
 
-      x.backend.updateSubscriptions(d, subsA :: Nil)
+      x.updateSubscriptions(d, subsA :: Nil)
 
       Subscription.usersFor(d) must haveTheSameElementsAs(u1 :: Nil)
       }

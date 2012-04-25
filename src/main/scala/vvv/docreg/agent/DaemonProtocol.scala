@@ -11,12 +11,13 @@ import org.jboss.netty.handler.codec.oneone.{OneToOneDecoder, OneToOneEncoder}
 import net.liftweb.common.Loggable
 import java.text.DecimalFormat
 import actors.{TIMEOUT, Actor}
+import akka.actor.ActorRef
 
 trait DaemonProtocol extends Loggable
 {
   val factory = new NioDatagramChannelFactory(Executors.newCachedThreadPool)
 
-  val consumers: List[Actor]
+  val consumers: List[ActorRef]
 
   val bootstrap = new ConnectionlessBootstrap(factory)
   bootstrap.setPipelineFactory(new ChannelPipelineFactory {
@@ -147,34 +148,35 @@ object DaemonProtocol
 
   def main(args: Array[String])
   {
-    //getNextChange(Actor.self, "shelob", -1)
-
-//    val request = RegisterRequest(
-//      "New Document Test 3",
-//      "DocReg",
-//      "Testing document addition with docregbeta",
-//      "Everyone",
-//      "sabernethy",
-//      "sabernethy",
-//      "docregweb",
-//      "0.7.0"
+    println("disabled")
+//    //getNextChange(Actor.self, "shelob", -1)
+//
+////    val request = RegisterRequest(
+////      "New Document Test 3",
+////      "DocReg",
+////      "Testing document addition with docregbeta",
+////      "Everyone",
+////      "sabernethy",
+////      "sabernethy",
+////      "docregweb",
+////      "0.7.0"
+////    )
+////    val encoder = new RegisterRequestEncoder{}
+//
+//    val request = NextChangeRequest(-1)
+//    val encoder = new NextChangeRequestEncoder{}
+//
+//    val msg = new DownstreamMessage(
+//      Header(3, encoder.messageType, 1, 1),
+//      buffer => encoder.encode(request, buffer)
 //    )
-//    val encoder = new RegisterRequestEncoder{}
-
-    val request = NextChangeRequest(-1)
-    val encoder = new NextChangeRequestEncoder{}
-
-    val msg = new DownstreamMessage(
-      Header(3, encoder.messageType, 1, 1),
-      buffer => encoder.encode(request, buffer)
-    )
-
-    val x = new DaemonProtocol{
-      val consumers = List(Actor.self)
-    }
-    x.transmit("shelob", msg)
-    Actor.receiveWithin(5000) {
-      case in => println("XX " + in)
-    }
+//
+//    val x = new DaemonProtocol{
+//      val consumers = List(self)
+//    }
+//    x.transmit("shelob", msg)
+//    Actor.receiveWithin(5000) {
+//      case in => println("XX " + in)
+//    }
   }
 }

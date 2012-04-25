@@ -1,19 +1,19 @@
 package vvv.docreg.agent
 
-import actors.Actor
 import org.jboss.netty.buffer.ChannelBuffer
 import net.liftweb.common.Loggable
+import akka.actor.{PoisonPill, ActorRef, Actor}
 
 trait DaemonAgent extends Actor
 
-case class RequestPackage(replyTo: Actor, target: String, request: Request)
+case class RequestPackage(replyTo: ActorRef, target: String, request: Request)
 case class ReplyPackage(header: Header, reply: Reply)
 
 class DaemonAgentImpl extends DaemonAgent with DaemonProtocol with Loggable
 {
   var previousTransaction: Int = 0
-  val consumers = List(this)
-  var outstandingTransactions: Map[Int, Actor] = Map.empty
+  val consumers = List(self)
+  var outstandingTransactions: Map[Int, ActorRef] = Map.empty
 
   def nextTransaction(): Int =
   {
@@ -28,13 +28,8 @@ class DaemonAgentImpl extends DaemonAgent with DaemonProtocol with Loggable
     previousTransaction
   }
 
-  def act()
-  {
-    loop
-    {
-      // todo change to react when DaemonProtocol doesn't block
-      receive
-      {
+
+  protected def receive = {
         case RequestPackage(replyTo, target, request) =>
         {
           val encoding = request match {
@@ -105,14 +100,12 @@ class DaemonAgentImpl extends DaemonAgent with DaemonProtocol with Loggable
         {
           logger.info("DaemonAgent killed")
           close()
-          exit()
+          self ! PoisonPill
         }
         case _ =>
         {
           // Ignored message.
         }
-      }
-    }
   }
 
 
@@ -120,10 +113,10 @@ class DaemonAgentImpl extends DaemonAgent with DaemonProtocol with Loggable
 
 trait DaemonAgentComponent
 {
-  val daemonAgent: DaemonAgent
+  val daemonAgent: ActorRef
 }
 
-trait DaemonAgentComponentImpl extends DaemonAgentComponent
-{
-  val daemonAgent = new DaemonAgentImpl()
-}
+//trait DaemonAgentComponentImpl extends DaemonAgentComponent
+//{
+//  val daemonAgent = new DaemonAgentImpl()
+//}

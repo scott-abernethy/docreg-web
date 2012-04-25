@@ -1,22 +1,18 @@
 package vvv.docreg.backend
 
-import actors.Actor
 import vvv.docreg.agent._
 import net.liftweb.common.Loggable
 import java.io.File
 import com.hstx.docregsx.ScpClient
 import vvv.docreg.model.Document.ValidDocumentFileName
+import akka.actor.{PoisonPill, Actor, ActorRef}
 
-class SubmitEngine(agent: DaemonAgent, target: String, clientHost: String, clientVersion: String) extends Actor with Loggable
+class SubmitEngine(agent: ActorRef, target: String, clientHost: String, clientVersion: String) extends Actor with Loggable
 {
   var cachedRequest: Submit = null
 
-  def act()
-  {
-    loop
-    {
-      react
-      {
+
+  protected def receive = {
         case msg @ Submit(document, projectName, localFile, userFileName, comment, user) =>
         {
           // todo check revision is latest?
@@ -25,7 +21,7 @@ class SubmitEngine(agent: DaemonAgent, target: String, clientHost: String, clien
           cachedRequest = msg
           val request = RegisterRequest(userFileName, projectName, if (comment.length() < 1) "[no description]" else comment, document.access, user.displayName, user.shortUsername(), clientHost, clientVersion)
           logger.info("SubmitEngine register " + request)
-          agent ! RequestPackage(Actor.self, target, request)
+          agent ! RequestPackage(self, target, request)
         }
         case RegisterReply(response, suggestedFileName) if (response.startsWith("Rejected")) =>
         {
@@ -34,12 +30,12 @@ class SubmitEngine(agent: DaemonAgent, target: String, clientHost: String, clien
             case (ValidDocumentFileName(suggestedKey, _, suggestedSuffix), Submit(document, projectName, localFile, ValidDocumentFileName(key, _, suffix), comment, user)) if (suggestedKey == key && suggestedSuffix == suffix) =>
             {
               logger.warn("SubmitEngine rejected, so RETRY register using " + suggestedFileName)
-              Actor.self ! Submit(document, projectName, localFile, suggestedFileName, comment, user)
+              self ! Submit(document, projectName, localFile, suggestedFileName, comment, user)
             }
             case _ =>
             {
               logger.warn("SubmitEngine rejected, would have accepted " + suggestedFileName + " but that doesn't make sense.")
-              Actor.self ! 'Die
+              self ! 'Die
             }
           }
         }
@@ -60,7 +56,7 @@ class SubmitEngine(agent: DaemonAgent, target: String, clientHost: String, clien
             scpClient.copy(cachedRequest.localFile.apply().toString(), submittedFileName);
             logger.debug("Copying file, done")
             // todo check file size
-            agent ! RequestPackage(Actor.self, target, SubmitRequest(submittedFileName, -1))
+            agent ! RequestPackage(self, target, SubmitRequest(submittedFileName, -1))
             // todo delete local file?
           }
           else
@@ -73,29 +69,28 @@ class SubmitEngine(agent: DaemonAgent, target: String, clientHost: String, clien
         {
           logger.info("Submit reply " + response + " with suggested filename of " + suggestedFileName)
           // todo, notify user
-          Actor.self ! 'Die
+          self ! 'Die
         }
         case 'Die =>
         {
-          exit()
+          self ! PoisonPill
         }
         case other =>
         {
           logger.warn("Submit engine got unexpected " + other)
         }
         // todo timeout
-      }
-    }
   }
 
-  override def exceptionHandler =
-  {
-    case e: Exception =>
-    {
-      logger.error("SubmitEngine exception " + e.getMessage, e)
-      Actor.self ! 'Die
-    }
-  }
+  // TODO actor equivalent
+//  override def exceptionHandler =
+//  {
+//    case e: Exception =>
+//    {
+//      logger.error("SubmitEngine exception " + e.getMessage, e)
+//      self ! 'Die
+//    }
+//  }
 }
 
 //SubmitEngine register RegisterRequest(0021-439-Document Register Test - SC.doc,DocReg,Fix title, submit via new async protocol client.,Everyone,Scott Abernethy,sabernethy,0:0:0:0:0:0:0:1,dr+w 0.7.0)

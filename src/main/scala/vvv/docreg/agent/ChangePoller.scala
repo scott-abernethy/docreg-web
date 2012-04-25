@@ -1,14 +1,17 @@
 package vvv.docreg.agent
 
-import actors.Actor
 import net.liftweb.util.Schedule
-import java.util.concurrent.ScheduledFuture
 import net.liftweb.common.Loggable
 import vvv.docreg.util.Millis
+import akka.util.duration._
+import akka.util.Duration
+import java.util.concurrent.{TimeUnit}
+import akka.actor.{Cancellable, PoisonPill, Actor, ActorRef}
+import net.liftweb.http.js.JsCmds._Noop
 
 case class Changed(documentInfo: DocumentInfo)
 
-class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Actor with Loggable
+class ChangePoller(hostname: String, consumer: ActorRef, agent: ActorRef) extends Actor with Loggable
 {
   // todo use akka watchdog
   val pollInterval = 5000L
@@ -19,38 +22,34 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
   var lastPoll = Millis.zero()
   var lastReply = Millis.zero()
   var lastDocumentInfo: Option[DocumentInfo] = None
-  var wakeFuture: Option[ScheduledFuture[Unit]] = None
+  var wakeCancellable: Option[Cancellable] = None
 
-  def act()
-  {
-    loop
-    {
-      react
-      {
+  protected def receive = {
         case 'Reset =>
         {
           lastChangeNumber = -1
           lastPoll.zero()
           lastReply.zero()
           lastDocumentInfo = None
-          this ! 'Poll
+          self ! 'Poll
         }
 
         case 'Poll if lastPoll.elapsed_?(0.9 * pollInterval toLong) =>
         {
           //logger.debug("Poll, next change request {" + lastChangeNumber + "}")
           lastPoll.mark()
-          agent ! RequestPackage(Actor.self, hostname, NextChangeRequest(lastChangeNumber))
+          agent ! RequestPackage(self, hostname, NextChangeRequest(lastChangeNumber))
           schedulePoll
           scheduleWake
         }
 
         case 'Wake =>
         {
+          wakeCancellable = None
           if (lastReply.elapsed_?(pollReplyTimeout))
           {
             logger.warn("Change reply not received in a timely fashion")
-            this ! 'Reset
+            self ! 'Reset
             // todo warn consumer to resync
           }
           else
@@ -67,7 +66,7 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
           {
             lastChangeNumber = changeNumber
             lastPoll.zero()
-            this ! 'Poll
+            self ! 'Poll
 
             // Daemon can repeat last changed document message, so ignore repeats
             if (!lastDocumentInfo.exists(_ == documentInfo))
@@ -79,32 +78,29 @@ class ChangePoller(hostname: String, consumer: Actor, agent: Actor) extends Acto
           }
         }
 
-        case 'Ping => reply('Pong)
+        case 'Ping => sender ! 'Pong
 
         case 'Die =>
         {
           logger.info("ChangePoller killed")
-          exit()
+          self ! PoisonPill
         }
 
         case other =>
-      }
-    }
   }
   
   def scheduleWake
   {
-    if (wakeFuture.isEmpty || wakeFuture.exists(_.isDone))
+    if (wakeCancellable.isEmpty)
     {
-      val thiz = Actor.self
-      wakeFuture = Some(Schedule.schedule(() => thiz ! 'Wake, wakeInterval))
+      val cancellable = context.system.scheduler.scheduleOnce(Duration(wakeInterval, TimeUnit.MILLISECONDS), self, 'Wake)
+      wakeCancellable = Some(cancellable)
     }
   }
 
   def schedulePoll
   {
-    val thiz = Actor.self
-    Schedule.schedule(() => thiz ! 'Poll, pollInterval)
+    context.system.scheduler.scheduleOnce(Duration(pollInterval, TimeUnit.MILLISECONDS), self, 'Poll)
   }
 }
 
@@ -112,21 +108,21 @@ object ChangePoller
 {
   def main(args: Array[String])
   {
-    import Actor._
-    val foo = Actor.actor
-    {
-      loop
-      {
-        receive
-        {
-          case Changed(d) => println(">>>> " + d)
-          case other => println(">>>? " + other)
-        }
-      }
-    }
-
-    val agent = new DaemonAgentImpl().start
-    val x = new ChangePoller("shelob", foo, agent).start
-    x ! 'Reset
+//    import Actor._
+//    val foo = Actor.actor
+//    {
+//      loop
+//      {
+//        receive
+//        {
+//          case Changed(d) => println(">>>> " + d)
+//          case other => println(">>>? " + other)
+//        }
+//      }
+//    }
+//
+//    val agent = new DaemonAgentImpl().start
+//    val x = new ChangePoller("shelob", foo, agent).start
+//    x ! 'Reset
   }
 }

@@ -34,6 +34,7 @@ case class ResponseFailure(request: AnyRef)
 
 class FileDatabase extends Actor
 {
+  // TODO make this all non-blocking
   def receive =
   {
     case m @ GetRegister => {
@@ -75,6 +76,10 @@ object FileDatabaseHelper {
 //  private static final Pattern FILENAME_FORMAT = Pattern.compile("^([a-zA-Z0-9]+)-([0-9]+)-(.*)");
 
   def parseDate(dateString: String): Date = {
+    if ("".equals(dateString))
+    {
+      return null
+    }
     try {
       DATE_FORMAT.parse(dateString);
     }
@@ -92,7 +97,7 @@ object FileDatabaseHelper {
     load("docreg/docreg.txt", createDocumentInfo _)
   }
 
-  val ValidNumber: Regex = """^([0-9])+$""".r
+  val ValidNumber: Regex = """^([0-9]+)$""".r
 
   def createDocumentInfo(data: Array[String]): Option[DocumentInfo] = {
     data.toList match {
@@ -159,8 +164,9 @@ object FileDatabaseHelper {
     val resource = Resource.fromInputStream(new FileInputStream(fullPath))
 //    val resource = Resource.fromFile(filePath)
 
-    // TODO filter on regex
-    val items = resource.lines().dropWhile(_.isEmpty)/*.filter(_ => true)*/.map(_ split '\t')
+    val items = resource.lines().dropWhile(_.isEmpty).map(_ split '\t')
+
+    // TODO timeout
 
 //    val processor = for {
 //      in <- items.processor

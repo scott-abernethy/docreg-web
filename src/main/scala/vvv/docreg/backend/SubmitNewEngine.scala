@@ -1,27 +1,22 @@
 package vvv.docreg.backend
 
-import actors.Actor
 import vvv.docreg.agent._
 import net.liftweb.common.Loggable
 import java.io.File
 import vvv.docreg.model.{Document, User}
 import com.hstx.docregsx.ScpClient
+import akka.actor.{PoisonPill, Actor, ActorRef}
 
-class SubmitNewEngine(agent: DaemonAgent, target: String, clientHost: String, clientVersion: String) extends Actor with Loggable
+class SubmitNewEngine(agent: ActorRef, target: String, clientHost: String, clientVersion: String) extends Actor with Loggable
 {
   var cachedRequest: Create = null
 
-  def act()
-  {
-    loop
-    {
-      react
-      {
+  protected def receive = {
         case msg @ Create(projectName, localFile, userFileName, comment, user) =>
         {
           // todo check the fields, including comment which should default to "[no description]"? Check default for approval etc also.
           cachedRequest = msg
-          agent ! RequestPackage(Actor.self, target, RegisterRequest(userFileName, projectName, if (comment.length() < 1) "[no description]" else comment, "Everyone", user.displayName, user.shortUsername(), clientHost, clientVersion))
+          agent ! RequestPackage(self, target, RegisterRequest(userFileName, projectName, if (comment.length() < 1) "[no description]" else comment, "Everyone", user.displayName, user.shortUsername(), clientHost, clientVersion))
         }
         case RegisterReply(response, suggestedFileName) =>
         {
@@ -39,7 +34,7 @@ class SubmitNewEngine(agent: DaemonAgent, target: String, clientHost: String, cl
             scpClient.copy(cachedRequest.localFile.apply().toString(), submittedFileName);
             logger.debug("Copying file, done")
             // todo check file size
-            agent ! RequestPackage(Actor.self, target, SubmitRequest(submittedFileName, -1))
+            agent ! RequestPackage(self, target, SubmitRequest(submittedFileName, -1))
             // todo delete local file?
           }
           else
@@ -52,48 +47,47 @@ class SubmitNewEngine(agent: DaemonAgent, target: String, clientHost: String, cl
         {
           logger.info("Submit reply " + response + " with suggested filename of " + suggestedFileName)
           // todo, notify user
-          Actor.self ! 'Die
+          self ! 'Die
         }
         case 'Die =>
         {
-          exit()
+          self ! PoisonPill
         }
         case other =>
         {
           logger.warn("Submit engine got unexpected " + other)
         }
         // todo timeout
-      }
-    }
   }
 
-  override def exceptionHandler =
-  {
-    case e: Exception =>
-    {
-      logger.error("SubmitNewEngine exception " + e.getMessage, e)
-      Actor.self ! 'Die
-    }
-  }
+  // TODO akka equiv
+//  override def exceptionHandler =
+//  {
+//    case e: Exception =>
+//    {
+//      logger.error("SubmitNewEngine exception " + e.getMessage, e)
+//      Actor.self ! 'Die
+//    }
+//  }
 }
 
-object SubmitNewEngine
-{
-  def main(args: Array[String])
-  {
-    val u = new User
-    u.name = "Scott Abernethy"
-    u.username = "sabernethy@GNET.global.vpn"
-
-    val agent = new DaemonAgentImpl()
-    agent.start()
-    val x = new SubmitNewEngine(agent, "shelob", "10.16.2.0", "dr+w 0.7.0.dev")
-    x.start()
-    x ! Create("DocReg", () => new File("/tmp/garbage.txt"), "New Document Test 4.txt", "Testing document addition with docregweb", u)
-    Actor.receiveWithin(30000) {
-      case in => println("XX " + in)
-    }
-    agent ! 'Die
-    x ! 'Die
-  }
-}
+//object SubmitNewEngine
+//{
+//  def main(args: Array[String])
+//  {
+//    val u = new User
+//    u.name = "Scott Abernethy"
+//    u.username = "sabernethy@GNET.global.vpn"
+//
+//    val agent = new DaemonAgentImpl()
+//    agent.start()
+//    val x = new SubmitNewEngine(agent, "shelob", "10.16.2.0", "dr+w 0.7.0.dev")
+//    x.start()
+//    x ! Create("DocReg", () => new File("/tmp/garbage.txt"), "New Document Test 4.txt", "Testing document addition with docregweb", u)
+//    Actor.receiveWithin(30000) {
+//      case in => println("XX " + in)
+//    }
+//    agent ! 'Die
+//    x ! 'Die
+//  }
+//}

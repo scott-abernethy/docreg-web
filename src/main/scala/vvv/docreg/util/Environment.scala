@@ -12,25 +12,28 @@ trait Environment extends BackendComponent with DocumentServerComponent with Dir
   def exit()
 }
 
-trait EnvironmentImpl extends Environment with BackendComponentImpl with DocumentServerComponentImpl with DirectoryComponentImpl with DaemonAgentComponentImpl
+trait EnvironmentImpl extends Environment with BackendComponent with DocumentServerComponentImpl with DirectoryComponentImpl with DaemonAgentComponent
 {
-  val poller = new ChangePoller(Backend.server, backend, daemonAgent)
+  val system = ActorSystem("DocRegWebSystem")
+  import system._
+  val daemonAgent = actorOf(Props[DaemonAgentImpl], "DaemonAgent")
+  val backend = actorOf(Props(new Backend(directory, daemonAgent, documentServer)), "Backend")
+  val poller = actorOf(Props(new ChangePoller(Backend.server, backend, daemonAgent)))
 
   def start()
   {
     documentServer.start()
-    backend.start()
     backend ! Connect()
-    daemonAgent.start()
-    poller.start() ! 'Reset
+    poller ! 'Reset
   }
 
   def exit()
   {
     documentServer ! 'Die
-    backend !? (5000L, 'Die)
+    backend ! 'Die
     poller ! 'Die
     daemonAgent ! 'Die
+    system.shutdown()
   }
 }
 
