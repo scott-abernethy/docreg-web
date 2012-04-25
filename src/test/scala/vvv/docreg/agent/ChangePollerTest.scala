@@ -3,6 +3,7 @@ package vvv.docreg.agent
 import org.specs.Specification
 import actors.Actor._
 import actors.{TIMEOUT, Actor}
+import java.util.Date
 
 object ChangePollerTest extends Specification
 {
@@ -13,7 +14,7 @@ object ChangePollerTest extends Specification
       val x = new ChangePoller("1.2.3.4", Actor.self, Actor.actor())
       x.start()
 
-      val a: DocumentInfo = DocumentInfo(2, 1, "", "", "", "", "", "", "", "", "", "", "")
+      val a: DocumentInfo = DocumentInfo(2, 1, "", "", "", "", "", "", new Date, "", "", "", new Date)
       x ! NextChangeReply(1, a)
       x !? 'Ping
       receiveWithin(1000)
@@ -22,7 +23,7 @@ object ChangePollerTest extends Specification
         case _ => fail("Changed msg expected")
       }
 
-      val b: DocumentInfo = DocumentInfo(456, 2, "sd", "", "", "", "", "", "", "", "", "", "")
+      val b: DocumentInfo = DocumentInfo(456, 2, "sd", "", "", "", "", "", new Date, "", "", "", new Date)
       x ! NextChangeReply(1, b)
       x !? 'Ping
       receiveWithin(1000)
@@ -45,8 +46,10 @@ object ChangePollerTest extends Specification
       val x = new ChangePoller("1.2.3.4", Actor.self, Actor.actor())
       x.start()
 
-      val a: DocumentInfo = DocumentInfo(5174,193,"5174-193-Performance Review Process Check List.xlsx","Eclipse","Performance Review Process Check List","updated for SC SP group","Everyone","RVann","2011-08-26 16:15:18 Z","boromir","10.15.153.122","","")
-      val a2: DocumentInfo = DocumentInfo(5174,193,"5174-193-Performance Review Process Check List.xlsx","Eclipse","Performance Review Process Check List","updated for SC SP group","Everyone","RVann","2011-08-26 16:15:18 Z","boromir","10.15.153.122","","")
+      val d = new Date
+
+      val a: DocumentInfo = DocumentInfo(5174,193,"5174-193-Performance Review Process Check List.xlsx","Eclipse","Performance Review Process Check List","updated for SC SP group","Everyone","RVann",d,"boromir","10.15.153.122","",null)
+      val a2: DocumentInfo = DocumentInfo(5174,193,"5174-193-Performance Review Process Check List.xlsx","Eclipse","Performance Review Process Check List","updated for SC SP group","Everyone","RVann",d,"boromir","10.15.153.122","",null)
 
       x ! NextChangeReply(1, a)
       x !? 'Ping

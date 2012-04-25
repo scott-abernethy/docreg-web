@@ -6,7 +6,6 @@ import org.specs.specification._
 import scala.actors.Actor
 import org.specs.mock.Mockito
 import vvv.docreg.db.TestDbVendor
-import com.hstx.docregsx.{TabLine, Subscriber => AgentSubscriber}
 import vvv.docreg.model.{Subscription, UserLookup, User, Document}
 import scala._
 import org.squeryl.PrimitiveTypeMode._
@@ -114,23 +113,6 @@ object BackendTest extends Specification with Mockito
 
       Subscription.usersFor(d) must haveTheSameElementsAs(u1 :: Nil)
       }
-    }
-
-    "Do TabLines work?" >>
-    {
-      val x = new TabLine("Asutherl\talan.sutherland@hstx.com\talways")
-      x.size() must be_==(3)
-      x.get(0) must be_==("Asutherl")
-      x.get(1) must be_==("alan.sutherland@hstx.com")
-      x.get(2) must be_==("always")
-    }
-
-    "Do AgentSubscribers work?" >>
-    {
-      val x = new AgentSubscriber(new TabLine("Asutherl\talan.sutherland@hstx.com\talways"))
-      x.getSubscriberEmail must be_==("alan.sutherland@hstx.com")
-      x.getSubscriberUserName must be_==("Asutherl")
-      x.getEmailEvent must be_==("always")
     }
   }
 }

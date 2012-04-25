@@ -3,7 +3,6 @@ package vvv.docreg.backend
 import org.specs._
 import mock.Mockito
 import vvv.docreg.db.TestDbVendor
-import com.hstx.docregsx.{Approval => AgentApproval}
 import vvv.docreg.agent.ApprovalInfo
 import java.util.Date
 import net.liftweb.common.{Full, Empty}

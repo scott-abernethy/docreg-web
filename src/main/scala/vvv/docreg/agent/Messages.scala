@@ -2,6 +2,7 @@ package vvv.docreg.agent
 
 import actors.Actor
 import java.util.Date
+import java.text.DecimalFormat
 
 // todo message type part of request case class? register handler for each type, gives case class encode and decode.
 object MessageType extends Enumeration
@@ -24,10 +25,18 @@ object MessageType extends Enumeration
   val approvalReply = Value(36)
 }
 
+object Standards {
+  val documentNumberFormat = new DecimalFormat("0000")
+}
+
 case class Header(version: Int, message: MessageType.Type, transactionId: Int, sequence: Int)
 
 // TODO key and version should be String
-case class DocumentInfo(key: Int, version: Int, fileName: String, projectName: String, title: String, description: String, access: String, author: String, date: String, server: String, client: String, editor: String, editorStart: String)
+case class DocumentInfo(number: Int, version: Int, fileName: String, projectName: String, title: String, description: String, access: String, author: String, date: Date, server: String, client: String, editor: String, editorStart: Date) {
+  def getKey(): String = {
+    Standards.documentNumberFormat.format(number)
+  }
+}
 
 case class RevisionInfo(fileName: String, project: String, comment: String, access: String, author: String, date: Date, server: String, clientIp: String, clientHost: String, clientUserName: String, clientVersion: String, crc: String)
 

@@ -9,7 +9,6 @@ import vvv.docreg.util._
 import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
 import java.io.IOException
-import com.hstx.docregsx.{Document => AgentDocument, Revision => AgentRevision, Approval => AgentApproval, Subscriber => AgentSubscriber, ApprovalStatus => AgentApprovalState}
 import vvv.docreg.db.DbVendor
 import java.util.Date
 import vvv.docreg.agent._
@@ -19,7 +18,7 @@ import vvv.docreg.model._
 
 case class Connect()
 case class Reload(d: Document)
-case class Reconcile(document: AgentDocument, revisions: List[RevisionInfo], approvals: List[ApprovalInfo], subscriptions: List[SubscriberInfo])
+case class Reconcile(document: DocumentInfo, revisions: List[RevisionInfo], approvals: List[ApprovalInfo], subscriptions: List[SubscriberInfo])
 case class ApprovalApproved(document: Document, revision: Revision, user: User, state: ApprovalState, comment: String)
 case class ApprovalRequested(document: Document, revision: Revision, users: Iterable[User])
 case class SubscribeRequested(document: Document, user: User)
@@ -89,12 +88,12 @@ trait BackendComponentImpl extends BackendComponent
         case Changed(d) =>
         {
           // Todo: Apply what we know of the change now, then reconcile. Though the reconcile typically takes <1 second.
-          logger.debug("Change received, sending to reconcile " + d.key)
-          priorityReconciler ! Prepare(DaemonProtocol.documentInfoToAgentDocument(d), fileDatabase)
+          logger.debug("Change received, sending to reconcile " + d.getKey)
+          priorityReconciler ! Prepare(d, fileDatabase)
         }
         case msg @ Reconcile(d, revisions, approvals, subscriptions) =>
         {
-          logger.debug("Reconcile " + d.getKey)
+          logger.debug("Reconcile " + d.getKey())
           Document.forKey(d.getKey) match
           {
             case Full(document) => updateDocument(document, msg)
@@ -109,9 +108,9 @@ trait BackendComponentImpl extends BackendComponent
               user.shortUsername(), // todo this was user.displayName?!
               user.email,
               state match {
-                case ApprovalState.approved => AgentApprovalState.Approved.toString()
-                case ApprovalState.notApproved => AgentApprovalState.NotApproved.toString()
-                case _ => AgentApprovalState.Pending.toString()
+                case ApprovalState.approved => "Approved"
+                case ApprovalState.notApproved => "Not Approved"
+                case _ => "Pending"
               },
               comment,
               product, // todo is this consistent?
@@ -222,7 +221,7 @@ trait BackendComponentImpl extends BackendComponent
       }
       }
     } catch {
-      case e: java.lang.NullPointerException => logger.error("Exception " + e + " with " + reconcile.document.getKey); e.printStackTrace
+      case e: java.lang.NullPointerException => logger.error("Exception " + e + " with " + reconcile.document.getKey()); e.printStackTrace
     }
   }
 
@@ -250,24 +249,24 @@ trait BackendComponentImpl extends BackendComponent
     }
   }
 
-  private def assignDocument(document: Document, d: AgentDocument): Boolean = {
-    document.number = d.getKey
-    document.projectId = projectWithName(d.getProject).id
-    document.title = d.getTitle
-    document.access = d.getAccess
+  private def assignDocument(document: Document, d: DocumentInfo): Boolean = {
+    document.number = d.getKey()
+    document.projectId = projectWithName(d.projectName).id
+    document.title = d.title
+    document.access = d.access
     true
 //    document.dirty_?
     // todo check that revision based info here, such as access, is correct in the AgentDocument object.
   }
 
-  private def assignEditor(document: Document, d: AgentDocument): Boolean = {
-      if (d.getEditor != null && d.getEditor.length > 0) {
-        UserLookup.lookup(Some(d.getEditor()), None, None, directory, "editor on " + document + " with " + d) match {
+  private def assignEditor(document: Document, d: DocumentInfo): Boolean = {
+      if (d.editor != null && d.editor.length > 0) {
+        UserLookup.lookup(Some(d.editor), None, None, directory, "editor on " + document + " with " + d) match {
           case Full(u) => {
-            Pending.assignEditor(u, document, d.getEditorStart)
+            Pending.assignEditor(u, document, d.editorStart)
           }
           case _ => {
-            logger.warn("Editor not resolved for '" + d.getEditor + "' on " + document)
+            logger.warn("Editor not resolved for '" + d.editor + "' on " + document)
             false
           }
         }

@@ -101,13 +101,3 @@ trait RevisionReconcile extends Loggable
     }
   }
 }
-
-object RevisionReconcile
-{
-  import com.hstx.docregsx.{Revision => AgentRevision}
-
-  implicit def agentToInfo(in: AgentRevision): RevisionInfo =
-  {
-    RevisionInfo(in.getFilename, in.getProject, in.getComment, in.getAccess, in.getAuthor, in.getDate, in.getServer, in.getClientIp, in.getClientPc, in.getUsername, in.getClientVersion, in.getCrc)
-  }
-}

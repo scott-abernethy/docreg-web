@@ -3,7 +3,6 @@ package vvv.docreg.agent
 import akka.actor.Actor
 import scala.util.control.Exception._
 import scalax.file.NotFileException
-import com.hstx.docregsx.TabLine
 import akka.util.Duration
 import java.util.concurrent.TimeUnit
 import akka.dispatch.Await
@@ -98,7 +97,7 @@ object FileDatabaseHelper {
   def createDocumentInfo(data: Array[String]): Option[DocumentInfo] = {
     data.toList match {
       case List(ValidNumber(key), ValidNumber(version), fileName, projectName, title, description, access, author, date, server, client, editor, editorStart) => {
-        Some(DocumentInfo(key.toInt, version.toInt, fileName, projectName, title, description, access, author, date, server, client, editor, editorStart))
+        Some(DocumentInfo(key.toInt, version.toInt, fileName, projectName, title, description, access, author, parseDate(date), server, client, editor, parseDate(editorStart)))
       }
       case _ => {
         None

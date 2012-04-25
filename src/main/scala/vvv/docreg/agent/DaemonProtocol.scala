@@ -9,7 +9,6 @@ import org.jboss.netty.channel._
 import org.jboss.netty.buffer.{ChannelBuffers, ChannelBuffer}
 import org.jboss.netty.handler.codec.oneone.{OneToOneDecoder, OneToOneEncoder}
 import net.liftweb.common.Loggable
-import com.hstx.docregsx.Document
 import java.text.DecimalFormat
 import actors.{TIMEOUT, Actor}
 
@@ -144,12 +143,6 @@ case class DownstreamMessage(header: Header, body: (ChannelBuffer) => Unit)
 
 object DaemonProtocol
 {
-  implicit def documentInfoToAgentDocument(d: DocumentInfo): Document =
-  {
-    val line = new DecimalFormat("0000").format(d.key) :: new DecimalFormat("0000").format(d.version) :: d.fileName :: d.projectName :: d.title :: d.description :: d.access :: d.author :: d.date :: d.server :: d.client :: d.editor :: d.editorStart :: Nil
-    new Document(line.mkString("\t"))
-  }
-
   val protocolVersion: Int = 3
 
   def main(args: Array[String])

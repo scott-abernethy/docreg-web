@@ -5,7 +5,6 @@ import net.liftweb.util.Schedule
 import java.util.concurrent.ScheduledFuture
 import net.liftweb.common.Loggable
 import vvv.docreg.util.Millis
-import com.hstx.docregsx.Document
 
 case class Changed(documentInfo: DocumentInfo)
 

@@ -2,6 +2,7 @@ package vvv.docreg.agent
 
 import org.jboss.netty.buffer.ChannelBuffer
 import java.nio.charset.Charset
+import scala.Predef._
 
 trait ReplyDecoder {
   def decode(header: Header, buffer: ChannelBuffer): Reply
@@ -51,11 +52,11 @@ object NextChangeReplyDecoder extends ReplyDecoder
         description,
         access,
         author,
-        date,
+        FileDatabaseHelper.parseDate(date),
         server,
         client,
         editor,
-        editorStart)
+        FileDatabaseHelper.parseDate(editorStart))
     )
   }
 }

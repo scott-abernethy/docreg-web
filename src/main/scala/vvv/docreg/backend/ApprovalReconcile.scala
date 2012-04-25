@@ -79,13 +79,3 @@ trait ApprovalReconcile extends Loggable
     }
   }
 }
-
-object ApprovalReconcile
-{
-  import com.hstx.docregsx.{Approval => AgentApproval}
-  
-  implicit def agentToInfo(in: AgentApproval): ApprovalInfo =
-  {
-    ApprovalInfo(in.getFilename, in.getApproverName, in.getApproverEmail, in.getStatus.toString, in.getComment, in.getDate, in.getClientIp, in.getClientPc, in.getUsername)
-  }
-}
