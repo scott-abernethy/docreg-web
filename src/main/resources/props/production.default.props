@@ -2,3 +2,10 @@ db.driver=com.mysql.jdbc.Driver
 db.url=jdbc:mysql://localhost/docregweb
 db.user=docreguser
 db.password=docregsux
+
+## backend=shelob
+backend.server=10.16.9.179
+## backend=faramir
+#backend.server=10.15.168.23
+
+backend.home=/srv/docreg-fs

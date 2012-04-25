@@ -8,13 +8,13 @@ import org.specs.mock.Mockito
 import vvv.docreg.db.TestDbVendor
 import com.hstx.docregsx.{TabLine, Subscriber => AgentSubscriber}
 import vvv.docreg.model.{Subscription, UserLookup, User, Document}
-import vvv.docreg.agent.DaemonAgentComponent
 import scala._
 import org.squeryl.PrimitiveTypeMode._
+import vvv.docreg.agent.{SubscriberInfo, DaemonAgentComponent}
 
 object BackendTest extends Specification with Mockito
 {
-  val x = new BackendComponentImpl with DocumentServerComponent with AgentComponent with DirectoryComponent with DaemonAgentComponent
+  val x = new BackendComponentImpl with DocumentServerComponent with DirectoryComponent with DaemonAgentComponent
   {
     val directory = null
     val documentServer = null
@@ -53,9 +53,9 @@ object BackendTest extends Specification with Mockito
       d.title = ("FooBarBaz")
       Document.dbTable.insert(d)
 
-      val subsA = new AgentSubscriber(new TabLine("Asutherl\talan.sutherland@hstx.com\talways"))
-      val subsB = new AgentSubscriber(new TabLine("Sabernethy\tscott_abernethy@stratexnet.com\talways"))
-      val subsC = new AgentSubscriber(new TabLine("scott.abernethy@aviatnet.com\tscott.abernethy@Aviatnet.com\talways"))
+      val subsA = SubscriberInfo("Asutherl","alan.sutherland@hstx.com","always")
+      val subsB = SubscriberInfo("Sabernethy","scott_abernethy@stratexnet.com","always")
+      val subsC = SubscriberInfo("scott.abernethy@aviatnet.com","scott.abernethy@Aviatnet.com","always")
 
       val ul1 = new UserLookup
       ul1.username = Some("Asutherl")
@@ -94,7 +94,7 @@ object BackendTest extends Specification with Mockito
       d.title = ("FooBarBaz")
       Document.dbTable.insert(d)
 
-      val subsA = new AgentSubscriber(new TabLine("Asutherl\talan.sutherland@hstx.com\talways"))
+      val subsA = SubscriberInfo("Asutherl","alan.sutherland@hstx.com","always")
       val ul = new UserLookup
       ul.username = Some("Asutherl")
       ul.email = Some("alan.sutherland@hstx.com")

@@ -26,6 +26,7 @@ object MessageType extends Enumeration
 
 case class Header(version: Int, message: MessageType.Type, transactionId: Int, sequence: Int)
 
+// TODO key and version should be String
 case class DocumentInfo(key: Int, version: Int, fileName: String, projectName: String, title: String, description: String, access: String, author: String, date: String, server: String, client: String, editor: String, editorStart: String)
 
 case class RevisionInfo(fileName: String, project: String, comment: String, access: String, author: String, date: Date, server: String, clientIp: String, clientHost: String, clientUserName: String, clientVersion: String, crc: String)

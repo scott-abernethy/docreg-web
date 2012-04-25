@@ -3,7 +3,6 @@ package vvv.docreg.backend
 import scala.actors.Actor
 import scala.actors.Actor._
 import scala.collection.JavaConversions._
-import vvv.docreg.model._
 import vvv.docreg.model.ApprovalState._
 import vvv.docreg.util._
 
@@ -15,10 +14,12 @@ import vvv.docreg.db.DbVendor
 import java.util.Date
 import vvv.docreg.agent._
 import org.squeryl.PrimitiveTypeMode._
+import akka.actor.{Props, ActorSystem}
+import vvv.docreg.model._
 
 case class Connect()
 case class Reload(d: Document)
-case class Reconcile(document: AgentDocument, revisions: List[AgentRevision], approvals: List[AgentApproval], subscriptions: List[AgentSubscriber])
+case class Reconcile(document: AgentDocument, revisions: List[RevisionInfo], approvals: List[ApprovalInfo], subscriptions: List[SubscriberInfo])
 case class ApprovalApproved(document: Document, revision: Revision, user: User, state: ApprovalState, comment: String)
 case class ApprovalRequested(document: Document, revision: Revision, users: Iterable[User])
 case class SubscribeRequested(document: Document, user: User)
@@ -36,7 +37,7 @@ trait BackendComponent {
 
 trait BackendComponentImpl extends BackendComponent
 {
-  this: DocumentServerComponent with AgentComponent with DaemonAgentComponent with DirectoryComponent =>
+  this: DocumentServerComponent with DaemonAgentComponent with DirectoryComponent =>
 
   val backend = new Backend with Loggable with RevisionReconcile with ApprovalReconcile
   {
@@ -46,10 +47,13 @@ trait BackendComponentImpl extends BackendComponent
   val target = Backend.server
   val reconciler = new Reconciler(this).start()
   val priorityReconciler = new Reconciler(this).start()
-  var agent: vvv.docreg.backend.Agent = _
   val userLookup = new UserLookupProvider {
     def lookup(usernameOption: Option[String], emailOption: Option[String], nameOption: Option[String], why: String) = UserLookup.lookup(usernameOption, emailOption, nameOption, directory, why)
   }
+  val system = ActorSystem("MySystem")
+  val fileDatabase = system.actorOf(Props[FileDatabase], name = "FileDatabase")
+
+    // TODO creating the ol' agent loaded the register and started a reconcile.
 
     def act()
   {
@@ -60,34 +64,33 @@ trait BackendComponentImpl extends BackendComponent
         case Connect() =>
         {
           logger.info("Starting " + product + " v" + version + " " + java.util.TimeZone.getDefault.getDisplayName)
-          agent = createAgent(clientVersion, target, product, self)
         }
-        case Loaded(d :: ds) => {
-          Document.forKey(d.getKey) match {
-            case Full(document) => {
-              // reconcile if
-              // 1. not latest version
-              // 2. editor (recently)
-              val v: Int = Integer.parseInt(d.getVersion)
-              val recentEditor = d.getEditor != null && d.getEditorStart != null && d.getEditorStart.after(new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 7)))
-              if (!document.latest_?(v) || recentEditor) {
-                reconciler ! Prepare(d, agent)
-              }
-            }
-            case _ => {
-              reconciler ! Prepare(d, agent)
-            }
-          }
-          this ! Loaded(ds)
-        }
-        case Loaded(Nil) => {
-          logger.debug("Parsing docreg.txt for changes to reconcile complete")
-        }
+//        case Loaded(d :: ds) => {
+//          Document.forKey(d.getKey) match {
+//            case Full(document) => {
+//              // reconcile if
+//              // 1. not latest version
+//              // 2. editor (recently)
+//              val v: Int = Integer.parseInt(d.getVersion)
+//              val recentEditor = d.getEditor != null && d.getEditorStart != null && d.getEditorStart.after(new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 7)))
+//              if (!document.latest_?(v) || recentEditor) {
+//                reconciler ! Prepare(d, fileDatabase)
+//              }
+//            }
+//            case _ => {
+//              reconciler ! Prepare(d, fileDatabase)
+//            }
+//          }
+//          this ! Loaded(ds)
+//        }
+//        case Loaded(Nil) => {
+//          logger.debug("Parsing docreg.txt for changes to reconcile complete")
+//        }
         case Changed(d) =>
         {
           // Todo: Apply what we know of the change now, then reconcile. Though the reconcile typically takes <1 second.
           logger.debug("Change received, sending to reconcile " + d.key)
-          priorityReconciler ! Prepare(DaemonProtocol.documentInfoToAgentDocument(d), agent)
+          priorityReconciler ! Prepare(DaemonProtocol.documentInfoToAgentDocument(d), fileDatabase)
         }
         case msg @ Reconcile(d, revisions, approvals, subscriptions) =>
         {
@@ -169,6 +172,8 @@ trait BackendComponentImpl extends BackendComponent
         case 'Die =>
         {
           logger.info("Backend killed")
+          // Kill off reconciler?
+          system.shutdown()
           exit()
         }
         case other =>
@@ -208,10 +213,10 @@ trait BackendComponentImpl extends BackendComponent
 
       assignEditor(document, reconcile.document)
 
-      val update = reconcileRevisions(document, reconcile.revisions.map(x => RevisionReconcile.agentToInfo(x)))
+      val update = reconcileRevisions(document, reconcile.revisions)
       if (!update.contains(ReconcileDocumentRemoved))
       {
-        reconcileApprovals(document, reconcile.approvals.map(x => ApprovalReconcile.agentToInfo(x)))
+        reconcileApprovals(document, reconcile.approvals)
         updateSubscriptions(document, reconcile.subscriptions)
         documentServer ! DocumentAdded(document)
       }
@@ -223,17 +228,17 @@ trait BackendComponentImpl extends BackendComponent
 
   private def updateDocument(document: Document, reconcile: Reconcile) {
     transaction {
-    val update = reconcileRevisions(document, reconcile.revisions.map(x => RevisionReconcile.agentToInfo(x)))
+    val update = reconcileRevisions(document, reconcile.revisions)
     if (update.contains(ReconcileDocumentRemoved))
     {
       return
     }
     updateSubscriptions(document, reconcile.subscriptions)
-    reconcileApprovals(document, reconcile.approvals.map(x => ApprovalReconcile.agentToInfo(x)))
+    reconcileApprovals(document, reconcile.approvals)
     
     val docChanged = assignDocument(document, reconcile.document)
     val editorChanged = assignEditor(document, reconcile.document)
-    if (docChanged || editorChanged) {
+    if (docChanged) {
       Document.dbTable.update(document)
     }
     update.collect{case ReconcileRevisionAdded(r) => r}.foreach{ id =>
@@ -272,11 +277,11 @@ trait BackendComponentImpl extends BackendComponent
       }
   }
 
-  def updateSubscriptions(document: Document, subscriptions: List[AgentSubscriber])
+  def updateSubscriptions(document: Document, subscriptions: List[SubscriberInfo])
   {
     val subscribers: List[User] = for {
       s <- subscriptions
-      u <- UserLookup.lookup(Some(s.getSubscriberUserName), Some(s.getSubscriberEmail), None, directory, "subscription on " + document + " for " + s)
+      u <- UserLookup.lookup(Some(s.userName), Some(s.email), None, directory, "subscription on " + document + " for " + s)
     } yield u
 
     val listed = subscribers.distinct.toSet
@@ -301,5 +306,5 @@ trait BackendComponentImpl extends BackendComponent
 }
 
 object Backend {
-  val server: String = Props.get("backend.server") openOr "shelob" // shelob.gnet.global.vpn?
+  val server: String = net.liftweb.util.Props.get("backend.server") openOr "shelob" // shelob.gnet.global.vpn?
 }

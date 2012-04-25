@@ -3,5 +3,10 @@ db.adapter=org.squeryl.adapters.H2Adapter
 db.url=jdbc:h2:docreg-web
 db.user=
 db.password=
-backend.server=shelob.gnet.global.vpn
-#backend.server=faramir.gnet.global.vpn
+
+## backend=shelob
+backend.server=10.16.9.179
+## backend=faramir
+#backend.server=10.15.168.23
+
+backend.home=/srv/docreg-fs

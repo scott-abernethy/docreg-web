@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# do not allow unset values
+set -o nounset
+# break on any error
+set -o errexit
+
+EXIT_ERROR=1
+trap on_exit INT TERM EXIT
+
+# called when the script terminates
+on_exit () {
+  if (( EXIT_ERROR )); then
+    echo Usage: mirror-fs SERVER USER
+  fi
+  exit
+}
+
+SERVER=$1
+FUSER=$2
+LOCAL_DIR="/srv/docreg-fs"
+
+echo Create 
+sudo mkdir -p $LOCAL_DIR
+sudo chown $FUSER $LOCAL_DIR
+echo Need to add user to fuse group
+sudo gpasswd -a $FUSER fuse
+
+echo Mounting
+sshfs -o idmap=user docreg@$SERVER: $LOCAL_DIR
+
+## TO UNMOUNT
+#fusermount -u $LOCAL_DIR 
+
+## TO MOUNT VIA FSTAB
+#sshfs#docreg@$SERVER: $LOCAL_DIR fuse defaults,idmap=user 0 0
+
+EXIT_ERROR=0

@@ -16,7 +16,6 @@ import vvv.docreg.backend._
 import vvv.docreg.db.DbVendor
 import net.liftweb.widgets.flot._
 import actors.Actor
-import vvv.docreg.agent.{ChangePoller, DaemonAgentImpl, DaemonAgentComponentImpl}
 import org.squeryl.PrimitiveTypeMode._
 
 /**

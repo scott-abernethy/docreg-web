@@ -3,3 +3,10 @@ db.adapter=org.squeryl.adapters.MySQLAdapter
 db.url=jdbc:mysql://localhost/docregweb
 db.user=root
 db.password=
+
+## backend=shelob
+backend.server=10.16.9.179
+## backend=faramir
+#backend.server=10.15.168.23
+
+backend.home=/srv/docreg-fs
