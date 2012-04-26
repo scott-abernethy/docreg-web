@@ -4,7 +4,6 @@ import vvv.docreg.agent._
 import net.liftweb.common.Loggable
 import java.io.File
 import vvv.docreg.model.{Document, User}
-import com.hstx.docregsx.ScpClient
 import akka.actor.{PoisonPill, Actor, ActorRef}
 
 class SubmitNewEngine(agent: ActorRef, target: String, clientHost: String, clientVersion: String) extends Actor with Loggable
@@ -29,9 +28,8 @@ class SubmitNewEngine(agent: ActorRef, target: String, clientHost: String, clien
             logger.info("Register reply " + response + " with suggested filename of " + suggestedFileName)
               // Submit with suggested file name assuming, as long as it is version 001 and has same fileName part.
             val submittedFileName = suggestedFileName
-            var scpClient = new ScpClient(target)
             logger.debug("Copying file")
-            scpClient.copy(cachedRequest.localFile.apply().toString(), submittedFileName);
+            SubmitBin.copyTo(cachedRequest.localFile.apply(), submittedFileName);
             logger.debug("Copying file, done")
             // todo check file size
             agent ! RequestPackage(self, target, SubmitRequest(submittedFileName, -1))

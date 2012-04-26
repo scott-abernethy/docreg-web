@@ -2,8 +2,6 @@ package vvv.docreg.backend
 
 import vvv.docreg.agent._
 import net.liftweb.common.Loggable
-import java.io.File
-import com.hstx.docregsx.ScpClient
 import vvv.docreg.model.Document.ValidDocumentFileName
 import akka.actor.{PoisonPill, Actor, ActorRef}
 
@@ -51,9 +49,9 @@ class SubmitEngine(agent: ActorRef, target: String, clientHost: String, clientVe
               // Submit with suggested file name assuming, as long as it is version 001 and has same fileName part.
             // todo for edit submit, filename should be same.
             val submittedFileName = suggestedFileName
-            var scpClient = new ScpClient(target)
             logger.debug("Copying file")
-            scpClient.copy(cachedRequest.localFile.apply().toString(), submittedFileName);
+            // todo error handling? or just akka fail handler?
+            SubmitBin.copyTo(cachedRequest.localFile.apply(), submittedFileName)
             logger.debug("Copying file, done")
             // todo check file size
             agent ! RequestPackage(self, target, SubmitRequest(submittedFileName, -1))

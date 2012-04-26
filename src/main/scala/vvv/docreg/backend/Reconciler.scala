@@ -22,9 +22,13 @@ class Reconciler(private val backend: ActorRef) extends Actor with Loggable {
 
           val timeout = Timeout(60 seconds)
 
-          val futureRevisions = ask(fileDatabase, GetLog(key))(timeout).map(_ match {
-            case ResponseLog(_, items) => items
-            case _ => Nil
+          val futureRevisions = ask(fileDatabase, GetLog(key, document.access))(timeout).map(_ match {
+            case ResponseLog(_, items) => Some(items)
+            case _ => {
+              // A log should not fail.
+              // TODO worse than this?!
+              None
+            }
           })
           val futureApprovals = ask(fileDatabase, GetApproval(key))(timeout).map(_ match {
             case ResponseApproval(_, items) => items
@@ -36,10 +40,10 @@ class Reconciler(private val backend: ActorRef) extends Actor with Loggable {
           })
 
           val result = for {
-            rs <- futureRevisions
+            rs_? <- futureRevisions
             as <- futureApprovals
             ss <- futureSubscriptions
-          } yield Reconcile(document, rs, as, ss)
+          } yield rs_?.map(Reconcile(document, _, as, ss))
 
           // The pipe pattern sends the future result to the actor on future completion, so non-blocking
           pipe(result) to backend

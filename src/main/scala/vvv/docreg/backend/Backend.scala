@@ -57,6 +57,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
   protected def receive = {
     case Connect() => {
       logger.info("Starting " + product + " v" + version + " " + java.util.TimeZone.getDefault.getDisplayName)
+      logger.info("Connecting to " + target)
       fileDatabase ! GetRegister
     }
     case ResponseRegister(ds) => {
@@ -91,7 +92,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
           logger.debug("Change received, sending to reconcile " + d.getKey)
           priorityReconciler ! Prepare(d, fileDatabase)
         }
-        case msg @ Reconcile(d, revisions, approvals, subscriptions) => {
+        case Some(msg @ Reconcile(d, revisions, approvals, subscriptions)) => {
           logger.debug("Reconcile " + d.getKey())
           Document.forKey(d.getKey) match {
             case Full(document) => updateDocument(document, msg)

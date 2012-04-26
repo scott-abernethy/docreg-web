@@ -6,12 +6,13 @@ import scalax.file.NotFileException
 import akka.util.Duration
 import java.util.concurrent.TimeUnit
 import akka.dispatch.Await
-import java.io.{FileInputStream, FileNotFoundException}
 import scalax.io.managed.SeekableByteChannelResource
-import scalax.io.{SeekableByteChannel, Resource}
 import java.text.SimpleDateFormat
 import java.util.{TimeZone, Date}
 import util.matching.Regex
+import scalax.io.{Resource, SeekableByteChannel}
+import java.io.{File, FileInputStream, FileNotFoundException}
+import net.liftweb.common.Loggable
 
 // docreg/docreg.txt
 // docreg/editlog.txt
@@ -22,7 +23,7 @@ import util.matching.Regex
 
 case object GetRegister
 case object GetEditLog
-case class GetLog(key: String)
+case class GetLog(key: String, access: String)
 case class GetMail(key: String)
 case class GetApproval(key: String)
 
@@ -44,8 +45,8 @@ class FileDatabase extends Actor
       }
     }
 
-    case m @ GetLog(key) => {
-      FileDatabaseHelper.loadLog(key) match {
+    case m @ GetLog(key, access) => {
+      FileDatabaseHelper.loadLog(key, access) match {
         case Some(items) => sender ! ResponseLog(key, items)
         case _ => sender ! ResponseFailure(m)
       }
@@ -125,8 +126,14 @@ object FileDatabaseHelper {
     }
   }
 
-  def loadLog(key: String): Option[List[RevisionInfo]] = {
-    load("docreg/log/" + key + ".log", createRevisionInfo _)
+  def loadLog(key: String, access: String): Option[List[RevisionInfo]] = {
+    // TODO
+//    def pathFor = access match {
+//      case "Secure" => "docreg/log/" + key + ".log"
+//      case _ => "secure/log/" + key + ".log"
+//    }
+    def pathFor = "docreg/log/" + key + ".log"
+    load(pathFor, createRevisionInfo _)
   }
 
   def createRevisionInfo(data: Array[String]): Option[RevisionInfo] = {
@@ -181,7 +188,7 @@ object FileDatabaseHelper {
     //      case _ => println("Fail")
     //    }
 
-    val result = catching(classOf[NotFileException], classOf[FileNotFoundException]) either {
+    val result = catching(classOf[NotFileException], classOf[FileNotFoundException]).either{
       items.foldLeft(List.empty[X]) {
         (list, line) =>
           encoder(line) match {
@@ -195,5 +202,14 @@ object FileDatabaseHelper {
       case Left(error) => None
       case Right(data) => Some(data.reverse) // reverse needed due to foldLeft
     }
+  }
+}
+
+object SubmitBin {
+  def copyTo(sourceFile: File, submitFileName: String) {
+    val local = Resource.fromFile(sourceFile)
+    val remote = Resource.fromFile("/srv/docreg-fs/submit/" + submitFileName)
+    // todo error handling?
+    local.copyDataTo(remote)
   }
 }
