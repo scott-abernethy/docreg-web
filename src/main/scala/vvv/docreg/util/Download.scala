@@ -11,6 +11,7 @@ import net.liftweb.util.ControlHelpers._
 import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.client.methods.HttpGet
 import vvv.docreg.model.Server
+import vvv.docreg.agent.AgentVendor
 
 object Download extends Loggable
 {
@@ -84,7 +85,7 @@ object Download extends Loggable
 
     userLocalServer match {
       case Full(s) if (s != null && s.length() > 0) => s
-      case _ => Backend.server
+      case _ => AgentVendor.server
     }
   }
 

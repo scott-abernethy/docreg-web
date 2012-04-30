@@ -3,9 +3,6 @@ db.url=jdbc:mysql://localhost/docregweb
 db.user=docreguser
 db.password=docregsux
 
-## backend=shelob
-backend.server=10.16.9.179
-## backend=faramir
-#backend.server=10.15.168.23
-
-backend.home=/srv/docreg-fs
+agent.server=10.16.9.179
+agent.home=/srv/docreg-fs
+agent.secure=true

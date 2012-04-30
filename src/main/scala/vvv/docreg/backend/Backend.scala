@@ -42,7 +42,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
   val product = ProjectProps.get("project.name") openOr "drw"
   val version = ProjectProps.get("project.version") openOr "0.0"
   val clientVersion = "dr+w " + version
-  val target = Backend.server
+  val target = AgentVendor.server
   val reconciler = context.actorOf(Props(new Reconciler(self)), "Reconciler")
   val priorityReconciler = context.actorOf(Props(new Reconciler(self)), "PriorityReconciler")
   val userLookup = new UserLookupProvider {
@@ -50,9 +50,6 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
   }
 
   val fileDatabase = context.actorOf(Props[FileDatabase], name = "FileDatabase")
-
-  // TODO creating the ol' agent loaded the register and started a reconcile.
-
 
   protected def receive = {
     case Connect() => {
@@ -93,7 +90,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
           priorityReconciler ! Prepare(d, fileDatabase)
         }
         case Some(msg @ Reconcile(d, revisions, approvals, subscriptions)) => {
-          logger.debug("Reconcile " + d.getKey())
+          logger.debug("Reconcile " + d.getKey() + " : " + (revisions.size, approvals.size, subscriptions.size))
           Document.forKey(d.getKey) match {
             case Full(document) => updateDocument(document, msg)
             case _ => createDocument(msg)
@@ -280,8 +277,4 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
       Subscription.dbTable.deleteWhere(s => (s.documentId === document.id) and (s.userId in remove.map(_.id)))
     }
   }
-}
-
-object Backend {
-  val server: String = net.liftweb.util.Props.get("backend.server") openOr "shelob" // shelob.gnet.global.vpn?
 }

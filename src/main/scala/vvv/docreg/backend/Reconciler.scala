@@ -27,6 +27,7 @@ class Reconciler(private val backend: ActorRef) extends Actor with Loggable {
             case _ => {
               // A log should not fail.
               // TODO worse than this?!
+              logger.warn("Failed to get log for " + List(key, document.access))
               None
             }
           })

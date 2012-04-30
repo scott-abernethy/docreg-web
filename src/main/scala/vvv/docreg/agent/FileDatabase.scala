@@ -5,14 +5,15 @@ import scala.util.control.Exception._
 import scalax.file.NotFileException
 import akka.util.Duration
 import java.util.concurrent.TimeUnit
-import akka.dispatch.Await
 import scalax.io.managed.SeekableByteChannelResource
 import java.text.SimpleDateFormat
 import java.util.{TimeZone, Date}
 import util.matching.Regex
-import scalax.io.{Resource, SeekableByteChannel}
 import java.io.{File, FileInputStream, FileNotFoundException}
 import net.liftweb.common.Loggable
+import akka.dispatch.{Future, Await}
+import akka.util.duration._
+import scalax.io.{LongTraversable, Resource, SeekableByteChannel}
 
 // docreg/docreg.txt
 // docreg/editlog.txt
@@ -35,34 +36,37 @@ case class ResponseFailure(request: AnyRef)
 
 class FileDatabase extends Actor
 {
-  // TODO make this all non-blocking
   def receive =
   {
     case m @ GetRegister => {
-      FileDatabaseHelper.loadRegister() match {
-        case Some(items) => sender ! ResponseRegister(items)
-        case _ => sender ! ResponseFailure(m)
+      val to = sender
+      FileDatabaseHelper.loadRegister().onComplete{
+        case Right(items) => to ! ResponseRegister(items)
+        case _ => to ! ResponseFailure(m)
       }
     }
 
     case m @ GetLog(key, access) => {
-      FileDatabaseHelper.loadLog(key, access) match {
-        case Some(items) => sender ! ResponseLog(key, items)
-        case _ => sender ! ResponseFailure(m)
+      val to = sender
+      FileDatabaseHelper.loadLog(key, access).onComplete{
+        case Right(items) => to ! ResponseLog(key, items)
+        case _ => to ! ResponseFailure(m)
       }
     }
 
     case m @ GetMail(key) => {
-      FileDatabaseHelper.loadMail(key) match {
-        case Some(items) => sender ! ResponseMail(key, items)
-        case _ => sender ! ResponseFailure(m)
+      val to = sender
+      FileDatabaseHelper.loadMail(key).onComplete{
+        case Right(items) => to ! ResponseMail(key, items)
+        case _ => to ! ResponseFailure(m)
       }
     }
 
     case m @ GetApproval(key) => {
-      FileDatabaseHelper.loadApproval(key) match {
-        case Some(items) => sender ! ResponseApproval(key, items)
-        case _ => sender ! ResponseFailure(m)
+      val to = sender
+      FileDatabaseHelper.loadApproval(key).onComplete{
+        case Right(items) => to ! ResponseApproval(key, items)
+        case _ => to ! ResponseFailure(m)
       }
     }
   }
@@ -92,10 +96,9 @@ object FileDatabaseHelper {
     }
   }
 
-  def loadRegister(): Option[List[DocumentInfo]] = {
-    // TODO
-//    load("secure/docreg-secure.txt", createDocumentInfo _)
-    load("docreg/docreg.txt", createDocumentInfo _)
+  def loadRegister(): Future[List[DocumentInfo]] = {
+    val register = if (AgentVendor.secure) "secure/docreg-secure.txt" else "docreg/docreg.txt"
+    loadAsync(register, createDocumentInfo _)
   }
 
   val ValidNumber: Regex = """^([0-9]+)$""".r
@@ -105,14 +108,17 @@ object FileDatabaseHelper {
       case List(ValidNumber(key), ValidNumber(version), fileName, projectName, title, description, access, author, date, server, client, editor, editorStart) => {
         Some(DocumentInfo(key.toInt, version.toInt, fileName, projectName, title, description, access, author, parseDate(date), server, client, editor, parseDate(editorStart)))
       }
+      case List(ValidNumber(key), ValidNumber(version), fileName, projectName, title, description, access, author, date, server, client) => {
+        Some(DocumentInfo(key.toInt, version.toInt, fileName, projectName, title, description, access, author, parseDate(date), server, client, "", null))
+      }
       case _ => {
         None
       }
     }
   }
 
-  def loadMail(key: String): Option[List[SubscriberInfo]] = {
-    load("docreg/mail/" + key + ".mail", createMailInfo _)
+  def loadMail(key: String): Future[List[SubscriberInfo]] = {
+    loadAsync("docreg/mail/" + key + ".mail", createMailInfo _)
   }
 
   def createMailInfo(data: Array[String]): Option[SubscriberInfo] = {
@@ -126,14 +132,12 @@ object FileDatabaseHelper {
     }
   }
 
-  def loadLog(key: String, access: String): Option[List[RevisionInfo]] = {
-    // TODO
-//    def pathFor = access match {
-//      case "Secure" => "docreg/log/" + key + ".log"
-//      case _ => "secure/log/" + key + ".log"
-//    }
-    def pathFor = "docreg/log/" + key + ".log"
-    load(pathFor, createRevisionInfo _)
+  def loadLog(key: String, access: String): Future[List[RevisionInfo]] = {
+    def pathFor = access match {
+      case "Secure" if (AgentVendor.secure) => "secure/log/" + key + ".log"
+      case _ => "docreg/log/" + key + ".log"
+    }
+    loadAsync(pathFor, createRevisionInfo _)
   }
 
   def createRevisionInfo(data: Array[String]): Option[RevisionInfo] = {
@@ -147,8 +151,8 @@ object FileDatabaseHelper {
     }
   }
 
-  def loadApproval(key: String): Option[List[ApprovalInfo]] = {
-    load("docreg/approval/" + key + ".approval", createApprovalInfo _)
+  def loadApproval(key: String): Future[List[ApprovalInfo]] = {
+    loadAsync("docreg/approval/" + key + ".approval", createApprovalInfo _)
   }
 
   def createApprovalInfo(data: Array[String]): Option[ApprovalInfo] = {
@@ -163,44 +167,25 @@ object FileDatabaseHelper {
     }
   }
 
-  def load[X](path: String, encoder: (Array[String]) => Option[X]): Option[List[X]] = {
+  def loadAsync[X](path: String, encoder: (Array[String]) => Option[X]): Future[List[X]] = {
     implicit val codec = scalax.io.Codec.ISO8859
-
-    val fullPath: String = "/srv/docreg-fs/" + path
-
+    val fullPath: String = AgentVendor.home + "/" + path
     val resource = Resource.fromInputStream(new FileInputStream(fullPath))
-//    val resource = Resource.fromFile(filePath)
 
     val items = resource.lines().dropWhile(_.isEmpty).map(_ split '\t')
 
-    // TODO timeout
+    val processor = for {
+      in <- items.processor
+      _ <- in.repeatUntilEmpty()
+      next <- in.next.timeout(15.seconds)
+    } yield encoder(next)
 
-//    val processor = for {
-//      in <- items.processor
-//      _ <- in.repeatUntilEmpty()
-//      next <- in.next
-//    } yield new TabLine(next)
-
-//    processor.traversable.async.mkString("aaa"))
-
-    //    Await.result(processor.traversable.async.foldmkString("AAA"), Duration.create(60L, TimeUnit.SECONDS)) match {
-    //      case s: String => println(s)
-    //      case _ => println("Fail")
-    //    }
-
-    val result = catching(classOf[NotFileException], classOf[FileNotFoundException]).either{
-      items.foldLeft(List.empty[X]) {
-        (list, line) =>
-          encoder(line) match {
-            case Some(encoded) => encoded :: list
-            case _ => list
-          }
-      }
-    }
-
-    result match {
-      case Left(error) => None
-      case Right(data) => Some(data.reverse) // reverse needed due to foldLeft
+    processor.traversable[Option[X]].async.foldLeft(List.empty[X]) {
+      (list, x) =>
+        x match {
+          case Some(encoded) =>  list ::: (encoded :: Nil)
+          case _ => list
+        }
     }
   }
 }
@@ -208,7 +193,7 @@ object FileDatabaseHelper {
 object SubmitBin {
   def copyTo(sourceFile: File, submitFileName: String) {
     val local = Resource.fromFile(sourceFile)
-    val remote = Resource.fromFile("/srv/docreg-fs/submit/" + submitFileName)
+    val remote = Resource.fromFile(AgentVendor.home + "/submit/" + submitFileName)
     // todo error handling?
     local.copyDataTo(remote)
   }
