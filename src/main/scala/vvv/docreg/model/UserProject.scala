@@ -6,6 +6,9 @@ import vvv.docreg.db.{DbSchema, DbObject}
 import net.liftweb.mapper.{OrderBy, By}
 import org.squeryl.PrimitiveTypeMode._
 
+/**
+ * User selected favourite projects. See ProjectAuthorization for user authorized projects.
+ */
 class UserProject extends DbObject[UserProject] {
   def dbTable = DbSchema.userProjects
   var userId: Long = 0

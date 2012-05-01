@@ -21,6 +21,7 @@ object DbSchema extends org.squeryl.Schema {
   val users = table[User]
   val userLookups = table[UserLookup]
   val projects = table[Project]
+  val projectAuthorizations = table[ProjectAuthorization]
   val userProjects = table[UserProject]
   val documents = table[Document]
   val revisions = table[Revision]
@@ -47,6 +48,12 @@ object DbSchema extends org.squeryl.Schema {
 
   on(projects)(p => declare(
     p.name is(indexed, unique, dbType("varchar(64)"))
+  ))
+
+  on(projectAuthorizations)(u => declare(
+    u.projectId is(indexed),
+    u.userId is(indexed),
+    columns(u.projectId, u.userId) are(indexed, unique)
   ))
 
   on(userProjects)(u => declare(
@@ -88,34 +95,10 @@ object DbSchema extends org.squeryl.Schema {
   ))
 
   val projectsToDocuments = oneToManyRelation(projects, documents).via( (p,d) => p.id === d.projectId)
+  val projectsToAuthorizations = oneToManyRelation(projects, projectAuthorizations).via( (p,a) => p.id === a.projectId)
   val documentsToRevisions = oneToManyRelation(documents, revisions).via( (d,r) => d.id === r.documentId)
   val documentsToPendings = oneToManyRelation(documents, pendings).via( (d,p) => d.id === p.documentId)
   val usersToRevisions = oneToManyRelation(users, revisions).via( (u,r) => u.id === r.authorId)
   val usersToApprovals = oneToManyRelation(users, approvals).via( (u,a) => u.id === a.userId)
   val usersToPendings = oneToManyRelation(users, pendings).via( (u,p) => u.id === p.userId)
-  /*
-   on(cultists)(c => declare(
-     c.email is(indexed, unique)
-   ))
-   on(artifacts)(a => declare(
-     a.path is(indexed, dbType("varchar(255)")),
-     columns(a.gatewayId, a.path) are(unique, indexed)
-   ))
-   on(clones)(c => declare(
-     c.artifactId is(indexed),
-     c.forCultistId is(indexed),
-     columns(c.artifactId, c.forCultistId) are(unique, indexed)
-   ))
-   on(presences)(p => declare(
-     p.artifactId is(indexed, unique)
-   ))
-
-   val cultistToGateways = oneToManyRelation(cultists, gateways).via((c,g) => c.id === g.cultistId)
-   val gatewayToArtifacts = oneToManyRelation(gateways, artifacts).via((g,a) => g.id === a.gatewayId)
-   val artifactToClones = oneToManyRelation(artifacts, clones).via((a,cl) => a.id === cl.artifactId)
-   val cultistToClones = oneToManyRelation(cultists, clones).via((c,cl) => c.id === cl.forCultistId)
-   val artifactToPresences = oneToManyRelation(artifacts, presences).via((a,p) => a.id === p.artifactId)
-
-   override def drop = super.drop
-  */
 }
