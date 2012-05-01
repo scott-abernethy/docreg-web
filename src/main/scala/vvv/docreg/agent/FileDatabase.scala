@@ -73,24 +73,21 @@ class FileDatabase extends Actor
 }
 
 object FileDatabaseHelper {
-  val DATE_FORMAT = {
-    val x = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss 'Z'");
-    x.setTimeZone(TimeZone.getTimeZone("UTC"))
-    x
-  }
 //  private static final Pattern FILENAME_FORMAT = Pattern.compile("^([a-zA-Z0-9]+)-([0-9]+)-(.*)");
 
   def parseDate(dateString: String): Date = {
-    if ("".equals(dateString))
-    {
+    if ("".equals(dateString)) {
       return null
     }
     try {
-      DATE_FORMAT.parse(dateString);
+      // Date formats are not synchronized, so create this every time.
+      val x = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss 'Z'");
+      x.setTimeZone(TimeZone.getTimeZone("UTC"))
+      x.parse(dateString);
     }
     catch {
       case x => {
-        println("Failed to parse " + dateString + " - " + x.getMessage);
+        println("Failed to parse '" + dateString + "' - " + x);
         null;
       }
     }
