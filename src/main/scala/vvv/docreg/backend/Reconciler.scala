@@ -52,16 +52,3 @@ class Reconciler(private val backend: ActorRef) extends Actor with Loggable {
         case _ => {}
       }
 }
-
-// these can be done in parallel
-/*
-
-just load it all.
-
-wait for reply first.
-
-createDocument(ad)
- - loadRevisions: List[ar]
- - loadSubscribers: List[as]
- - loadApprovals: List[aa]
- */

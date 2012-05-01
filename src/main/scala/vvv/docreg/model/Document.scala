@@ -34,6 +34,8 @@ class Document extends DbObject[Document] {
     inTransaction( DbSchema.projectsToDocuments.right(this).headOption )
   }
 
+  def secure_?(): Boolean = access equalsIgnoreCase "Secure"
+
   def latest: Revision = {
     inTransaction{
       from(Revision.dbTable)(r =>
