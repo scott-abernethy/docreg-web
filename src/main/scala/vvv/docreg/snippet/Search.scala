@@ -18,12 +18,12 @@ import vvv.docreg.model._
 import xml.{Text, NodeSeq}
 
 class Search extends Loggable with ProjectSelection {
-  object searchInput extends SessionVar("")
+  object searchInput extends RequestVar("")
 
   def input = {
     if (User.loggedIn_?) {
       ".search-input" #> SHtml.text(searchInput.is, s => searchInput(s), "class" -> "search-query input-medium") &
-      ".search-submit" #> SHtml.onSubmit((s) => S.redirectTo("/search"))
+      ".search-submit" #> SHtml.onSubmit((s) => {val x = searchInput.is; S.redirectTo("/search", () => searchInput(x))})
     } else {
       ".all" #> NodeSeq.Empty
     }
