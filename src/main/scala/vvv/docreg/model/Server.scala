@@ -28,7 +28,7 @@ object Server {
     new Server("RTP", "ugluk", "10.15.32.210") ::
     new Server("UK", "balrog", "10.11.65.21") ::
     new Server("Singapore", "treebeard", "10.11.48.28") ::
-    new Server("Slovenia", "beregond", "192.168.180.30") ::
+    new Server("Slovenia", "beregond", "10.15.201.30" /* was "192.168.180.30" */) ::
     new Server("India", "eomer", "192.168.250.51") :: Nil
   }
 }
