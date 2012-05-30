@@ -134,5 +134,89 @@ object DocumentTest extends Specification {
 
       checkValid("6146-001-New Document Test 3.txt", "6146", "001", "New Document Test 3.txt")
     }
+
+    "validate user access" >>
+    {
+      TestDbVendor.initAndClean()
+      inTransaction {
+        val (p1, p2, p3) = TestDbVendor.createProjects
+        val (u1, u2) = TestDbVendor.createUsers
+
+        val x = new Document
+        x.projectId = p3.id
+        x.title = "Foo"
+        x.number = "1444"
+        x.access = "Public"
+        x.allows(u1) must beTrue
+
+        x.access = "Secure"
+        x.allows(u1) must beFalse
+
+        ProjectAuthorization.grant(u2, p3)
+        x.allows(u1) must beFalse
+
+        ProjectAuthorization.grant(u1, p3)
+        x.allows(u1) must beTrue
+
+        ProjectAuthorization.revoke(u1, p3)
+        x.allows(u1) must beFalse
+      }
+    }
+  }
+
+  "DocumentRevision extractor " should {
+    import Document.DocumentRevision
+
+    "Not extract garbage input" >> {
+      DocumentRevision.unapply("garbage") must beNone
+      DocumentRevision.unapply("123KKK-REV") must beNone
+      DocumentRevision.unapply("X-Y") must beNone
+      DocumentRevision.unapply("XXXX-YYY") must beNone
+    }
+
+    "Load correct document" >> {
+      TestDbVendor.initAndClean()
+      inTransaction{
+        val (p1, p2, p3) = TestDbVendor.createProjects
+        val (u1, u2) = TestDbVendor.createUsers
+
+        val d = new Document
+        d.number = ("0234")
+        d.projectId = (p1.id)
+        d.title = ("The Nameless City")
+        d.access = ("Forbidden")
+        Document.dbTable.insert(d)
+
+        val r1 = new Revision
+        r1.documentId = (d.id)
+        r1.version = (1)
+        r1.filename = ("foo.txt")
+        r1.authorId = (u1.id)
+        r1.date = (T.now)
+        r1.comment = ("ok ok ok now")
+        Revision.dbTable.insert(r1)
+
+        val r4 = new Revision
+        r4.documentId = (d.id)
+        r4.version = (4)
+        r4.filename = ("foo.txt")
+        r4.authorId = (u2.id)
+        r4.date = (T.now)
+        r4.comment = ("hmmm")
+        Revision.dbTable.insert(r4)
+
+        DocumentRevision.unapply("0233") must beNone
+        DocumentRevision.unapply("234") must beNone
+        DocumentRevision.unapply("0234") must beSome((d, r4))
+        DocumentRevision.unapply("0234-004") must beSome((d, r4))
+        DocumentRevision.unapply("0234-4") must beSome((d, r4))
+        DocumentRevision.unapply("0234-001") must beSome((d, r1))
+        DocumentRevision.unapply("0234-1") must beSome((d, r1))
+        DocumentRevision.unapply("0234-009") must beNone
+        DocumentRevision.unapply("0234-9") must beNone
+        DocumentRevision.unapply("0234-XYZ") must beNone
+        DocumentRevision.unapply("0234-") must beNone
+      }
+    }
   }
 }

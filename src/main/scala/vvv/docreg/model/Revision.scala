@@ -42,9 +42,24 @@ object Revision extends Revision {
     inTransaction( from(dbTable)(r => where(r.documentId === documentId) select(r) orderBy(r.version desc)).toList )
   }
 
+  def latestFor(document: Document): Option[Revision] = {
+    inTransaction {
+      from(dbTable)(r =>
+        where(r.documentId === document.id)
+        select(r)
+        orderBy(r.version desc)
+      ).headOption
+    }
+  }
+
   def forDocument(document: Document, version: Long): Option[Revision] =
   {
-    inTransaction( from(dbTable)(r => where(r.documentId === document.id and r.version === version) select(r)).headOption )
+    if (version == Long.MaxValue) {
+      latestFor(document)
+    }
+    else {
+      inTransaction( from(dbTable)(r => where(r.documentId === document.id and r.version === version) select(r)).headOption )
+    }
   }
 }
 

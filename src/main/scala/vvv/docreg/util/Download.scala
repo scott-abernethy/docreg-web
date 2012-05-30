@@ -5,21 +5,20 @@ import _root_.net.liftweb.http._
 import _root_.net.liftweb.util._
 
 import vvv.docreg.backend.Backend
-import vvv.docreg.model.{User, Document}
 import org.apache.http.HttpEntity
 import net.liftweb.util.ControlHelpers._
 import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.client.methods.HttpGet
-import vvv.docreg.model.Server
 import vvv.docreg.agent.AgentVendor
+import vvv.docreg.model._
 
 object Download extends Loggable
 {
-  def download(key: String, version: Option[String]): Box[LiftResponse] =
+  def download(key: String, version: String): Box[LiftResponse] =
   {
     Document.forKey(key) match {
       case Full(d) => {
-        val r = version.flatMap(v => d.revision(v.toLong)).getOrElse(d.latest)
+        val r = Revision.forDocument(d, version.toLong) getOrElse EmptyRevision
         val url: String = fileUrl(r.filename)
         log("downloaded " + key + " via " + url)
         Full(RedirectResponse(url))

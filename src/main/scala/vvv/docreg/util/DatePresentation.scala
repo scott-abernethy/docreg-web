@@ -7,6 +7,7 @@ import vvv.docreg.model.User
 import net.liftweb.common.Full
 
 object DatePresentation {
+  // TODO date formats are not synchronized, so may play up if accessed concurrently
   private val dateTimeF = new SimpleDateFormat("MMM dd, yyyy h:mm a")
   dateTimeF.setTimeZone(TimeZone.getDefault)
   private val dayF = new SimpleDateFormat("MMM dd, yyyy")

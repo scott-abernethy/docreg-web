@@ -36,6 +36,13 @@ class Document extends DbObject[Document] {
 
   def secure_?(): Boolean = access equalsIgnoreCase "Secure"
 
+  def allows(user: User): Boolean = {
+    secure_?() match {
+      case true => ProjectAuthorization.authorizedFor_?(user.id, projectId)
+      case open => true
+    }
+  }
+
   def latest: Revision = {
     inTransaction{
       from(Revision.dbTable)(r =>
@@ -131,6 +138,26 @@ object Document extends Document {
   def sort(a: Document, b: Document): Boolean = {
     a.number.toLong < b.number.toLong
   }
+
+  object DocumentRef {
+    def unapply(ref: String): Option[(String, Long)] = {
+      ref match {
+        case ValidIdentifier(num, null) => Some(num, Long.MaxValue)
+        case ValidIdentifier(num, ver) => Some(num, ver.substring(1).toLong)
+        case _ => None
+      }
+    }
+  }
+
+  object DocumentRevision {
+    def unapply(ref: String): Option[(Document, Revision)] = {
+      for {
+        (key, version) <- DocumentRef.unapply(ref)
+        d <- Document.forKey(key).toOption
+        r <- Revision.forDocument(d, version)
+      } yield (d, r)
+    }
+  }
 }
 
 object FilteredDocument
@@ -205,23 +232,6 @@ object FilteredDocument
     }
   }
 
-//  def search(request: String): List[Document] =
-//  {
-//    if (request == null || request.isEmpty)
-//    {
-//      all()
-//    }
-//    else
-//    {
-//      val search: String = formatSearch(request)
-//      (
-//        searchLike(Document.title, search) :::
-//        searchAuthor(search) :::
-//        searchLike(Document.key, prePadTo(request, 4, '0'))
-//      ).distinct
-//    }
-//  }
-
   def formatSearch(in: String): String =
   {
     val out: Option[String] = for {
@@ -231,60 +241,4 @@ object FilteredDocument
 
     out.getOrElse("%")
   }
-
-//  def all(): List[Document] =
-//  {
-//    if (ProjectSelection.showAll.is) {
-//      Document.findAll(
-//        OrderBy(Document.id, Descending),
-//        PreCache(Document.project)
-//      )
-//    } else {
-//      val checked = ProjectSelection.projects.is.toList
-//      Document.findAll(
-//        In(Document.project, Project.id, ByList(Project.id, checked.map( _.id.is))),
-//        OrderBy(Document.id, Descending)
-//      )
-//    }
-//  }
-//
-//  def searchLike(field: MappedField[String, Document], value: String): List[Document] =
-//  {
-//    if (ProjectSelection.showAll.is) {
-//      Document.findAll(
-//        Like(field, value),
-//        OrderBy(Document.id, Descending),
-//        PreCache(Document.project)
-//      )
-//    } else {
-//      val checked = ProjectSelection.projects.is.toList
-//      Document.findAll(
-//        Like(field, value),
-//        In(Document.project, Project.id, ByList(Project.id, checked.map( _.id.is))),
-//        OrderBy(Document.id, Descending),
-//        PreCache(Document.project)
-//      )
-//    }
-//  }
-//
-//  def searchAuthor(value: String): List[Document] =
-//  {
-//    val users : List[User] = User.findAll(
-//        Like(User.name, "%" + value + "%"),
-//        OrderBy(User.name, Descending)
-//    )
-//    if (!ProjectSelection.showAll.is){
-//      val touchedRevisions = Revision.findAll(
-////      In(Revision.author, User.id, In(User.name, User.name, Like(User.name, "%" + value + "%"))),
-//        In(Revision.author, User.id, ByList(User.id, users.map(_.id.is))),
-//        In(Revision.document, Document.id, In(Document.project, Project.id, ByList(Project.id, ProjectSelection.projects.is.map(_.id.is).toSeq)))
-//      )
-//      touchedRevisions.flatMap(_.document.obj).distinct
-//    }else{
-//      val touchedRevisions = Revision.findAll(
-//        In(Revision.author, User.id, ByList(User.id, users.map(_.id.is)))
-//      )
-//      touchedRevisions.flatMap(_.document.obj).distinct
-//    }
-//  }
 }

@@ -19,8 +19,23 @@ name SAbernethy
 sAMAccountName: sabernethy
 sn: Abernethy
 givenName: Scott
+description: Software Lead Designer
+title: Software Lead Designer
 displayName: Scott Abernethy
 distinguishedName: CN=SAbernethy,OU=NZ,OU=People,OU=APAC,DC=GNET,DC=global,DC=vpn
+mobile: +64 21 442 473
+department: Software Engineering
+co: New Zealand
+cn: SAbernethy
+l: Lower Hutt
+st: Wellington
+c: NZ
+physicalDeliveryOfficeName: New Zealand
+telephoneNumber: +64 4 5778 913
+proxyAddresses: sip:Scott.Abernethy@Aviatnet.com, smtp:Scott.Abernethy@Aviatnetworks.com, smtp:Scott_Abernethy@stratexnet.com, smtp:Scott.Abernethy@HSTX.co.nz, X400:c=NZ;a= ;p=DMCWave;o=WENZ;s=Abernethy;g=Scott;, smtp:Scott.Abernethy@HarrisStratex.com, x400:c=NZ;a= ;p=DMCWave;o=WENZ;s=sabernethy;, SMTP:Scott.Abernethy@Aviatnet.com, smtp:Scott.Abernethy@HSTX.com
+objectClass: top, person, organizationalPerson, user
+objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=global,DC=vpn
+memberOf: CN=DocRegProject,OU=OpenKM,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn, CN=STXN Provision Development Team,OU=Distribution List,OU=Messaging,OU=APAC,DC=HSTX,DC=global,DC=vpn, ...
  */
 
 case class UserAttributes(userName: String, mail: String, displayName: String)

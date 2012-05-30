@@ -48,14 +48,18 @@ object ProjectAuthorization extends ProjectAuthorization {
     }
   }
 
-  def authorizedFor_?(user: User, project: Project): Boolean = {
-    authorizationFor(user, project).exists(_.revoked.isEmpty)
+  def authorizedFor_?(user: User, project: Project): Boolean = authorizedFor_?(user.id, project.id)
+
+  def authorizedFor_?(userId: Long, projectId: Long): Boolean = {
+    authorizationFor(userId, projectId).exists(_.revoked.isEmpty)
   }
 
-  def authorizationFor(user: User, project: Project): Option[ProjectAuthorization] = {
+  def authorizationFor(user: User, project: Project): Option[ProjectAuthorization] = authorizationFor(user.id, project.id)
+
+  def authorizationFor(userId: Long, projectId: Long): Option[ProjectAuthorization] = {
     inTransaction{
       from(dbTable)(pa =>
-        where(pa.userId === user.id and pa.projectId === project.id)
+        where(pa.userId === userId and pa.projectId === projectId)
         select(pa)
       ).headOption
     }

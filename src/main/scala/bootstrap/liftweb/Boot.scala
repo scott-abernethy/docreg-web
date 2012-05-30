@@ -2,7 +2,7 @@ package bootstrap.liftweb
 
 import net.liftweb._
 import http.RewriteResponse._
-import util._
+import net.liftweb.util._
 import Helpers._
 
 import common._
@@ -15,8 +15,10 @@ import _root_.vvv.docreg.util._
 import vvv.docreg.backend._
 import vvv.docreg.db.DbVendor
 import net.liftweb.widgets.flot._
-import actors.Actor
+import scala.actors.Actor
 import org.squeryl.PrimitiveTypeMode._
+import scala._
+import vvv.docreg.model.Document.DocumentRevision
 
 /**
  * A class that's instantiated early and run.  It allows the application
@@ -53,6 +55,8 @@ class Boot
       Menu.i("Edit Document") / "doc" / "edit" >> loggedIn,
       Menu.i("Create Document") / "doc" / "create" >> loggedIn,
       Menu.i("Submit Document") / "doc" / "submit" >> loggedIn,
+      Menu.i("Restricted Document") / "doc" / "restricted" >> loggedIn,
+      Menu.i("Invalid Document") / "doc" / "invalid" >> loggedIn,
       Menu.i("Project Information") / "project" / "info" >> loggedIn,
       Menu.i("User Lookup Admin") / "admin" / "user-lookup" >> loggedIn
     )
@@ -102,15 +106,36 @@ class Boot
       }
     }
 
-    LiftRules.statelessRewrite.append {
-      case RewriteRequest(ParsePath("d" :: key :: tail, _, _, _), _, _) => {
-        RewriteResponse(key :: tail)
-      }
-      case RewriteRequest(ParsePath(Document.ValidIdentifier(key, null) :: "v" :: version :: tail, _, _, _), _, _) => {
-        RewriteResponse(key + "-" + version :: tail)
-      }
-      case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: Nil, _, _, _), _, _) => {
-        RewriteResponse("doc" :: "info" :: Nil, docIdParams(key, version))
+    // Rewrite ... (stateful, so S is valid here)
+    LiftRules.statefulRewrite.append {
+      case RewriteRequest(ParsePath((ref @ Document.DocumentRef(number, version)) :: action, s, a, es), _, _) => {
+        inTransaction {
+          ref match {
+            case DocumentRevision(document, revision) => {
+              (User.loggedInUser.is.filter(document.allows(_)).isDefined, action) match {
+                case (false, _) => {
+                  // This rewrite will occur for cases where user is not logged in.
+                  RewriteResponse(ParsePath("doc" :: "restricted" :: Nil, s, a, es), Map("number" -> document.number, "version" -> revision.version.toString), true)
+                }
+                case (_, Nil) => {
+                  RewriteResponse(ParsePath("doc" :: "info" :: Nil, s, a, es), Map("key" -> document.number, "version" -> revision.version.toString), true)
+                }
+                case (_, "download" :: tail) => {
+                  RewriteResponse(ParsePath("doc" :: "download" :: tail ::: document.number :: revision.version.toString :: Nil, s, a, es), Map.empty, true)
+                }
+                case (_, "log" :: Nil) => {
+                  RewriteResponse(ParsePath("doc" :: "log" :: document.number:: Nil, s, a, es), Map.empty, true)
+                }
+                case (_, x) => {
+                  RewriteResponse(ParsePath("doc" :: x, s, a, es), Map("key" -> document.number, "version" -> revision.version.toString), true)
+                }
+              }
+            }
+            case _ => {
+              RewriteResponse(ParsePath("doc" :: "invalid" :: Nil, s, a, es), Map("number" -> number, "version" -> version.toString), true)
+            }
+          }
+        }
       }
       case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: action :: Nil, _, _, _), _, _) if (action != "download" && action != "log") => {
         RewriteResponse("doc" :: action :: Nil, docIdParams(key, version))
@@ -126,12 +151,13 @@ class Boot
       }
     }
 
+    // ... then dispatch ... (S is valid here)
     LiftRules.dispatch.append {
-      case Req(Document.ValidIdentifier(key, version) :: "download" :: Nil, _, GetRequest) =>
-        () => Download.download(key, Option(version).map(_.substring(1)))
-      case Req(Document.ValidIdentifier(key, version) :: "download" :: "editing" :: user :: Nil, _, GetRequest) =>
+      case Req("doc" :: "download" :: key :: version :: Nil, _, GetRequest) =>
+        () => Download.download(key, version)
+      case Req("doc" :: "download" :: "editing" :: user :: key :: version :: Nil, _, GetRequest) =>
         () => Download.downloadForEditing(key, user)
-      case Req(Document.ValidIdentifier(key, version) :: "log" :: Nil, _, GetRequest) =>
+      case Req("doc" :: "log" :: key :: Nil, _, GetRequest) =>
         () => Download.logFile(key)
     }
 

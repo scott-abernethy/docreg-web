@@ -25,6 +25,9 @@ class User extends DbObject[User] {
   def dbTable = DbSchema.users
   var username: String = ""
   var name: String =  ""
+//  var title: String =  ""
+//  var department: String =  ""
+//  var location: String =  ""
   var email: String = ""
   var active: Boolean = true
   var host: String = ""
