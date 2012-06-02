@@ -24,10 +24,11 @@ import scala.Predef._
 class User extends DbObject[User] {
   def dbTable = DbSchema.users
   var username: String = ""
+  var dn: String = ""
   var name: String =  ""
-//  var title: String =  ""
-//  var department: String =  ""
-//  var location: String =  ""
+  var description: String =  ""
+  var department: String =  ""
+  var location: String =  ""
   var email: String = ""
   var active: Boolean = true
   var host: String = ""
@@ -154,7 +155,7 @@ object User extends User with Loggable {
 
   def saveUserCookie() {
     loggedInUser.is match {
-      case Full(u) => S.addCookie(HTTPCookie(docRegUserCookie, u.username).setMaxAge(3600 * 24 * 365).setPath("/"))
+      case Full(u) => S.addCookie(HTTPCookie(docRegUserCookie, u.username).setMaxAge(3600 * 24 * 7).setPath("/"))
       case _ => S.addCookie(HTTPCookie(docRegUserCookie, "###").setPath("/"))
     }
   }

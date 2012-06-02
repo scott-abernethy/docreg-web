@@ -15,49 +15,69 @@ import vvv.docreg.model._
 
 class UserSnippet extends Loggable {
   val signInHint = ""
+  object failure extends RequestVar[Option[(String,String)]](None)
   object username extends RequestVar(signInHint)
+  object password extends RequestVar("")
 
   def signIn = {
-    ".username" #> JsCmds.FocusOnLoad(SHtml.text(username.is, s => username(s)) % ("style" -> "width: 250px")) &
-    ".submit" #> SHtml.submit("Sign In", processLogin _, "class" -> "btn primary")
+    ".failure-alert" #> failure.is.map{ f =>
+      ".failure-heading *" #> f._1 &
+      ".failure-desc *" #> f._2
+    } &
+    ".username" #> JsCmds.FocusOnLoad(SHtml.text(username.is, s => username(s), "class" -> "input-xlarge")) &
+    ".password" #> SHtml.password("", s => password(s), "class" -> "input-xlarge") &
+    ".submit" #> SHtml.submit("Sign In", processLogin _, "class" -> "btn btn-success")
   }
 
   def processLogin() {
-    username.is.toLowerCase match {
+    username.is.trim.toLowerCase match {
       case DomainUsername("gnet", name) => {
-        tryLogin(name)
+        tryLogin(name, password.is.trim)
       }
       case DomainUsername(domain, name) => {
-        loginError(<p><strong>Invalid domain</strong>{" '" + domain + "'. Please use your GNET domain username."}</p>)
+        loginFailed("Invalid Domain", "'" + domain + "' is not a recognised domain. Please use your GNET domain username.")
       }
       case ValidEmail(name, "gnet.global.vpn") => {
-        tryLogin(name)
+        tryLogin(name, password.is.trim)
+      }
+      case ValidEmail(name, "aviatnet.com") => {
+        loginFailed("Invalid Username", "Email address is not supported. Please use your GNET domain username.")
       }
       case ValidEmail(name, domain) => {
-        loginError(<p><strong>Invalid domain</strong>{" '" + domain + "'. Please use your GNET domain username."}</p>)
+        loginFailed("Invalid Domain", "'" + domain + "' is not a recognised domain. Please use your GNET domain username.")
       }
       case input if (input == signInHint) => {
-        loginError(<p>Please enter <strong>your</strong> account username</p>)
+        loginFailed("Invalid Username", "Please enter your GNET account username.")
       }
       case input => {
-        tryLogin(input)
+        tryLogin(input, password.is.trim)
       }
     }
   }
 
-  private def tryLogin(username: String) {
+  private def tryLogin(username: String, password: String) {
     inTransaction{
       User.forUsernameOrCreate(username) match {
-        case Full(u) if u.active =>
-          doSignIn(u)
-        case _ =>
-          loginError(<p><strong>Failed</strong>{" to login as user '" + username + User.domain + "'"}</p>)
+        case Full(u) => {
+          if (!u.active) {
+            loginFailed("Restricted User", "Failed to login as user '" + username + "', user is flagged as inactive.")
+          }
+          else if (Environment.env.directory.login(u.dn, password)) {
+            doSignIn(u)
+          }
+          else {
+            loginFailed("Invalid Username or Password", "Failed to login as user '" + username + "', incorrect username or password provided.")
+          }
+        }
+        case _ => {
+          loginFailed("Invalid Username or Password", "Failed to login as user '" + username + "', incorrect username or password provided.")
+        }
       }
     }
   }
 
-  private def loginError(msg: NodeSeq) {
-    S.error(<div class="alert-message error">{ msg }</div>)
+  def loginFailed(title: String, desc: String) {
+    failure.apply(Some(title, desc))
   }
 
   def doSignIn(u: vvv.docreg.model.User) {
@@ -110,6 +130,9 @@ class UserSnippet extends Loggable {
     val t = ".profile-name" #> u.displayName &
     ".profile-username" #> u.username &
     ".profile-email" #> <a href={"mailto:" + u.email}>{u.email} <i class="icon-envelope"></i></a> &
+    ".profile-description" #> u.description &
+    ".profile-department" #> u.department &
+    ".profile-location" #> u.location &
     ".profile-local-server" #> Server.description(u.localServer) &
     ".profile-time-zone" #> u.timeZone &
     ".profile-activity" #> <span>{ u.activity() } submits in { u.impact() } documents</span> &

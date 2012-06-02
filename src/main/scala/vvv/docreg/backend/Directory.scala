@@ -2,7 +2,6 @@ package vvv.docreg.backend
 
 import net.liftweb.ldap._
 import net.liftweb.util.ControlHelpers._
-import javax.naming.directory._
 import net.liftweb.common.{Full, Failure, Empty, Box}
 import vvv.docreg.model.User
 import vvv.docreg.util.StringUtil.ValidEmail
@@ -38,17 +37,21 @@ objectCategory: CN=Person,CN=Schema,CN=Configuration,DC=global,DC=vpn
 memberOf: CN=DocRegProject,OU=OpenKM,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn, CN=STXN Provision Development Team,OU=Distribution List,OU=Messaging,OU=APAC,DC=HSTX,DC=global,DC=vpn, ...
  */
 
-case class UserAttributes(userName: String, mail: String, displayName: String)
-
 trait Directory {
   def findFromMail(mailUserName: String): Box[UserAttributes]
   def findFromUserName(userName: String): Box[UserAttributes]
   def findFromPartialName(partialName: String): Box[UserAttributes]
+  def login(dn: String, password: String): Boolean
 }
 
 trait DirectoryComponent {
   val directory: Directory
 }
+
+/*
+LDAP port 389?
+Microsoft's AD LDAP is on port 3268 (and Global Catalog server)
+ */
 
 class DirectoryImpl extends LDAPVendor with Directory {
   val ldapBase = "DC=GNET,DC=global,DC=vpn"
@@ -62,24 +65,23 @@ class DirectoryImpl extends LDAPVendor with Directory {
   )
 
   def searchIt(filter: String): List[String] = {
-    val sc = new SearchControls()
-    sc.setSearchScope(SearchControls.SUBTREE_SCOPE)
+    val sc = new javax.naming.directory.SearchControls()
+    sc.setSearchScope(javax.naming.directory.SearchControls.SUBTREE_SCOPE)
     // todo restrict search to attributes we care about?
     searchControls.doWith(sc) {
       search(filter)
     }
   }
 
-  def findFromPartialName(partialName: String): Box[UserAttributes] = {
-    find("displayName=" + partialName.replaceAll(" ", "*") + "")
+  def partialNameFilter(partialName: String) = {
+    "displayName=" + partialName.replaceAll(" ", "*") + ""
   }
 
-  def findFromMail(mail: String): Box[UserAttributes] = {
-    find("mail=" + mail)
+  def mailFilter(mail: String) = {
+    "mail=" + mail
   }
 
-  def findFromUserName(userName: String): Box[UserAttributes] =
-  {
+  def userNameFilter(userName: String) = {
     val u = userName match
     {
       case ValidEmail(name, domain) =>
@@ -87,34 +89,122 @@ class DirectoryImpl extends LDAPVendor with Directory {
       case other =>
         other
     }
-    find("userPrincipalName=" + u + User.domain)
+    "userPrincipalName=" + u + User.domain
   }
-  
+
+  def findFromPartialName(partialName: String): Box[UserAttributes] = {
+    find(partialNameFilter(partialName))
+  }
+
+  def findFromMail(mail: String): Box[UserAttributes] = {
+    find(mailFilter(mail))
+  }
+
+  def findFromUserName(userName: String): Box[UserAttributes] = {
+    find(userNameFilter(userName))
+  }
+
   def find(filter: String): Box[UserAttributes] = {
+    dn(filter).flatMap(findAttributes(_))
+  }
+
+  def dn(filter: String): Box[String] = {
     tryo(searchIt("(&(objectCategory=person)(" + filter + "))")) match {
       case Full(Nil) => Empty
-      case Full(dn :: Nil) => findFromDn(dn)
+      case Full(dn :: Nil) => Full(dn)
       case Full(dn :: more) => Failure("Multiple users found " + (dn :: more))
       case _ => Failure("Exception encoutered during search for '" + filter + "'")
     }
   }
 
-  def findFromDn(dn: String): Box[UserAttributes] = {
-    def extractValue(attr: Attributes, key: String): Option[String] = Option(attr).map(_.get(key)).filter(_ != null).map(_.get()).filter(_ != null).map(_.toString)
+  def findAttributes(dn: String): Box[UserAttributes] = {
     tryo(attributesFromDn(dn + "," + ldapBase)) match {
-      case Full(attr) if (attr != null) => {
-        Box(
-          for {
-            userPrincipalName <- extractValue(attr, "userPrincipalName")
-            mail <- extractValue(attr, "mail")
-            displayName <- extractValue(attr, "displayName")
-          } yield UserAttributes(userPrincipalName, mail, displayName)
-        )
-      }
-      case _ => {
-        Empty
-      }
+      case Full(attrs) if (attrs != null) => Full(new NamingUserAttributes(dn,attrs))
+      case _ => Empty
     }
+  }
+
+  def login(dn: String, password: String): Boolean = {
+    if (!password.isEmpty) {
+      val success = bindUser(dn, password)
+      logger.info("Login " + (dn, password) + " -> " + success)
+      success
+    }
+    else {
+      false
+    }
+  }
+}
+
+trait UserAttributes {
+  def userName(): Option[String]
+
+  def email(): Option[String]
+
+  def displayName(): Option[String]
+
+  def dn(): Option[String]
+
+  def department(): Option[String]
+
+  def description(): Option[String]
+
+  def location(): Option[String]
+
+  def memberOf(): List[String]
+
+  def debug() = {}
+}
+
+class NamingUserAttributes(val foundDn: String, val attrs: javax.naming.directory.Attributes) extends UserAttributes {
+  def extractValue(key: String): Option[String] = {
+    Option( attrs.get(key) ).flatMap( x => Option(x.get()) ).map(_.toString)
+  }
+
+  def dn() = Some(foundDn)
+
+  def userName() = extractValue("userPrincipalName")
+
+  def email() = extractValue("mail")
+
+  def displayName() = extractValue("displayName")
+
+  def department() = extractValue("department")
+
+  def description() = extractValue("description")
+
+  def location() = extractValue("physicalDeliveryOfficeName")
+
+  private def lameEnumToListOfString(enum: javax.naming.NamingEnumeration[_]): List[String] = {
+    if (!enum.hasMore) {
+      Nil
+    }
+    else {
+      enum.next().toString :: lameEnumToListOfString(enum)
+    }
+  }
+
+  private def lameEnumToList[T](enum: javax.naming.NamingEnumeration[T]): List[T] = {
+    if (!enum.hasMore) {
+      Nil
+    }
+    else {
+      enum.next() :: lameEnumToList(enum)
+    }
+  }
+
+  def memberOf(): List[String] = {
+    val memberOf = attrs.get("memberOf")
+    if (memberOf != null) {
+      tryo(lameEnumToListOfString(memberOf.getAll)).getOrElse(List.empty[Any]).map(_.toString())
+    }
+    else {
+      List.empty
+    }
+  }
+
+  override def debug() {
+    lameEnumToList(attrs.getAll).foreach(x => println(x.getID + " -> " + lameEnumToListOfString(x.getAll)))
   }
 }
 

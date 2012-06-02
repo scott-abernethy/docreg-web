@@ -8,10 +8,39 @@
     <div id="main" class="lift:surround?with=no-sidebar;at=content">
 
   <form class="lift:snippet?type=UserSnippet.signIn;form=post form-inline">
-    <div class="hero-unit">
+    <div>
       <h1>Hello</h1>
-      <p>Please sign in, using your GNET account username</p>
-      <span class="username">Input</span> <button class="submit"/>
+
+        <fieldset>
+            <legend>Please sign in, using your GNET account credentials.</legend>
+
+            <div class="control-group alert alert-error failure-alert">
+                <h3 class="alert-heading failure-heading">Sign In Failed</h3>
+                <p class="failure-desc">This document is restricted and your user account has not been granted access privileges.</p>
+                <p><a href="/help#signin-help" class="btn btn-danger">Help</a></p>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Username</label>
+                <div class="controls">
+                    <span class="username"></span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Password</label>
+                <div class="controls">
+                    <span class="password"></span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="controls">
+                    <button class="submit">Submit</button>
+                </div>
+            </div>
+        </fieldset>
+
+      <!--<span class="username">Input</span> <span class="password"></span> <button class="submit"/>-->
     </div>
   </form>
 

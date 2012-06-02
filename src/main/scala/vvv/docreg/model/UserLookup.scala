@@ -19,13 +19,48 @@ class UserLookup extends DbObject[UserLookup] {
   var userId: Long = 0
 }
 
+object SystemUserAttributes extends UserAttributes {
+  def userName() = Some("system.docreg")
+
+  def email() = Some("system@docreg.x")
+
+  def displayName() = Some("[System]")
+
+  def dn() = None
+
+  def department() = None
+
+  def description() = None
+
+  def location() = None
+
+  def memberOf() = Nil
+}
+
+object UnknownUserAttributes extends UserAttributes {
+  def userName() = Some("unknown.docreg")
+
+  def email() = Some("unknown@docreg.x")
+
+  def displayName() = Some("[Unknown]")
+
+  def dn() = None
+
+  def department() = None
+
+  def description() = None
+
+  def location() = None
+
+  def memberOf() = Nil
+}
+
 object UserLookup extends UserLookup with Loggable {
-  val unknownUserAttributes = UserAttributes("unknown.docreg", "unknown@docreg.x", "[Unknown]")
-  val systemUserAttributes = UserAttributes("system.docreg", "system@docreg.x", "[System]")
-  lazy val unknownUser = fromAttributes(unknownUserAttributes, false)
+  lazy val unknownUser = fromAttributes(UnknownUserAttributes, false)
+  lazy val systemUser = fromAttributes(SystemUserAttributes, false)
 
   def installDefaults() {
-    install(Some("smite"), None, Some("System"), systemUserAttributes)
+    install(Some("smite"), None, Some("System"), SystemUserAttributes)
   }
 
   def install(usernameOption: Option[String], emailOption: Option[String], nameOption: Option[String], userAttributes: UserAttributes) {
@@ -108,19 +143,27 @@ object UserLookup extends UserLookup with Loggable {
 
   // todo move to User?
   def fromAttributes(attributes: UserAttributes, active: Boolean): Box[User] = {
-    // todo put back to find via username when other email dependant user creation tasks have gone.
-    from(User.dbTable)(u => where(u.email === attributes.mail) select(u)).headOption match {
-      case Some(existing) =>
-        Full(existing)
-      case _ =>
-        val created = new User
-        created.name = attributes.displayName
-        created.email = attributes.mail
-        created.username = attributes.userName
-        created.active = active
-        created.localServer = "boromir"
-        created.timeZone = "US/Pacific"
-        Full( User.dbTable.insert(created) )
+    attributes.userName() match {
+      case Some(userName) => {
+        from(User.dbTable)(u => where(u.username === userName) select(u)).headOption match {
+          case Some(existing) =>
+            Full(existing)
+          case _ =>
+            val created = new User
+            created.dn = attributes.dn() getOrElse "?"
+            created.name = attributes.displayName() getOrElse "?"
+            created.email = attributes.email() getOrElse "?"
+            created.username = userName
+            created.active = active
+            created.localServer = "boromir"
+            created.timeZone = "US/Pacific"
+            created.description = attributes.description() getOrElse ""
+            created.department = attributes.department() getOrElse ""
+            created.location = attributes.location() getOrElse ""
+            Full( User.dbTable.insert(created) )
+        }
+      }
+      case _ => Failure("No username")
     }
   }
 }

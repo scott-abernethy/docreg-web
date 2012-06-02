@@ -8,6 +8,24 @@ import vvv.docreg.backend.{UserAttributes, Directory}
 import net.liftweb.common.{Full, Failure, Empty}
 import org.squeryl.PrimitiveTypeMode._
 
+class FakeUserAttributes(username: String, mail: String, display: String) extends UserAttributes {
+  def userName() = Some(username)
+
+  def email() = Some(mail)
+
+  def displayName() = Some(display)
+
+  def dn() = None
+
+  def department() = None
+
+  def description() = None
+
+  def location() = None
+
+  def memberOf() = Nil
+}
+
 object UserLookupTest extends Specification with Mockito {
   "UserLookup" should {
     "Reject empty lookup" >> {
@@ -70,7 +88,7 @@ object UserLookupTest extends Specification with Mockito {
       b.username = ("bbb")
       User.dbTable.insert(b)
 
-      directory.findFromUserName("uUu") returns(Full(UserAttributes("uUu", "u@hoo.org", "u u u")))
+      directory.findFromUserName("uUu") returns(Full(new FakeUserAttributes("uUu", "u@hoo.org", "u u u")))
 //      directory.findFromUserName("uUu") returns(Empty)
 //      directory.findFromUserName("uUu") returns(Empty)
       UserLookup.lookup(Some("uUu"), None, None, directory, "") match {
@@ -100,7 +118,7 @@ object UserLookupTest extends Specification with Mockito {
       b.username = ("bbb")
       User.dbTable.insert(b)
 
-      directory.findFromMail("l@la.la") returns(Full(UserAttributes("lala", "l@la.la", "la la la lah")))
+      directory.findFromMail("l@la.la") returns(Full(new FakeUserAttributes("lala", "l@la.la", "la la la lah")))
       UserLookup.lookup(None, Some("l@la.la"), None, directory, "") match {
         case Full(user) =>
           user.email must be_==("l@la.la")
