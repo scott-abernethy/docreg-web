@@ -22,8 +22,7 @@ class Search extends Loggable with ProjectSelection {
 
   def input = {
     if (User.loggedIn_?) {
-      ".search-input" #> SHtml.text(searchInput.is, s => searchInput(s), "class" -> "search-query input-medium") &
-      ".search-submit" #> SHtml.onSubmit((s) => {val x = searchInput.is; S.redirectTo("/search", () => searchInput(x))})
+      ".search-input" #> SHtml.onSubmit((s) => {val x = s; S.redirectTo("/search", () => searchInput(x))})
     } else {
       ".all" #> NodeSeq.Empty
     }
