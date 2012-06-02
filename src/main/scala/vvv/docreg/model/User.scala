@@ -20,7 +20,6 @@ import scala.Predef._
 // http://wiki.eclipse.org/Jetty/Tutorial/JAAS#LdapLoginModule
 // http://www.mail-archive.com/openbd@googlegroups.com/msg05268.html
 
-// Custom simple user, authentication handled against domain by jetty.
 class User extends DbObject[User] {
   def dbTable = DbSchema.users
   var username: String = ""
@@ -31,13 +30,12 @@ class User extends DbObject[User] {
   var location: String =  ""
   var email: String = ""
   var active: Boolean = true
+  var superuser: Boolean = false
   var host: String = ""
   var lastSession: Timestamp = new Timestamp(0)
   var sessionCount: Long = 0
   var localServer: String = ""
   var timeZone: String = ""
-
-  //var subscriptions = MappedManyToMany(Subscription, Subscription.user, Subscription.document, Document)
 
   def subscribed_?(d: Document) = {
     inTransaction( Subscription.dbTable.where(s => s.userId === id and s.documentId === d.id).isEmpty ) == false
@@ -106,7 +104,20 @@ class User extends DbObject[User] {
   }
 
   def canLogin_?(): Boolean = {
+    // TODO need to check for DocReg Access group
     active
+  }
+
+  def accessLevel(): AccessLevel.Value = {
+    if (!active) {
+      AccessLevel.none
+    }
+    else if (superuser) {
+      AccessLevel.superuser
+    }
+    else {
+      AccessLevel.normal
+    }
   }
 }
 
@@ -166,15 +177,6 @@ object User extends User with Loggable {
     }
   }
 
-//  def forUsernameOrCreate(username: String): Box[User] = {
-//    forUsername(username + domain) match {
-//      case Some(user) =>
-//        Full(user)
-//      case _ =>
-//        UserLookup.lookup(Some(username), None, None, Environment.env.directory, "forUsernameOrCreate")
-//    }
-//  }
-
   def saveUserCookie() {
     loggedInUser.is match {
       case Full(u) => S.addCookie(HTTPCookie(docRegUserCookie, u.username).setMaxAge(3600 * 24 * 7).setPath("/"))
@@ -205,4 +207,11 @@ object User extends User with Loggable {
     val y = b.displayName.split(" ").head
     x.compareToIgnoreCase(y) < 0
   }
+}
+
+object AccessLevel extends Enumeration {
+  type AccessLevel = Value
+  val none = Value("None")
+  val normal = Value("Normal")
+  val superuser = Value("Administrator")
 }

@@ -126,6 +126,10 @@ class UserSnippet extends Loggable {
     ".profile-local-server" #> Server.description(u.localServer) &
     ".profile-time-zone" #> u.timeZone &
     ".profile-activity" #> <span>{ u.activity() } submits in { u.impact() } documents</span> &
+    ".profile-access-level" #> u.accessLevel().toString &
+    ".profile-authorizations" #> ProjectAuthorization.authorizedProjectsFor(u).map{ pa =>
+      ".item" #> pa.name
+    } &
     ".profile-preferences [href]" #> u.preferences() &
     ".subscription-item" #> Subscription.documentsForUser(u).map { s =>
       "li *" #> s.info()

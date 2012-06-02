@@ -126,9 +126,7 @@ class DirectoryImpl extends LDAPVendor with Directory {
 
   def login(dn: String, password: String): Boolean = {
     if (!password.isEmpty) {
-      val success = bindUser(dn, password)
-      logger.info("Login " + (dn, password) + " -> " + success)
-      success
+      bindUser(dn, password)
     }
     else {
       false

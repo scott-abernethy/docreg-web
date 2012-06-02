@@ -64,4 +64,14 @@ object ProjectAuthorization extends ProjectAuthorization {
       ).headOption
     }
   }
+
+  def authorizedProjectsFor(user: User): List[Project] = {
+    inTransaction{
+      join(dbTable, Project.dbTable)( (pa, p) =>
+        where(pa.userId === user.id)
+        select(p)
+        on(pa.projectId === p.id)
+      ).toList
+    }
+  }
 }

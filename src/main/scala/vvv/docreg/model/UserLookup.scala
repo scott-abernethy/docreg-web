@@ -155,6 +155,7 @@ object UserLookup extends UserLookup with Loggable {
             Full(existing)
           case _ =>
             val created = new User
+            created.username = userName
             updateUserAttributes(created, attributes, active)
             created.localServer = "boromir"
             created.timeZone = "US/Pacific"
