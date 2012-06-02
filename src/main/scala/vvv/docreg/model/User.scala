@@ -104,7 +104,13 @@ class User extends DbObject[User] {
       TimeZone.getTimeZone(timeZone)
     }
   }
+
+  def canLogin_?(): Boolean = {
+    active
+  }
 }
+
+case class SignInFailure(why: String, description: String)
 
 object User extends User with Loggable {
   val docRegUserCookie = "DocRegWebUser"
@@ -112,7 +118,23 @@ object User extends User with Loggable {
 
   object loggedInUser extends SessionVar[Box[User]](checkForUserCookie)
   object requestUri extends SessionVar[Option[String]](None)
-  
+
+  def signIn(username: String, password: String): Either[User, SignInFailure] = {
+    val directory = Environment.env.directory
+    // This gives us an up to date user, i.e. LDAP attributes are reloaded
+    UserLookup.lookupUser(username, directory) match {
+      case Full(user) if (!user.canLogin_?()) => {
+        Right(SignInFailure("Not Authorized", "Your user account is not authorized to access this service."))
+      }
+      case Full(user) if (directory.login(user.dn, password)) => {
+        Left(user)
+      }
+      case _ => {
+        Right(SignInFailure("Incorrect Username or Password", "Failed to login as user '" + username + "', incorrect username or password provided."))
+      }
+    }
+  }
+
   def reloadLoggedInUser() {
     val u = loggedInUser.toOption.flatMap(_.reload())
     loggedInUser(u)
@@ -144,14 +166,14 @@ object User extends User with Loggable {
     }
   }
 
-  def forUsernameOrCreate(username: String): Box[User] = {
-    forUsername(username + domain) match {
-      case Some(user) =>
-        Full(user)
-      case _ =>
-        UserLookup.lookup(Some(username), None, None, Environment.env.directory, "forUsernameOrCreate")
-    }
-  }
+//  def forUsernameOrCreate(username: String): Box[User] = {
+//    forUsername(username + domain) match {
+//      case Some(user) =>
+//        Full(user)
+//      case _ =>
+//        UserLookup.lookup(Some(username), None, None, Environment.env.directory, "forUsernameOrCreate")
+//    }
+//  }
 
   def saveUserCookie() {
     loggedInUser.is match {

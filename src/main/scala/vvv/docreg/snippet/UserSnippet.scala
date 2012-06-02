@@ -56,22 +56,12 @@ class UserSnippet extends Loggable {
   }
 
   private def tryLogin(username: String, password: String) {
-    inTransaction{
-      User.forUsernameOrCreate(username) match {
-        case Full(u) => {
-          if (!u.active) {
-            loginFailed("Restricted User", "Failed to login as user '" + username + "', user is flagged as inactive.")
-          }
-          else if (Environment.env.directory.login(u.dn, password)) {
-            doSignIn(u)
-          }
-          else {
-            loginFailed("Invalid Username or Password", "Failed to login as user '" + username + "', incorrect username or password provided.")
-          }
-        }
-        case _ => {
-          loginFailed("Invalid Username or Password", "Failed to login as user '" + username + "', incorrect username or password provided.")
-        }
+    inTransaction(User.signIn(username, password)) match {
+      case Left(user) => {
+        doSignIn(user)
+      }
+      case Right(SignInFailure(why, description)) => {
+        loginFailed(why, description)
       }
     }
   }

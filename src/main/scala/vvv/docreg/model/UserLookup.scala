@@ -133,7 +133,7 @@ object UserLookup extends UserLookup with Loggable {
     )
   }
 
-  def lookupUser(inputOption: Option[String], lookup: (String) => Box[UserAttributes]): Option[User] = {
+  protected def lookupUser(inputOption: Option[String], lookup: (String) => Box[UserAttributes]): Box[User] = {
     for {
       input <- inputOption
       foundUserAttributes <- lookup(input)
@@ -141,29 +141,37 @@ object UserLookup extends UserLookup with Loggable {
     } yield user
   }
 
-  // todo move to User?
-  def fromAttributes(attributes: UserAttributes, active: Boolean): Box[User] = {
+  def lookupUser(username: String, directory: Directory): Box[User] = {
+    lookupUser(Some(username), x => directory.findFromUserName(x))
+  }
+  
+  protected def fromAttributes(attributes: UserAttributes, active: Boolean): Box[User] = {
     attributes.userName() match {
       case Some(userName) => {
         from(User.dbTable)(u => where(u.username === userName) select(u)).headOption match {
           case Some(existing) =>
+            updateUserAttributes(existing, attributes, active)
+            User.dbTable.update(existing)
             Full(existing)
           case _ =>
             val created = new User
-            created.dn = attributes.dn() getOrElse "?"
-            created.name = attributes.displayName() getOrElse "?"
-            created.email = attributes.email() getOrElse "?"
-            created.username = userName
-            created.active = active
+            updateUserAttributes(created, attributes, active)
             created.localServer = "boromir"
             created.timeZone = "US/Pacific"
-            created.description = attributes.description() getOrElse ""
-            created.department = attributes.department() getOrElse ""
-            created.location = attributes.location() getOrElse ""
             Full( User.dbTable.insert(created) )
         }
       }
       case _ => Failure("No username")
     }
+  }
+
+  protected def updateUserAttributes(user: User, attributes: UserAttributes, active: Boolean) {
+    user.dn = attributes.dn() getOrElse "?"
+    user.name = attributes.displayName() getOrElse "?"
+    user.email = attributes.email() getOrElse "?"
+    user.description = attributes.description() getOrElse ""
+    user.department = attributes.department() getOrElse ""
+    user.location = attributes.location() getOrElse ""
+    user.active = active
   }
 }
