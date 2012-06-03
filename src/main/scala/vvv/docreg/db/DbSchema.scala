@@ -33,6 +33,9 @@ object DbSchema extends org.squeryl.Schema {
     u.username is(indexed, unique, dbType("varchar(64)")),
     u.name is(indexed, dbType("varchar(64)")),
     u.email is(indexed, dbType("varchar(64)")),
+    u.description is(dbType("varchar(256)")),
+    u.department is(dbType("varchar(128)")),
+    u.location is(dbType("varchar(128)")),
     u.host is(dbType("varchar(64)")),
     u.localServer is(dbType("varchar(64)")),
     u.timeZone is(dbType("varchar(32)"))
