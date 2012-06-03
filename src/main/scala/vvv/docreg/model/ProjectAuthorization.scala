@@ -68,7 +68,7 @@ object ProjectAuthorization extends ProjectAuthorization {
   def authorizedProjectsFor(user: User): List[Project] = {
     inTransaction{
       join(dbTable, Project.dbTable)( (pa, p) =>
-        where(pa.userId === user.id)
+        where(pa.userId === user.id and pa.revoked.isNull)
         select(p)
         on(pa.projectId === p.id)
       ).toList
