@@ -117,6 +117,7 @@ class UserSnippet extends Loggable {
   }
 
   def profileTransform(u: User) = {
+    val authorzations = ProjectAuthorization.authorizedProjectsFor(u)
     val t = ".profile-name" #> u.displayName &
     ".profile-username" #> u.username &
     ".profile-email" #> <a href={"mailto:" + u.email}>{u.email} <i class="icon-envelope"></i></a> &
@@ -127,8 +128,9 @@ class UserSnippet extends Loggable {
     ".profile-time-zone" #> u.timeZone &
     ".profile-activity" #> <span>{ u.activity() } submits in { u.impact() } documents</span> &
     ".profile-access-level" #> u.accessLevel().toString &
-    ".profile-authorizations" #> ProjectAuthorization.authorizedProjectsFor(u).map{ pa =>
-      ".item" #> pa.name
+    (if (authorzations.isEmpty) ".profile-authorizations" #> NodeSeq.Empty else ".ignoredzzz" #> "ignored") &
+    ".authorized-item" #> authorzations.map{ pa =>
+      "li *" #> pa.name
     } &
     ".profile-preferences [href]" #> u.preferences() &
     ".subscription-item" #> Subscription.documentsForUser(u).map { s =>
