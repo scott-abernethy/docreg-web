@@ -24,7 +24,7 @@ class ProjectSnippet extends Loggable {
         val authorized: List[User] = p.authorized()
         val contributors: List[User] = p.contributors()
         val t = ".p-name" #> p.name &
-          ".d-count *" #> (open.size + restricted.size) &
+          ".d-count *" #> (open.size) &
           listOrNone[Document](".d-items", open, d => <span><i class={ if (d.secure_?()) "icon-lock" else "icon-book" }></i> { d.info() }</span>) &
           ".d-restricted" #> restricted.headOption.map{ x =>
             ".d-restricted-count *" #> restricted.size
