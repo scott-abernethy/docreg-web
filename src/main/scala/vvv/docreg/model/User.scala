@@ -8,13 +8,13 @@ import http._
 import provider.HTTPCookie
 import vvv.docreg.util.{Environment, StringUtil}
 import vvv.docreg.util.StringUtil.ValidEmail
-import xml.NodeSeq
 import java.util.{TimeZone, Date}
 import java.sql.Timestamp
 import vvv.docreg.db.{DbObject, DbSchema}
 import org.squeryl.PrimitiveTypeMode._
 import vvv.docreg.model.User.loggedInUser
 import scala.Predef._
+import xml.{Text, NodeSeq}
 
 // http://www.assembla.com/wiki/show/liftweb/How_to_use_Container_Managed_Security
 // http://wiki.eclipse.org/Jetty/Tutorial/JAAS#LdapLoginModule
@@ -53,12 +53,23 @@ class User extends DbObject[User] {
 
   def profileLink(): NodeSeq = profileLink(displayName)
 
-  def profileLink(text: String): NodeSeq = <a href={ profile() }>{ text }</a>
+  def profileLink(text: String): NodeSeq = profileLink(Text(text))
 
   def profile(): String = "/user/" + username.split("@")(0)
 
   def preferences(): String = {
     "/user/" + username.split("@")(0) + "/preferences"
+  }
+
+  def profileLink(content: NodeSeq): NodeSeq = <a href={ profile() }>{ content }</a>
+
+  def profileLabel(focusUserId: Long): NodeSeq = {
+    if (focusUserId == id) {
+      <span class="user-selected">{ profileLink() }</span>
+    }
+    else {
+      <span class="user">{ profileLink() }</span>
+    }
   }
 
   def revisions(): List[Revision] = {

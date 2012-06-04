@@ -36,6 +36,10 @@ class Project extends DbObject[Project] {
       ).distinct.toList
     }
   }
+
+  def authorized(): List[User] = {
+    ProjectAuthorization.authorizedUsersFor(id)
+  }
 }
 
 object Project extends Project {

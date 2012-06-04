@@ -112,3 +112,17 @@ blockquote p {
 .approval-approver {
   margin-bottom: 9px;
 }
+
+/*.user {*/
+    /*padding: 0px 4px;*/
+    /*background-color: #F7F7F9;*/
+    /*border: 1px solid #E1E1E8;*/
+    /*-webkit-border-radius: 3px;*/
+    /*-moz-border-radius: 3px;*/
+    /*border-radius: 3px;*/
+/*}*/
+
+.user-selected a {
+  background: #08C;
+  color: #fff;
+}
