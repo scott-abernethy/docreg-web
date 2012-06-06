@@ -54,13 +54,12 @@ Microsoft's AD LDAP is on port 3268 (and Global Catalog server)
  */
 
 class DirectoryImpl extends LDAPVendor with Directory {
-  val ldapBase = "DC=GNET,DC=global,DC=vpn"
   configure(
     Map(
       "ldap.url" -> "ldap://dcgnetnz1.gnet.global.vpn:3268",
       "ldap.userName" -> "gnet\\***REMOVED***",
       "ldap.password" -> "***REMOVED***",
-      "ldap.base" -> ldapBase
+      "ldap.base" -> DirectoryConfig.ldapBase
     )
   )
 
@@ -118,7 +117,7 @@ class DirectoryImpl extends LDAPVendor with Directory {
   }
 
   def findAttributes(dn: String): Box[UserAttributes] = {
-    tryo(attributesFromDn(dn + "," + ldapBase)) match {
+    tryo(attributesFromDn(dn + "," + DirectoryConfig.ldapBase)) match {
       case Full(attrs) if (attrs != null) => Full(new NamingUserAttributes(dn,attrs))
       case _ => Empty
     }
@@ -208,4 +207,10 @@ class NamingUserAttributes(val foundDn: String, val attrs: javax.naming.director
 
 trait DirectoryComponentImpl extends DirectoryComponent {
   val directory = new DirectoryImpl
+}
+
+object DirectoryConfig {
+  val ldapBase = "DC=GNET,DC=global,DC=vpn"
+  val docRegUser = """^CN=User,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn$""".r
+  val docRegProject = """^CN=Project(.*),OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn$""".r
 }

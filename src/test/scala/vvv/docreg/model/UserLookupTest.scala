@@ -8,22 +8,30 @@ import vvv.docreg.backend.{UserAttributes, Directory}
 import net.liftweb.common.{Full, Failure, Empty}
 import org.squeryl.PrimitiveTypeMode._
 
-class FakeUserAttributes(username: String, mail: String, display: String) extends UserAttributes {
-  def userName() = Some(username)
+class FakeUserAttributes(username: String, mail: String, display: String) extends NothingUserAttributes {
+  override def userName() = Some(username)
 
-  def email() = Some(mail)
+  override def email() = Some(mail)
 
-  def displayName() = Some(display)
+  override def displayName() = Some(display)
+}
 
-  def dn() = None
+class NothingUserAttributes extends UserAttributes {
+  def userName(): Option[String] = None
 
-  def department() = None
+  def email(): Option[String] = None
 
-  def description() = None
+  def displayName(): Option[String] = None
 
-  def location() = None
+  def dn(): Option[String] = None
 
-  def memberOf() = Nil
+  def department(): Option[String] = None
+
+  def description(): Option[String] = None
+
+  def location(): Option[String] = None
+
+  def memberOf(): List[String] = Nil
 }
 
 object UserLookupTest extends Specification with Mockito {
@@ -103,6 +111,7 @@ object UserLookupTest extends Specification with Mockito {
 //      there was no(directory).findFromPartialName(any[String])
       }
     }
+
     "Second look up directory for email" >> {
       TestDbVendor.initAndClean()
       val directory = mock[Directory]
@@ -128,6 +137,75 @@ object UserLookupTest extends Specification with Mockito {
           fail()
       }
       }
+    }
+
+    "Remove authorizations if none provided via LDAP" >> {
+      TestDbVendor.initAndClean()
+      inTransaction{
+        val (p1, p2, p3) = TestDbVendor.createProjects
+        val (u1, u2) = TestDbVendor.createUsers
+        ProjectAuthorization.grant(u1, p3)
+        ProjectAuthorization.grant(u2, p3)
+        ProjectAuthorization.authorizedFor_?(u1, p1) must beFalse
+        ProjectAuthorization.authorizedFor_?(u1, p3) must beTrue
+        ProjectAuthorization.authorizedFor_?(u2, p3) must beTrue
+
+        val attrs = new NothingUserAttributes{
+          override def memberOf() = Nil
+        }
+        UserLookup.parseUserAuthorizations(u1, attrs)
+        ProjectAuthorization.authorizedFor_?(u1, p3) must beFalse
+        ProjectAuthorization.authorizedFor_?(u2, p3) must beTrue
+      }
+    }
+
+    "Add authorizations provided via LDAP" >> {
+      TestDbVendor.initAndClean()
+      inTransaction{
+        val (p1, p2, p3) = TestDbVendor.createProjects
+        val (u1, u2) = TestDbVendor.createUsers
+        ProjectAuthorization.authorizedFor_?(u1, p2) must beFalse
+        ProjectAuthorization.authorizedFor_?(u2, p2) must beFalse
+
+        val attrs = new NothingUserAttributes{
+          override def memberOf() = List("CN=ProjectUnknown,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=Projectp2,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegProject,OU=OpenKM,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=STXN Provision Development Team,OU=Distribution List,OU=Messaging,OU=APAC,DC=HSTX,DC=global,DC=vpn")
+        }
+        UserLookup.parseUserAuthorizations(u2, attrs)
+        ProjectAuthorization.authorizedFor_?(u1, p2) must beFalse
+        ProjectAuthorization.authorizedFor_?(u2, p2) must beTrue
+      }
+    }
+
+    "Merge authorizations provided via LDAP" >> {
+      TestDbVendor.initAndClean()
+      inTransaction{
+        val (p1, p2, p3) = TestDbVendor.createProjects
+        val (u1, u2) = TestDbVendor.createUsers
+        ProjectAuthorization.grant(u1, p2)
+        ProjectAuthorization.grant(u1, p3)
+
+        val attrs = new NothingUserAttributes{
+          override def memberOf() = List("CN=ProjectUnknown,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=Projectp2,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegProject,OU=OpenKM,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=Projectp1,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=STXN Provision Development Team,OU=Distribution List,OU=Messaging,OU=APAC,DC=HSTX,DC=global,DC=vpn")
+        }
+        UserLookup.parseUserAuthorizations(u1, attrs)
+        ProjectAuthorization.authorizedFor_?(u1, p1) must beTrue
+        ProjectAuthorization.authorizedFor_?(u1, p2) must beTrue
+        ProjectAuthorization.authorizedFor_?(u1, p3) must beFalse
+      }
+    }
+
+    "Parse user access via LDAP" >> {
+      UserLookup.parseUserAccess(new NothingUserAttributes()) must beFalse
+
+      val nope = new NothingUserAttributes{
+        override def memberOf() = List("CN=ProjectUnknown,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=Projectp2,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegProject,OU=OpenKM,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=Projectp1,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=STXN Provision Development Team,OU=Distribution List,OU=Messaging,OU=APAC,DC=HSTX,DC=global,DC=vpn")
+      }
+      UserLookup.parseUserAccess(nope) must beFalse
+
+      val yep = new NothingUserAttributes{
+        override def memberOf() = List("CN=ProjectUnknown,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=User,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegProject,OU=OpenKM,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=Projectp1,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=STXN Provision Development Team,OU=Distribution List,OU=Messaging,OU=APAC,DC=HSTX,DC=global,DC=vpn")
+      }
+      UserLookup.parseUserAccess(yep) must beTrue
     }
   }
 }

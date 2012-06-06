@@ -37,8 +37,12 @@ object ProjectAuthorization extends ProjectAuthorization {
   }
 
   def revoke(user: User, project: Project) {
+    revoke(user.id, project.id)
+  }
+
+  def revoke(userId: Long, projectId: Long) {
     inTransaction{
-      authorizationFor(user, project) match {
+      authorizationFor(userId, projectId) match {
         case Some(existing) if (existing.revoked.isEmpty) => {
           existing.revoked = Some(T.now())
           dbTable.update(existing)

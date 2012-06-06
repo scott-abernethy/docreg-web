@@ -1,10 +1,10 @@
 package vvv.docreg.model
 
 import net.liftweb.common.Failure._
-import vvv.docreg.backend.{UserAttributes, Directory}
 import net.liftweb.common._
 import vvv.docreg.db.{DbSchema, DbObject}
 import org.squeryl.PrimitiveTypeMode._
+import vvv.docreg.backend.{DirectoryConfig, UserAttributes, Directory}
 
 trait UserLookupProvider
 {
@@ -152,27 +152,62 @@ object UserLookup extends UserLookup with Loggable {
           case Some(existing) =>
             updateUserAttributes(existing, attributes, active)
             User.dbTable.update(existing)
+            // TODO enable once IT have decided how to do this.
+            //parseUserAuthorizations(existing, attributes)
             Full(existing)
           case _ =>
-            val created = new User
+            var created = new User
             created.username = userName
             updateUserAttributes(created, attributes, active)
             created.localServer = "boromir"
             created.timeZone = "US/Pacific"
-            Full( User.dbTable.insert(created) )
+            created = User.dbTable.insert(created)
+            // TODO enable once IT have decided how to do this.
+            //parseUserAuthorizations(created, attributes)
+            Full( created )
         }
       }
       case _ => Failure("No username")
     }
   }
 
-  protected def updateUserAttributes(user: User, attributes: UserAttributes, active: Boolean) {
+
+
+  def updateUserAttributes(user: User, attributes: UserAttributes, active: Boolean) {
     user.dn = attributes.dn() getOrElse "?"
     user.name = attributes.displayName() getOrElse "?"
     user.email = attributes.email() getOrElse "?"
     user.description = attributes.description() getOrElse ""
     user.department = attributes.department() getOrElse ""
     user.location = attributes.location() getOrElse ""
-    user.active = active
+    // TODO enable once IT have decided how to do this.
+    user.active = active //&& parseUserAccess(attributes)
+  }
+
+  // TODO UserLookup and the directory should be actors
+
+  def parseUserAccess(attributes: UserAttributes): Boolean = {
+    attributes.memberOf().exists(DirectoryConfig.docRegUser.findFirstIn(_).isDefined)
+  }
+
+  def parseUserAuthorizations(user: User, attributes: UserAttributes) {
+    var existing: Set[Long] = ProjectAuthorization.authorizedProjectsFor(user).map(_.id).toSet
+    attributes.memberOf().foreach{
+      _ match {
+        case DirectoryConfig.docRegProject(projectName) => {
+          Project.forName(projectName) match {
+            case Some(p) if (existing.contains(p.id)) => {
+              existing = existing - p.id
+            }
+            case Some(p) => {
+              ProjectAuthorization.grant(user, p)
+            }
+            case _ => {}
+          }
+        }
+        case _ => {}
+      }
+    }
+    for (pid <- existing) ProjectAuthorization.revoke(user.id, pid)
   }
 }
