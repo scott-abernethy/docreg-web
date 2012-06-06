@@ -15,6 +15,8 @@ case class Prepare(d: DocumentInfo, fileDatabase: ActorRef)
 
 class Reconciler(private val backend: ActorRef) extends Actor with Loggable {
 
+  val fetchInParallel = false
+
   protected def receive = {
         case Prepare(document, fileDatabase) => {
           logger.debug("Preparing " + document.getKey())
@@ -46,8 +48,15 @@ class Reconciler(private val backend: ActorRef) extends Actor with Loggable {
             ss <- futureSubscriptions
           } yield rs_?.map(Reconcile(document, _, as, ss))
 
-          // The pipe pattern sends the future result to the actor on future completion, so non-blocking
-          pipe(result) to backend
+          if (fetchInParallel) {
+            // The pipe pattern sends the future result to the actor on future completion, so non-blocking
+            pipe(result) to backend
+          }
+          else {
+            // Alternatively block, useful in dev mode on slow VPN connection
+            val x = Await.result(result, timeout.duration)
+            backend ! x
+          }
         }
         case _ => {}
       }
