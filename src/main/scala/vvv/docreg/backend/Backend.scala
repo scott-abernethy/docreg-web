@@ -18,9 +18,9 @@ case class Loaded(ds: List[DocumentInfo])
 
 case class Reconcile(document: DocumentInfo, revisions: List[RevisionInfo], approvals: List[ApprovalInfo], subscriptions: List[SubscriberInfo])
 
-case class ApprovalApproved(document: Document, revision: Revision, user: User, state: ApprovalState, comment: String)
+case class ApprovalApproved(document: Document, revision: Revision, user: User, state: ApprovalState, comment: String, actionedBy: User)
 
-case class ApprovalRequested(document: Document, revision: Revision, users: Iterable[User])
+case class ApprovalRequested(document: Document, revision: Revision, users: Iterable[User], actionedBy: User)
 
 case class SubscribeRequested(document: Document, user: User)
 
@@ -96,7 +96,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
             case _ => createDocument(msg)
           }
         }
-        case ApprovalApproved(d, r, user, state, comment) => {
+        case ApprovalApproved(d, r, user, state, comment, actionedBy) => {
           daemonAgent ! RequestPackage(self, target,
             ApprovalRequest(
               r.filename,
@@ -109,11 +109,11 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
               },
               comment,
               product, // todo is this consistent?
-              user.shortUsername()
+              actionedBy.shortUsername()
             ))
         }
-        case ApprovalRequested(d, r, users) => {
-          users foreach (self ! ApprovalApproved(d, r, _, ApprovalState.pending, ""))
+        case ApprovalRequested(d, r, users, actionedBy) => {
+          users foreach (self ! ApprovalApproved(d, r, _, ApprovalState.pending, "", actionedBy))
         }
         case ApprovalReply(response) => {
           logger.info("Approval reply, " + response)

@@ -331,7 +331,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     approval.comment = if (comment.trim == "") "No Comment" else comment
     approval.date = new Timestamp(System.currentTimeMillis())
     Approval.dbTable.insert(approval)
-    backend ! ApprovalApproved(d, r, user, state, comment)
+    backend ! ApprovalApproved(d, r, user, state, comment, user)
     S.notice("Document " + state)
     S.redirectTo(d.infoHref())
   }
@@ -380,7 +380,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
       case Nil =>
         S.warning(<div class="alert-message error"><p>Approval request with no users!</p></div>)
       case xs  =>
-        backend ! ApprovalRequested(d, r, xs)
+        backend ! ApprovalRequested(d, r, xs, User.loggedInUser.is.getOrElse(null))
         S.notice("Approval requested for " + (xs.map(_.displayName).reduceRight((a, b) => a + "; " + b)))
     }
     S.redirectTo(d.infoHref())
