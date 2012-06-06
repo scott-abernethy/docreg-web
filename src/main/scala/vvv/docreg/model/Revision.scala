@@ -4,11 +4,11 @@ import _root_.net.liftweb.common._
 import java.text._
 import java.util.TimeZone
 import scala.xml.{NodeSeq, Text}
-import vvv.docreg.util.DatePresentation
 import net.liftweb.util._
 import java.sql.Timestamp
 import vvv.docreg.db.{DbSchema, DbObject}
 import org.squeryl.PrimitiveTypeMode._
+import vvv.docreg.util.{T, DatePresentation}
 
 class Revision extends DbObject[Revision] {
   def dbTable = DbSchema.revisions
@@ -65,18 +65,27 @@ object Revision extends Revision {
 
 object FilteredRevision {
   import vvv.docreg.helper.ProjectSelection
-  def findRecent(limit: Long): List[Revision] = {
+  def findRecent(userId: Long): List[(Document,Revision,Project)] = {
+    val recentCutoff: Timestamp = T.ago(1000L * 60 * 60 * 24 * 31)
     if (ProjectSelection.showAll.is) {
-      inTransaction( from(Revision.dbTable)(r => select(r) orderBy(r.date desc)).page(0, limit.toInt).toList )
-    } else {
+      inTransaction(
+        join(Revision.dbTable, Document.dbTable, Project.dbTable)( (r, d, p) =>
+          where(r.date > recentCutoff)
+          select((d,r,p))
+          orderBy(r.date desc)
+          on(r.documentId === d.id, d.projectId === p.id)
+        ).toList
+      )
+    }
+    else {
       val checked = ProjectSelection.projects.is.toList
       inTransaction(
-        join(Revision.dbTable, Document.dbTable)( (r, d) =>
-          where(d.projectId in checked.map(_.id))
-          select(r)
+        join(Revision.dbTable, Document.dbTable, Project.dbTable)( (r, d, p) =>
+          where(d.projectId in checked.map(_.id) and r.date > recentCutoff)
+          select((d,r,p))
           orderBy(r.date desc)
-          on(r.documentId === d.id)
-        ).page(0, limit.toInt).toList
+          on(r.documentId === d.id, d.projectId === p.id)
+        ).toList
       )
     }
   }

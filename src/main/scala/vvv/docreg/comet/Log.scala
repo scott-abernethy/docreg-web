@@ -21,9 +21,9 @@ object CurrentLog extends SessionVar[Box[Log]](Empty)
 case class ReloadLog()
 
 class Log extends DocumentSubscriber {
-  val limit = 30
+  val loadLimit = 80
   private val documentServer = Environment.env.documentServer
-  private var revisions: List[Revision] = Nil
+  private var revisions: List[(Document,Revision,Project)] = Nil
   private lazy val revisionPart: NodeSeq = (".log-item ^^" #> "foo").apply(defaultHtml)
 
   CurrentLog.set(Full(this))
@@ -48,54 +48,52 @@ class Log extends DocumentSubscriber {
     case DocumentRevised(document, latest) =>
       add(document, latest)
     case DocumentChanged(document) =>
-      revisions = revisions flatMap {r => if (r.documentId == document.id) r.reload else Some(r)}
-      val update = revisions filter {r => r.documentId == document.id} map {r => JsCmds.Replace(r.id.toString, bindRevision(r, false))}
+      revisions = revisions flatMap {x => if (x._2.documentId == document.id) x._2.reload.map( (x._1, _, x._3) ) else Some(x)}
+      val update = revisions filter {x => x._2.documentId == document.id} map {x => JsCmds.Replace(x._2.id.toString, bindRevision(x._1, x._2, false))}
       partialUpdate(update)
     case ReloadLog() =>
-      revisions = FilteredRevision.findRecent(limit)
+      revisions = FilteredRevision.findRecent(-1).filter(i => UserSession.isAuthorized(i._1, i._3)).take(loadLimit)
       reRender(true)
     case _ =>
   }
 
   private def add(d: Document, r: Revision) = {
-    if (d.project.map(ProjectSelection.isSelected(_)) getOrElse false) {
-      revisions.lastOption match {
-        case Some(remove) if revisions.size > limit =>
-          revisions = r :: revisions.dropRight(1)
-          partialUpdate(PrependHtml("log", bindRevision(r, true)) & FadeIn(r.id.toString) & Replace(remove.id.toString, Text("")))        case _ =>
-          revisions = r :: revisions
-          partialUpdate(PrependHtml("log", bindRevision(r, true)) & FadeIn(r.id.toString))
+    d.project() match {
+      case Some(p) if (ProjectSelection.isSelected(p) && UserSession.isAuthorized(d,p)) => {
+        revisions.lastOption match {
+          case Some(remove) if revisions.size > (loadLimit + 10) => {
+            revisions = (d,r,p) :: revisions.dropRight(1)
+            partialUpdate(PrependHtml("log", bindRevision(d, r, true)) & FadeIn(r.id.toString) & Replace(remove._2.id.toString, Text("")))
+          }
+          case _ => {
+            revisions = (d,r,p) :: revisions
+            partialUpdate(PrependHtml("log", bindRevision(d, r, true)) & FadeIn(r.id.toString))
+          }
+        }
       }
+      case _ => {}
     }
   }
 
   def render = {
-    ".log-item" #> revisions.map { transformRevision(false) _ }
+    ".log-item" #> revisions.map { x => transformRevision(false)(x._1, x._2) }
   }
 
-  private def bindRevision(r: Revision, hidden: Boolean): NodeSeq = {
-    transformRevision(hidden)(r).apply(revisionPart)
+  private def bindRevision(d: Document, r: Revision, hidden: Boolean): NodeSeq = {
+    transformRevision(hidden)(d, r).apply(revisionPart)
   }
 
-  private def transformRevision(hidden: Boolean)(r: Revision): CssBindFunc = {
+  private def transformRevision(hidden: Boolean)(d: Document, r: Revision): CssBindFunc = {
     val blank: Option[String] = None
-    r.document match {
-      case Some(d) => {
-        ".log-item [id]" #> r.id.toString &
-        ".log-item [class+]" #> (if (hidden) Some("hide") else blank) &
-        ".doc-title"  #> <a href={d.infoLink}>{d.fullTitle}</a> &
-        ".doc-author" #> r.author().map(_.profileLink()).getOrElse(Text("?")) &
-        ".doc-comment" #> r.comment &
-        ".doc-when" #> r.when &
-        ".doc-info [href]" #> d.infoLink
-      }
-      case _ => {
-        "*" #> NodeSeq.Empty
-      }
-    }
-
+    ".log-item [id]" #> r.id.toString &
+    ".log-item [class+]" #> (if (hidden) Some("hide") else blank) &
+    ".doc-title"  #> <a href={d.infoLink}>{d.fullTitle}</a> &
+    ".doc-author" #> r.author().map(_.profileLink()).getOrElse(Text("?")) &
+    ".doc-comment" #> r.comment &
+    ".doc-when" #> r.when &
+    ".doc-info [href]" #> d.infoLink
   }
-//
+
 //  private def bindRevision(xml: NodeSeq, r: Revision, hidden: Boolean): NodeSeq = {
 //    r.document.obj match {
 //      case Full(d: Document) =>

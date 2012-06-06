@@ -226,3 +226,17 @@ object AccessLevel extends Enumeration {
   val normal = Value("Normal")
   val superuser = Value("Administrator")
 }
+
+object UserSession {
+  object authorizedProjects extends SessionVar[Set[Long]](loadAuthorized)
+
+  def loadAuthorized(): Set[Long] = {
+    User.loggedInUser.is.map(u =>
+      ProjectAuthorization.authorizedProjectsFor(u).map(_.id).toSet
+    ).getOrElse(Set.empty[Long])
+  }
+
+  def isAuthorized(d: Document, p: Project): Boolean = {
+    d.secure_?() == false || UserSession.authorizedProjects.contains(p.id)
+  }
+}
