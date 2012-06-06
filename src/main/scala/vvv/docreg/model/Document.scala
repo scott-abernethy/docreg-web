@@ -36,6 +36,14 @@ class Document extends DbObject[Document] {
 
   def secure_?(): Boolean = access equalsIgnoreCase "Secure"
 
+  def accessIcon(): NodeSeq = {
+    if (secure_?()) {
+      <abbr title="Secure Document"><i class="icon-lock"></i></abbr>
+    } else {
+      <abbr title="Public Document"><i class="icon-book"></i></abbr>
+    }
+  }
+
   def allows(user: User): Boolean = {
     secure_?() match {
       case true => ProjectAuthorization.authorizedFor_?(user.id, projectId)

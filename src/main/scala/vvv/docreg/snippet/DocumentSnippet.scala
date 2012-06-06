@@ -78,8 +78,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
         if (editor != Nil) S.notice("edit-message", <div class="alert alert-warning"><strong>Under edit!</strong> This document is currently being edited.</div>)
         if (!d.latest_?(r.version)) S.warning("out-of-date-message", <div class="alert alert-info"><strong>Out of date!</strong> This is not the most recent version of the document.</div>)
         ".doc-title" #> <a href={d.infoLink}>{d.fullTitle}</a> &
-//        ".doc-access" #> (if (d.secure_?()) <span class="label label-inverse"><i class="icon-lock icon-white"></i> { d.access }</span> else <span class="label"><i class="icon-bullhorn icon-white"></i> { d.access }</span>) &
-        ".doc-access" #> (if (d.secure_?()) <abbr title="Secure Document"><i class="icon-lock"></i></abbr> else <abbr title="Public Document"><i class="icon-bullhorn"></i></abbr>) &
+        ".doc-access" #> d.accessIcon() &
         ".doc-project" #> d.project().map(_.infoLink).getOrElse(<span>?</span>) apply(in)
       }
       case (Full(d), _) =>
