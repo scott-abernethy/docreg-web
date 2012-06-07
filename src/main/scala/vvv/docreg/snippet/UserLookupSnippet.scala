@@ -7,7 +7,7 @@ import net.liftweb.util.{PassThru, ClearClearable}
 import net.liftweb.http.js.JsCmds.RedirectTo
 import net.liftweb.http.{SHtml, S}
 import net.liftweb.mapper._
-import net.liftweb.common.{Empty, Full}
+import net.liftweb.common.{Box, Empty, Full}
 
 class UserLookupSnippet
 {
@@ -31,11 +31,13 @@ class UserLookupSnippet
     var changeTo = ""
     S.param("id").flatMap(UserLookup.find(_)) match {
       case Full(i) => {
-        val us = User.findAll(OrderBy(User.username, Ascending)).map(u => (u.id.is.toString,u.shortUsername() + " = " + u.displayName))
+        val allUsers: List[User] = User.findAll(OrderBy(User.username, Ascending))
+        val selectOptions = allUsers.map(u => (u.id.is.toString,u.shortUsername() + " = " + u.displayName))
+        val selected = Box(allUsers.find(_.shortUsername() equalsIgnoreCase i.username).map(_.id.is.toString))
         ".x-username *" #> i.username.is &
         ".x-name *" #> i.name.is &
         ".x-email *" #> i.email.is &
-        ".x-user" #> SHtml.select(us.toSeq, Empty, changeTo = _) &
+        ".x-user" #> SHtml.select(selectOptions.toSeq, selected, changeTo = _) &
         ".x-submit" #> SHtml.submit("Submit", () => processChange(i.id, changeTo), "class" -> "btn primary") &
         ".x-cancel" #> SHtml.submit("Cancel", () => S.redirectTo("/admin/user-lookup"), "class" -> "btn")
       }
