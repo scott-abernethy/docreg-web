@@ -56,7 +56,8 @@ class Boot
       Menu.i("Create Document") / "doc" / "create" >> loggedIn,
       Menu.i("Submit Document") / "doc" / "submit" >> loggedIn,
       Menu.i("Project Information") / "project" / "info" >> loggedIn,
-      Menu.i("User Lookup Admin") / "admin" / "user-lookup" >> loggedIn
+      Menu.i("User Lookup Admin") / "admin" / "user-lookup" >> loggedIn,
+      Menu.i("User Lookup Change Admin") / "admin" / "user-lookup-change" >> loggedIn
     )
 
     // set the sitemap.  Note if you don't want access control for
