@@ -18,11 +18,20 @@ object DownloadService extends RestHelper with Loggable {
 
   serve {
     case "doc" :: "download" :: "editing" :: key :: version :: Nil Get req => {
-      val username: String = User.loggedInUser.is.map(_.shortUsername()).getOrElse("unknown")
-      fileResponse(key, d => Full(d.latest), (d,r) => d.editingFileName(username))
+      User.loggedInUser.is match {
+        case Full(user) => {
+          fileResponse(key, d => Full(d.latest), (d,r) => d.editingFileName(user.shortUsername()))
+        }
+        case _ => Full(RedirectResponse("/user/signin"))
+      }
     }
     case "doc" :: "download" :: key :: version :: Nil Get req => {
-      fileResponse(key, d => Revision.forDocument(d, version.toLong), (d,r) => r.filename)
+      User.loggedInUser.is match {
+        case Full(user) => {
+          fileResponse(key, d => Revision.forDocument(d, version.toLong), (d,r) => r.filename)
+        }
+        case _ => Full(RedirectResponse("/user/signin"))
+      }
     }
   }
 
