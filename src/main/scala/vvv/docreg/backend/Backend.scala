@@ -304,5 +304,5 @@ trait BackendComponentImpl extends BackendComponent
 }
 
 object Backend {
-  val server: String = Props.get("backend.server") openOr "10.15.168.22" // shelob.gnet.global.vpn?
+  val server: String = Props.get("backend.server") openOr "shelob" // shelob.gnet.global.vpn?
 }
