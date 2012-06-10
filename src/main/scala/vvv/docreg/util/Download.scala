@@ -4,6 +4,7 @@ import _root_.net.liftweb.common._
 import _root_.net.liftweb.http._
 import _root_.net.liftweb.util._
 
+import rest.RestHelper
 import vvv.docreg.backend.Backend
 import org.apache.http.HttpEntity
 import net.liftweb.util.ControlHelpers._
@@ -11,58 +12,41 @@ import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.client.methods.HttpGet
 import vvv.docreg.agent.AgentVendor
 import vvv.docreg.model._
+import java.io.{FileInputStream, File}
 
-object Download extends Loggable
-{
-  def download(key: String, version: String): Box[LiftResponse] =
-  {
-    Document.forKey(key) match {
-      case Full(d) => {
-        val r = Revision.forDocument(d, version.toLong) getOrElse EmptyRevision
-        val url: String = fileUrl(r.filename)
-        log("downloaded " + key + " via " + url)
-        Full(RedirectResponse(url))
-      }
-      case _ => {
-        log("failed to download " + key)
-        Empty
-      }
+object DownloadService extends RestHelper with Loggable {
+
+  serve {
+    case "doc" :: "download" :: "editing" :: key :: version :: Nil Get req => {
+      val username: String = User.loggedInUser.is.map(_.shortUsername()).getOrElse("unknown")
+      fileResponse(key, d => Full(d.latest), (d,r) => d.editingFileName(username))
+    }
+    case "doc" :: "download" :: key :: version :: Nil Get req => {
+      fileResponse(key, d => Revision.forDocument(d, version.toLong), (d,r) => r.filename)
     }
   }
 
-  def downloadForEditing(key: String, user: String): Box[LiftResponse] = {
-    // TODO could just grab user here, as we get it for other reasons.
+  def fileResponse(key: String, revisionFunc: (Document) => Box[Revision], fileNameFunc: (Document, Revision) => String): Box[LiftResponse] = {
     for {
       document <- Document.forKey(key)
-      url = fileUrl(document.latest.filename)
-      entity <- tryRequest(url)
-      stream = entity.getContent()
+      revision <- revisionFunc(document)
+      file <- releaseFile(document, revision)
+      stream <- tryo(new FileInputStream(file))
+      toFilename = fileNameFunc(document, revision)
     }
     yield {
-      log("downloaded for editing " + key + " via " + url)
-      StreamingResponse(stream, () => stream.close(), entity.getContentLength(), List("Content-Disposition" -> ("attachment; filename=\"" + document.editingFileName(user) + "\"")), Nil, 200)
+      log("downloaded " + key + " as " + toFilename)
+      StreamingResponse(stream, () => stream.close(), file.length(), List("Content-Disposition" -> ("attachment; filename=\"" + toFilename + "\"")), Nil, 200)
     }
   }
 
-  def logFile(key: String): Box[LiftResponse] =
-  {
-    Full(RedirectResponse("http://" + userServer + "/docreg/log/" + key + ".log"))
+  def releaseFile(document: Document, revision: Revision): Box[java.io.File] = {
+    val folder = if (document.secure_?()) "/secure/release" else "/docreg/release"
+    val path = AgentVendor.home + folder + "/" + revision.filename
+    Box !! new File(path)
   }
 
-  def tryRequest(url: String): Option[HttpEntity] = {
-    tryo {
-      val client = new DefaultHttpClient()
-      val get = new HttpGet(url)
-      val response = client.execute(get)
-      val entity = response.getEntity()
-      if (entity == null) {
-        throw new Exception()
-      }
-      entity
-    }
-  }
-
-  def log(text: String)
+  private def log(text: String)
   {
     // todo log to backend
     User.loggedInUser.is match {
@@ -74,22 +58,56 @@ object Download extends Loggable
       }
     }
   }
-
-  def userServer: String =
-  {
-    val userLocalServer: Box[String] = for {
-      user <- User.loggedInUser.is
-    }
-    yield Server.address(user.localServer)
-
-    userLocalServer match {
-      case Full(s) if (s != null && s.length() > 0) => s
-      case _ => AgentVendor.server
-    }
-  }
-
-  def fileUrl(fileName: String): String =
-  {
-    ("http://" + userServer + "/docreg/release/" + fileName).replaceAll(" ", "%20")
-  }
 }
+
+//object Download extends Loggable
+//{
+//  def logFile(key: String): Box[LiftResponse] =
+//  {
+//    Full(RedirectResponse("http://" + userServer + "/docreg/log/" + key + ".log"))
+//  }
+//
+//  def tryRequest(url: String): Option[HttpEntity] = {
+//    tryo {
+//      val client = new DefaultHttpClient()
+//      val get = new HttpGet(url)
+//      val response = client.execute(get)
+//      val entity = response.getEntity()
+//      if (entity == null) {
+//        throw new Exception()
+//      }
+//      entity
+//    }
+//  }
+//
+//  def log(text: String)
+//  {
+//    // todo log to backend
+//    User.loggedInUser.is match {
+//      case Full(user) => {
+//        logger.info("User '" + user.displayName + "' " + text)
+//      }
+//      case _ => {
+//        logger.info("User ??? " + text)
+//      }
+//    }
+//  }
+//
+//  def userServer: String =
+//  {
+//    val userLocalServer: Box[String] = for {
+//      user <- User.loggedInUser.is
+//    }
+//    yield Server.address(user.localServer)
+//
+//    userLocalServer match {
+//      case Full(s) if (s != null && s.length() > 0) => s
+//      case _ => AgentVendor.server
+//    }
+//  }
+//
+//  def fileUrl(fileName: String): String =
+//  {
+//    ("http://" + userServer + "/docreg/release/" + fileName).replaceAll(" ", "%20")
+//  }
+//}

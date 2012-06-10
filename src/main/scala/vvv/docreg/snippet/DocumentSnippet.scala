@@ -179,7 +179,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     (
       ClearClearable &
       ".doc-title" #> <a href={d.infoLink}>{d.fullTitle}</a> &
-      ".edit-download [href]" #> d.linkForEditing(user.map(_.shortUsername).getOrElse("unknown")) &
+      ".edit-download [href]" #> d.linkForEditing() &
       ".edit-submit-file [href]" #> (d.submitHref()) &
       ".edit-back [href]" #> (d.infoHref())
     ).apply(in)

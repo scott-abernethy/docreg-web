@@ -29,6 +29,7 @@ class Boot
   def boot
   {
     DbVendor.init()
+    //DbVendor.describe()
 
     // where to search snippet
     LiftRules.addToPackages("vvv.docreg")
@@ -152,14 +153,12 @@ class Boot
     }
 
     // ... then dispatch ... (S is valid here)
-    LiftRules.dispatch.append {
-      case Req("doc" :: "download" :: key :: version :: Nil, _, GetRequest) =>
-        () => Download.download(key, version)
-      case Req("doc" :: "download" :: "editing" :: user :: key :: version :: Nil, _, GetRequest) =>
-        () => Download.downloadForEditing(key, user)
-      case Req("doc" :: "log" :: key :: Nil, _, GetRequest) =>
-        () => Download.logFile(key)
-    }
+    LiftRules.dispatch.append(DownloadService)
+    // TODO
+//    LiftRules.dispatch.append {
+//      case Req("doc" :: "log" :: key :: Nil, _, GetRequest) =>
+//        () => Download.logFile(key)
+//    }
 
     LiftRules.noticesAutoFadeOut.default.set( (notices: NoticeType.Value) => {
             notices match {

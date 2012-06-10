@@ -125,9 +125,9 @@ class Document extends DbObject[Document] {
     infoHref() + "/edit"
   }
 
-  def linkForEditing(username: String): String =
+  def linkForEditing(): String =
   {
-    infoLink + "/download/editing/" + username
+    infoLink + "/download/editing"
   }
 
   def fullTitle: String = number + ": " + title
