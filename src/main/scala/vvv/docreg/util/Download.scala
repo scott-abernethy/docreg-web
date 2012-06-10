@@ -33,6 +33,9 @@ object DownloadService extends RestHelper with Loggable {
         case _ => Full(RedirectResponse("/user/signin"))
       }
     }
+    case "doc" :: "log" :: key :: Nil Get req => {
+      logResponse(key)
+    }
   }
 
   def fileResponse(key: String, revisionFunc: (Document) => Box[Revision], fileNameFunc: (Document, Revision) => String): Box[LiftResponse] = {
@@ -49,9 +52,27 @@ object DownloadService extends RestHelper with Loggable {
     }
   }
 
+  def logResponse(key: String): Box[LiftResponse] = {
+    for {
+      document <- Document.forKey(key)
+      file <- logFile(document)
+      stream <- tryo(new FileInputStream(file))
+    }
+    yield {
+      log("downloaded log file for " + key)
+      StreamingResponse(stream, () => stream.close(), file.length(), List("Content-Disposition" -> ("attachment; filename=\"" + key + ".log\"")), Nil, 200)
+    }
+  }
+
   def releaseFile(document: Document, revision: Revision): Box[java.io.File] = {
     val folder = if (document.secure_?()) "/secure/release" else "/docreg/release"
     val path = AgentVendor.home + folder + "/" + revision.filename
+    Box !! new File(path)
+  }
+
+  def logFile(document: Document): Box[java.io.File] = {
+    val folder = if (document.secure_?()) "/secure/log" else "/docreg/log"
+    val path = AgentVendor.home + folder + "/" + document.key() + ".log"
     Box !! new File(path)
   }
 

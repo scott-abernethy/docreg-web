@@ -154,11 +154,6 @@ class Boot
 
     // ... then dispatch ... (S is valid here)
     LiftRules.dispatch.append(DownloadService)
-    // TODO
-//    LiftRules.dispatch.append {
-//      case Req("doc" :: "log" :: key :: Nil, _, GetRequest) =>
-//        () => Download.logFile(key)
-//    }
 
     LiftRules.noticesAutoFadeOut.default.set( (notices: NoticeType.Value) => {
             notices match {
