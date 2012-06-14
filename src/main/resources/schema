@@ -1,0 +1,124 @@
+-- table declarations :
+create table User (
+    name varchar(64) not null,
+    localServer varchar(64) not null,
+    location varchar(128) not null,
+    email varchar(64) not null,
+    username varchar(64) not null,
+    description varchar(256) not null,
+    lastSession datetime not null,
+    host varchar(64) not null,
+    sessionCount bigint not null,
+    dn varchar(128) not null,
+    superuser boolean not null,
+    department varchar(128) not null,
+    id bigint primary key not null auto_increment,
+    timeZone varchar(32) not null,
+    active boolean not null
+  );
+-- indexes on User
+create index idx1108036e on User (name);
+create index idx14c903d5 on User (email);
+create unique index idx23a1052d on User (username);
+create table UserLookup (
+    name varchar(64),
+    email varchar(64),
+    username varchar(64),
+    id bigint primary key not null auto_increment,
+    userId bigint not null
+  );
+-- indexes on UserLookup
+create index idx2f7405e8 on UserLookup (name);
+create index idx35af064f on UserLookup (email);
+create index idx4bf507a7 on UserLookup (username);
+create index idx3cc506b3 on UserLookup (userId);
+create table Project (
+    name varchar(64) not null,
+    id bigint primary key not null auto_increment
+  );
+-- indexes on Project
+create unique index idx1e5204a6 on Project (name);
+create table ProjectAuthorization (
+    revoked datetime,
+    projectId bigint not null,
+    granted datetime not null,
+    id bigint primary key not null auto_increment,
+    userId bigint not null
+  );
+-- indexes on ProjectAuthorization
+create index idxbcd20c1a on ProjectAuthorization (projectId);
+create index idx99710ae2 on ProjectAuthorization (userId);
+create table UserProject (
+    projectId bigint not null,
+    selected boolean not null,
+    id bigint primary key not null auto_increment,
+    userId bigint not null
+  );
+-- indexes on UserProject
+create index idx5ba90848 on UserProject (projectId);
+create index idx43be0710 on UserProject (userId);
+create table Document (
+    number varchar(10) not null,
+    projectId bigint not null,
+    id bigint primary key not null auto_increment,
+    title varchar(128) not null,
+    access varchar(128) not null
+  );
+-- indexes on Document
+create unique index idx2eed05f6 on Document (number);
+create table Revision (
+    version bigint not null,
+    id bigint primary key not null auto_increment,
+    date datetime not null,
+    authorId bigint not null,
+    filename varchar(128) not null,
+    comment varchar(512) not null,
+    documentId bigint not null
+  );
+-- indexes on Revision
+create index idx4b890789 on Revision (documentId);
+create table Pending (
+    id bigint primary key not null auto_increment,
+    date datetime not null,
+    documentId bigint not null,
+    userId bigint not null,
+    action int not null
+  );
+-- indexes on Pending
+create index idx41e506ff on Pending (documentId);
+create index idx284b055f on Pending (userId);
+create table Approval (
+    state int not null,
+    revisionId bigint not null,
+    id bigint primary key not null auto_increment,
+    date datetime not null,
+    comment varchar(128) not null,
+    userId bigint not null
+  );
+-- indexes on Approval
+create index idx4b82078f on Approval (revisionId);
+create index idx2f4805df on Approval (userId);
+create table Subscription (
+    id bigint primary key not null auto_increment,
+    documentId bigint not null,
+    userId bigint not null
+  );
+-- indexes on Subscription
+create index idx6fe5093f on Subscription (documentId);
+create index idx4d4b079f on Subscription (userId);
+-- foreign key constraints :
+alter table Document add constraint DocumentFK1 foreign key (projectId) references Project(id);
+alter table ProjectAuthorization add constraint ProjectAuthorizationFK2 foreign key (projectId) references Project(id);
+alter table Revision add constraint RevisionFK3 foreign key (documentId) references Document(id);
+alter table Pending add constraint PendingFK4 foreign key (documentId) references Document(id);
+alter table Revision add constraint RevisionFK5 foreign key (authorId) references User(id);
+alter table Approval add constraint ApprovalFK6 foreign key (userId) references User(id);
+alter table Pending add constraint PendingFK7 foreign key (userId) references User(id);
+-- column group indexes :
+create unique index idxb70d0baa on UserLookup (username,name,email);
+create unique index idx1baf0eb3 on ProjectAuthorization (projectId,userId);
+create unique index idx9efc0ae1 on UserProject (userId,projectId);
+create unique index idx955e0abc on Revision (documentId,version);
+create unique index idxc8e90c43 on Pending (userId,documentId,action);
+create unique index idx8a830a28 on Approval (revisionId,userId);
+create unique index idxbab60bd8 on Subscription (documentId,userId);
