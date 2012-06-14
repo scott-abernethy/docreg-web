@@ -168,7 +168,7 @@ object UserLookupTest extends Specification with Mockito {
         ProjectAuthorization.authorizedFor_?(u2, p2) must beFalse
 
         val attrs = new NothingUserAttributes{
-          override def memberOf() = List("CN=ProjectUnknown,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=Projectp2,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegProject,OU=OpenKM,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=STXN Provision Development Team,OU=Distribution List,OU=Messaging,OU=APAC,DC=HSTX,DC=global,DC=vpn")
+          override def memberOf() = List("CN=DocRegProjectUnknown,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegProjectp2,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegProjectt,OU=OpenKM,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=STXN Provision Development Team,OU=Distribution List,OU=Messaging,OU=APAC,DC=HSTX,DC=global,DC=vpn")
         }
         UserLookup.parseUserAuthorizations(u2, attrs)
         ProjectAuthorization.authorizedFor_?(u1, p2) must beFalse
@@ -185,7 +185,7 @@ object UserLookupTest extends Specification with Mockito {
         ProjectAuthorization.grant(u1, p3)
 
         val attrs = new NothingUserAttributes{
-          override def memberOf() = List("CN=ProjectUnknown,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=Projectp2,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegProject,OU=OpenKM,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=Projectp1,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=STXN Provision Development Team,OU=Distribution List,OU=Messaging,OU=APAC,DC=HSTX,DC=global,DC=vpn")
+          override def memberOf() = List("CN=DocRegProjectUnknown,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegProjectp2,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegProjectt,OU=OpenKM,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegProjectp1,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=STXN Provision Development Team,OU=Distribution List,OU=Messaging,OU=APAC,DC=HSTX,DC=global,DC=vpn")
         }
         UserLookup.parseUserAuthorizations(u1, attrs)
         ProjectAuthorization.authorizedFor_?(u1, p1) must beTrue
@@ -198,12 +198,12 @@ object UserLookupTest extends Specification with Mockito {
       UserLookup.parseUserAccess(new NothingUserAttributes()) must beFalse
 
       val nope = new NothingUserAttributes{
-        override def memberOf() = List("CN=ProjectUnknown,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=Projectp2,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegProject,OU=OpenKM,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=Projectp1,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=STXN Provision Development Team,OU=Distribution List,OU=Messaging,OU=APAC,DC=HSTX,DC=global,DC=vpn")
+        override def memberOf() = List("CN=DocRegProjectUnknown,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegProjectp2,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegProjectt,OU=OpenKM,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegProjectp1,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=STXN Provision Development Team,OU=Distribution List,OU=Messaging,OU=APAC,DC=HSTX,DC=global,DC=vpn")
       }
       UserLookup.parseUserAccess(nope) must beFalse
 
       val yep = new NothingUserAttributes{
-        override def memberOf() = List("CN=ProjectUnknown,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=User,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegProject,OU=OpenKM,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=Projectp1,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=STXN Provision Development Team,OU=Distribution List,OU=Messaging,OU=APAC,DC=HSTX,DC=global,DC=vpn")
+        override def memberOf() = List("CN=DocRegProjectUnknown,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegUser,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegProjectt,OU=OpenKM,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=DocRegProjectp1,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn", "CN=STXN Provision Development Team,OU=Distribution List,OU=Messaging,OU=APAC,DC=HSTX,DC=global,DC=vpn")
       }
       UserLookup.parseUserAccess(yep) must beTrue
     }

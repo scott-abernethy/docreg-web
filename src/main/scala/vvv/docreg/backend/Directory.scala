@@ -211,6 +211,6 @@ trait DirectoryComponentImpl extends DirectoryComponent {
 
 object DirectoryConfig {
   val ldapBase = "DC=GNET,DC=global,DC=vpn"
-  val docRegUser = """^CN=User,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn$""".r
-  val docRegProject = """^CN=Project(.*),OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn$""".r
+  val docRegUser = """^CN=DocRegUser,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn$""".r
+  val docRegProject = """^CN=DocRegProject(.*),OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn$""".r
 }

@@ -152,8 +152,7 @@ object UserLookup extends UserLookup with Loggable {
           case Some(existing) =>
             updateUserAttributes(existing, attributes, active)
             User.dbTable.update(existing)
-            // TODO enable once IT have decided how to do this.
-            //parseUserAuthorizations(existing, attributes)
+            parseUserAuthorizations(existing, attributes)
             Full(existing)
           case _ =>
             var created = new User
@@ -162,8 +161,7 @@ object UserLookup extends UserLookup with Loggable {
             created.localServer = "boromir"
             created.timeZone = "US/Pacific"
             created = User.dbTable.insert(created)
-            // TODO enable once IT have decided how to do this.
-            //parseUserAuthorizations(created, attributes)
+            parseUserAuthorizations(created, attributes)
             Full( created )
         }
       }
@@ -180,8 +178,7 @@ object UserLookup extends UserLookup with Loggable {
     user.description = attributes.description() getOrElse ""
     user.department = attributes.department() getOrElse ""
     user.location = attributes.location() getOrElse ""
-    // TODO enable once IT have decided how to do this.
-    user.active = active //&& parseUserAccess(attributes)
+    user.active = active && parseUserAccess(attributes)
   }
 
   // TODO UserLookup and the directory should be actors
