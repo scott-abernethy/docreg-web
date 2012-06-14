@@ -12,7 +12,6 @@ class ProjectSnippet extends Loggable {
   val key = S.param("key") openOr ""
   val project: Option[Project] = {
     val nameUn = key.replaceAll("[+ ]", "_")
-    println("name like " + key + " -> " + nameUn)
     from(Project.dbTable)(p => where(p.name like nameUn) select(p)).headOption
   }
 
