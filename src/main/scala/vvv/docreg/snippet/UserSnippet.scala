@@ -124,7 +124,6 @@ class UserSnippet extends Loggable {
     ".profile-description" #> u.description &
     ".profile-department" #> u.department &
     ".profile-location" #> u.location &
-    ".profile-local-server" #> Server.description(u.localServer) &
     ".profile-time-zone" #> u.timeZone &
     ".profile-activity" #> <span>{ u.activity() } submits in { u.impact() } documents</span> &
     ".profile-access-level" #> u.accessLevel().toString &
@@ -158,13 +157,11 @@ class UserSnippet extends Loggable {
     }
     user match {
       case Some(u) if (User.loggedInUser.is.exists(_ == u)) => {
-        var selectedServer = u.localServer
         var selectedTime = ""
         ClearClearable &
         ".profile-name" #> u.displayName &
-        ".local-server" #> SHtml.select(Server.select.toSeq, Full(selectedServer), selectedServer = _) &
         ".local-time" #> SHtml.select(MappedTimeZone.timeZoneList, Option(u.timeZone), selectedTime = _) &
-        "#submit" #> SHtml.onSubmit( x => savePreferences(u, selectedServer, selectedTime) ) &
+        "#submit" #> SHtml.onSubmit( x => savePreferences(u, selectedTime) ) &
         "#cancel" #> SHtml.onSubmit( x => S.redirectTo(u.profile()) )
       }
       case _ => {
@@ -174,11 +171,11 @@ class UserSnippet extends Loggable {
     }
   }
 
-  def savePreferences(u: User, server: String, timeZone: String) {
+  def savePreferences(u: User, timeZone: String) {
     inTransaction{
       User.dbTable.update(x =>
         where(x.id === u.id)
-        set(x.localServer := server, x.timeZone := timeZone)
+        set(x.timeZone := timeZone)
       )
     }
 
