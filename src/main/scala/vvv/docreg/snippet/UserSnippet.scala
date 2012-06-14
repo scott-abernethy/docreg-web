@@ -129,7 +129,7 @@ class UserSnippet extends Loggable {
     ".profile-access-level" #> u.accessLevel().toString &
     (if (authorzations.isEmpty) ".profile-authorizations" #> NodeSeq.Empty else ".ignoredzzz" #> "ignored") &
     ".authorized-item" #> authorzations.map{ pa =>
-      "li *" #> pa.name
+      "li *" #> pa.infoLink()
     } &
     ".profile-preferences [href]" #> u.preferences() &
     ".subscription-item" #> Subscription.documentsForUser(u).map { s =>
