@@ -27,7 +27,7 @@ class UserLookupSnippet
       ".x-username *" #> i.username &
       ".x-name *" #> i.name &
       ".x-email *" #> i.email &
-      ".x-founduser *" #> "???"
+      ".x-founduser *" #> "???" &
       ".x-change [href]" #> ("/admin/user-lookup-change?id=" + i.id)
     }
   }

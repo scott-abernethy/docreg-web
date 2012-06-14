@@ -4,7 +4,7 @@ db.url=jdbc:mysql://localhost/docregweb
 db.user=root
 db.password=
 
-agent.server=10.15.168.23
-#agent.server=10.16.9.179
+#agent.server=10.15.168.23
+agent.server=10.16.9.179
 agent.home=/srv/docreg-fs
-agent.secure=true
+agent.secure=false
