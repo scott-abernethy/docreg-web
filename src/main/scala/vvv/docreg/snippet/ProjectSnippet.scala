@@ -6,13 +6,14 @@ import net.liftweb.util.Helpers._
 import vvv.docreg.model._
 import net.liftweb.http._
 import net.liftweb.util.CssSel
+import org.squeryl.PrimitiveTypeMode._
 
 class ProjectSnippet extends Loggable {
   val key = S.param("key") openOr ""
-  val project: Option[Project] = try {
-    Project.lookup(key.toLong)
-  } catch {
-    case e:NumberFormatException => None
+  val project: Option[Project] = {
+    val nameUn = key.replaceAll("[+ ]", "_")
+    println("name like " + key + " -> " + nameUn)
+    from(Project.dbTable)(p => where(p.name like nameUn) select(p)).headOption
   }
 
   def info(in: NodeSeq): NodeSeq = {

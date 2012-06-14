@@ -11,7 +11,7 @@ class Project extends DbObject[Project] {
   var name: String = ""
 
   def infoLink(): NodeSeq = {
-    <a href={ "/project/" + id }>{ name }</a>
+    <a href={ "/project/" + name.replaceAll(" ", "+") }>{ name }</a>
   }
 
   lazy val documentsQuery: OneToMany[Document] = DbSchema.projectsToDocuments.left(this)
