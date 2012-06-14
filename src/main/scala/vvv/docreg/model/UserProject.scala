@@ -67,6 +67,7 @@ object UserProject extends UserProject {
           join(Project.dbTable, UserProject.dbTable.leftOuter)( (p, up) =>
             where((up.map(_.userId).get.isNull) or (up.map(_.userId) === Some(user.id)))
             select(p, up.map(_.selected).getOrElse(false))
+            orderBy(p.name asc)
             on(p.id === up.map(_.projectId))
           ).toList
         }
