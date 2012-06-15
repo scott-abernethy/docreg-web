@@ -57,9 +57,12 @@ class DirectoryImpl extends LDAPVendor with Directory {
   configure(
     Map(
       "ldap.url" -> "ldap://dcgnetnz1.gnet.global.vpn:3268",
-      "ldap.userName" -> "gnet\\***REMOVED***",
+      "ldap.userName" -> "gnet\\DocRegSystem",
       "ldap.password" -> "***REMOVED***",
-      "ldap.base" -> DirectoryConfig.ldapBase
+      "ldap.base" -> DirectoryConfig.ldapBase,
+      "lift-ldap.testLookup" -> DirectoryConfig.testLookup,
+      "lift-ldap.retryInterval" -> "3000",
+      "lift-ldap.maxRetries" -> "5"
     )
   )
 
@@ -211,6 +214,37 @@ trait DirectoryComponentImpl extends DirectoryComponent {
 
 object DirectoryConfig {
   val ldapBase = "DC=GNET,DC=global,DC=vpn"
+  val testLookup = "CN=DocRegUser,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn"
   val docRegUser = """^CN=DocRegUser,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn$""".r
   val docRegProject = """^CN=DocRegProject(.*),OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn$""".r
+}
+
+object DirectoryTest {
+
+  def stress(users: List[(String,String)]) {
+    val d = new DirectoryImpl
+    var success: Long = 0
+    var failure: Long = 0
+    for (i <- List.range(1, 100000)) {
+      for (u <- users) {
+        if (testLogin(d, u._1, u._2)) {
+          success = success + 1
+        }
+        else {
+          failure = failure + 1
+        }
+      }
+      if (i % 10 == 0) {
+        println("[" + failure + "] of " + (success+failure))
+      }
+    }
+  }
+
+  def testLogin(d: DirectoryImpl, userName: String, password: String): Boolean = {
+    d.dn(d.userNameFilter(userName)) match {
+      case Full(dn) => d.bindUser(dn, password)
+      case _ => false
+    }
+  }
+
 }
