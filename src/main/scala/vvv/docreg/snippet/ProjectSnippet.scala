@@ -7,6 +7,7 @@ import vvv.docreg.model._
 import net.liftweb.http._
 import net.liftweb.util.CssSel
 import org.squeryl.PrimitiveTypeMode._
+import vvv.docreg.util.Bits
 
 class ProjectSnippet extends Loggable {
   val key = S.param("key") openOr ""
@@ -27,7 +28,7 @@ class ProjectSnippet extends Loggable {
           ".d-count *" #> (open.size) &
           listOrNone[Document](".d-items", open, d => <span>{ d.accessIcon() } { d.info() }</span>) &
           ".d-restricted" #> restricted.headOption.map{ x =>
-            ".d-restricted-count *" #> restricted.size
+            Bits.restrictedNotice(restricted.size)
           } &
           ".a-count *" #> authorized.size &
           listOrNone[User](".a-items", authorized, u => u.profileLabel(uid)) &

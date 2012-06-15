@@ -16,6 +16,7 @@ import vvv.docreg.comet._
 import vvv.docreg.util.StringUtil._
 import vvv.docreg.model._
 import xml.{Text, NodeSeq}
+import vvv.docreg.util.Bits
 
 class Search extends Loggable with ProjectSelection {
   object searchInput extends RequestVar("")
@@ -59,7 +60,7 @@ class Search extends Loggable with ProjectSelection {
         ".doc-title" #> <a href={d.infoLink}>{d.title}</a>
       } &
       ".d-restricted" #> restricted.headOption.map{ x =>
-          ".d-restricted-count *" #> restricted.size
+        Bits.restrictedNotice(restricted.size)
       }
     ).apply(in)
   }
