@@ -171,7 +171,7 @@ class NamingUserAttributes(val foundDn: String, val attrs: javax.naming.director
 
   def department() = extractValue("department")
 
-  def description() = extractValue("description")
+  def description() = extractValue("title")
 
   def location() = extractValue("physicalDeliveryOfficeName")
 
