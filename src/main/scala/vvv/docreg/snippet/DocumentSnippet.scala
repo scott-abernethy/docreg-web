@@ -155,7 +155,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
           ".rev-approval" #> as.map { y =>
             val a = y._1
             val u2 = y._2
-            ".approval-by" #> (u2.map(_.profileLink).getOrElse(Text("?"))) &
+            ".approval-by" #> (u2.flatMap(_.knownOption).map(_.profileLink).getOrElse(Text(a.rawUser))) &
             ".approval-state" #> <span class={ApprovalState.style(a.state)}>{a.state}</span> &
             ".approval-comment" #> <span>{ if (a.comment == "No Comment") "" else a.comment }</span> &
             ".approval-date" #> a.dateAsDT
