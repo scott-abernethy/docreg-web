@@ -33,7 +33,7 @@ class ProjectSnippet extends Loggable {
           ".a-count *" #> authorized.size &
           listOrNone[User](".a-items", authorized, u => u.profileLabel(uid)) &
           ".c-count *" #> contributors.size &
-          listOrNone[User](".c-items", contributors, u => u.profileLabel(uid))
+          listOrNone[User](".c-items", contributors.filter(_.knownOption.isDefined), u => u.profileLabel(uid))
         t(in)
       }
       case _ => {

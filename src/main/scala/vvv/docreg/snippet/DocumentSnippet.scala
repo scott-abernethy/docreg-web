@@ -161,7 +161,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
             ".approval-date" #> a.dateAsDT
           }
         } &
-        ".doc-subscriber" #> Subscription.usersFor(d).map { u =>
+        ".doc-subscriber" #> Subscription.usersFor(d).filter(_.knownOption.isDefined).map { u =>
           ".subscriber-info" #> u.profileLink
         }
       ).apply(in)
