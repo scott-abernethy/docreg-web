@@ -149,7 +149,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
           ".rev-number" #> r.version &
           ".rev-download" #> <a href={d.downloadHref(r.version)}>Download</a> &
           ".rev-approve" #> <a href={d.approveHref(r.version)}>Approve</a> &
-          ".rev-author" #> u.profileLink &
+          ".rev-author" #> u.knownOption.map(_.profileLink).getOrElse(Text(r.rawAuthor)) &
           ".rev-comment" #> r.comment &
           ".rev-date" #> r.dateAsDT & // TODO date only, hover for time
           ".rev-approval" #> as.map { y =>

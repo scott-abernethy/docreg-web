@@ -51,6 +51,10 @@ class User extends DbObject[User] {
     }
   }
 
+  def knownOption(): Option[User] = {
+    Option(this).filter(_.name != "[Unknown]")
+  }
+
   def profileLink(): NodeSeq = profileLink(displayName)
 
   def profileLink(text: String): NodeSeq = profileLink(Text(text))

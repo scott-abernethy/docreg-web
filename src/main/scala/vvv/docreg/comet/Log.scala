@@ -88,7 +88,7 @@ class Log extends DocumentSubscriber {
     ".log-item [id]" #> r.id.toString &
     ".log-item [class+]" #> (if (hidden) Some("hide") else blank) &
     ".doc-title"  #> <a href={d.infoLink}>{d.fullTitle}</a> &
-    ".doc-author" #> r.author().map(_.profileLink()).getOrElse(Text("?")) &
+    ".doc-author" #> r.author().flatMap(_.knownOption).map(_.profileLink()).getOrElse(Text(r.rawAuthor)) &
     ".doc-comment" #> r.comment &
     ".doc-when" #> r.when &
     ".doc-info [href]" #> d.infoLink
