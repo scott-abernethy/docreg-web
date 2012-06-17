@@ -69,6 +69,7 @@ object ApprovalReconcileTest extends Specification with Mockito
       Approval.forRevision(r1).head.comment must be_==("Just because")
       Approval.forRevision(r1).head.state must be_==(ApprovalState.approved)
       Approval.forRevision(r1).head.date must be_==(date1)
+      Approval.forRevision(r1).head.rawUser must be_==("aname")
       }
     }
 
@@ -96,6 +97,7 @@ object ApprovalReconcileTest extends Specification with Mockito
       aa.state = (ApprovalState.approved)
       aa.comment = ("Just because")
       aa.date = (date1)
+      aa.rawUser = "aname"
       Approval.dbTable.insert(aa)
       
       val approvals: List[ApprovalInfo] = List(
@@ -172,6 +174,7 @@ object ApprovalReconcileTest extends Specification with Mockito
 
       Approval.forDocument(d) must haveSize(1)
       Approval.forRevision(r3).head.userId must be_==(Full(u2.id))
+      Approval.forRevision(r3).head.rawUser must be_==(Full("bname"))
       }
     }
   }

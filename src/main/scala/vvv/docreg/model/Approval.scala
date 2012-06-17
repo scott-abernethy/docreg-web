@@ -13,6 +13,7 @@ class Approval extends DbObject[Approval] {
   def dbTable = DbSchema.approvals
   var revisionId: Long = 0
   var userId: Long = 0
+  var rawUser: String = ""
   var state: ApprovalState.Value = ApprovalState.pending
   var date: Timestamp = new Timestamp(0)
   var comment: String = ""

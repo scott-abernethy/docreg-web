@@ -90,6 +90,7 @@ object DbSchema extends org.squeryl.Schema {
     a.revisionId is(indexed),
     a.userId is(indexed),
     a.comment is(dbType("varchar(128)")),
+    a.rawUser is(dbType("varchar(64)")),
     columns(a.revisionId, a.userId) are (unique, indexed)
   ))
 

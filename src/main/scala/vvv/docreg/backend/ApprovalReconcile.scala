@@ -61,6 +61,7 @@ trait ApprovalReconcile extends Loggable
             approval.state = ApprovalState.parse(status)
             approval.date = new Timestamp(date.getTime)
             approval.comment = comment
+            approval.rawUser = name
             Approval.dbTable.insertOrUpdate(approval)
           }
           case _ =>
