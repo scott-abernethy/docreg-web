@@ -75,7 +75,9 @@ object DbSchema extends org.squeryl.Schema {
     r.documentId is(indexed),
     columns(r.documentId, r.version) are (unique, indexed),
     r.filename is(dbType("varchar(128)")),
-    r.comment is(dbType("varchar(512)"))
+    r.comment is(dbType("varchar(512)")),
+    r.clientVersion is(dbType("varchar(16)")),
+    r.rawAuthor is(dbType("varchar(64)"))
   ))
 
   on(pendings)(p => declare(

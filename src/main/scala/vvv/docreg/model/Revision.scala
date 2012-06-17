@@ -16,8 +16,10 @@ class Revision extends DbObject[Revision] {
   var version: Long = 0
   var filename: String = ""
   var authorId: Long = 0
+  var rawAuthor: String = ""
   var date: Timestamp = new Timestamp(0)
   var comment: String = ""
+  var clientVersion: String = ""
 
   def document(): Option[Document] = {
     inTransaction( DbSchema.documentsToRevisions.right(this).headOption )

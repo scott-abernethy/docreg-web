@@ -43,7 +43,7 @@ trait RevisionReconcile extends Loggable
 
       var results = Set.empty[ReconcileAction]
       filtered.foreach{
-        case r @ RevisionInfo(fullFileName @ Document.ValidDocumentFileName(key, version, file), project, comment, access, author, date, _, _, _, clientUserName, _, _) =>
+        case r @ RevisionInfo(fullFileName @ Document.ValidDocumentFileName(key, version, file), project, comment, access, author, date, _, _, _, clientUserName, clientVersion, _) =>
         {
           val record = document.revision(version.toLong).getOrElse{
             val x = new Revision
@@ -51,7 +51,7 @@ trait RevisionReconcile extends Loggable
             x.version = version.toLong
             x
           }
-          val user = userLookup.lookup(Some(r.clientUserName), None, Some(r.author), "revision on " + record + " for " + r).map(_.id).getOrElse(-1L)
+          val user = userLookup.lookup(Some(clientUserName), None, Some(author), "revision on " + record + " for " + r).map(_.id).getOrElse(-1L)
           var changed = false
           if (record.filename != fullFileName) {
             record.filename = fullFileName
@@ -59,6 +59,14 @@ trait RevisionReconcile extends Loggable
           }
           if (record.authorId != user) {
             record.authorId = user
+            changed = true
+          }
+          if (record.rawAuthor != author) {
+            record.rawAuthor = author
+            changed = true
+          }
+          if (record.clientVersion != clientVersion) {
+            record.clientVersion = clientVersion
             changed = true
           }
           if (record.date != T.at(date)) {

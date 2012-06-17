@@ -126,6 +126,8 @@ object RevisionReconcileTest extends Specification with Mockito
       r.authorId must be_==(u1.id)
       r.date must be_==(now)
       r.comment must be_==("Initial version of foo bar baz doco.")
+      r.rawAuthor must be_==("Johnty Roads")
+      r.clientVersion must be_==("v9")
       }
     }
 
@@ -150,6 +152,8 @@ object RevisionReconcileTest extends Specification with Mockito
       r.authorId = (u1.id)
       r.date = (now)
       r.comment = ("Initial version of foo bar baz doco.")
+      r.rawAuthor = "Johnty Roads"
+      r.clientVersion = "v9"
       Revision.dbTable.insert(r)
 
       val lookup = mock[UserLookupProvider]
