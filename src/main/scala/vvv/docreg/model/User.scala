@@ -222,6 +222,14 @@ object User extends User with Loggable {
     val y = b.displayName.split(" ").head
     x.compareToIgnoreCase(y) < 0
   }
+
+  def authorized(): List[User] = {
+    from(dbTable)( u =>
+      where(u.active === true)
+      select(u)
+      orderBy(u.name asc)
+    ).toList
+  }
 }
 
 object AccessLevel extends Enumeration {

@@ -1,6 +1,10 @@
 package bootstrap.liftweb
 
 import net.liftweb._
+import common.Full
+import http.Html5Properties
+import http.ParsePath
+import http.RewriteRequest
 import http.RewriteResponse._
 import net.liftweb.util._
 import Helpers._
@@ -12,6 +16,7 @@ import Loc._
 
 import _root_.vvv.docreg.model._
 import _root_.vvv.docreg.util._
+import sitemap.Loc.If
 import vvv.docreg.backend._
 import vvv.docreg.db.DbVendor
 import net.liftweb.widgets.flot._
@@ -19,6 +24,7 @@ import scala.actors.Actor
 import org.squeryl.PrimitiveTypeMode._
 import scala._
 import vvv.docreg.model.Document.DocumentRevision
+import scala.Some
 
 /**
  * A class that's instantiated early and run.  It allows the application
@@ -60,7 +66,8 @@ class Boot
       Menu.i("Invalid Document") / "doc" / "invalid" >> loggedIn,
       Menu.i("Project Information") / "project" / "info" >> loggedIn,
       Menu.i("User Lookup Admin") / "admin" / "user-lookup" >> loggedIn,
-      Menu.i("User Lookup Change Admin") / "admin" / "user-lookup-change" >> loggedIn
+      Menu.i("User Lookup Change Admin") / "admin" / "user-lookup-change" >> loggedIn,
+      Menu.i("Authorized Users") / "admin" / "authorized-list" >> loggedIn
     )
 
     // set the sitemap.  Note if you don't want access control for

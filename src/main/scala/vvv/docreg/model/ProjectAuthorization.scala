@@ -89,4 +89,14 @@ object ProjectAuthorization extends ProjectAuthorization {
       ).toList
     }
   }
+
+  def allAuthorizations(): List[(ProjectAuthorization,Project)] = {
+    inTransaction{
+      join(dbTable, Project.dbTable)( (pa, p) =>
+        where(pa.revoked.isNull)
+          select( (pa,p) )
+          on(pa.projectId === p.id)
+      ).toList
+    }
+  }
 }
