@@ -64,12 +64,14 @@ object UserProject extends UserProject {
           p4 u1
           p4 u2
            */
-          join(Project.dbTable, UserProject.dbTable.leftOuter)( (p, up) =>
-            where((up.map(_.userId).get.isNull) or (up.map(_.userId) === Some(user.id)))
-            select(p, up.map(_.selected).getOrElse(false))
-            orderBy(p.name asc)
-            on(p.id === up.map(_.projectId))
-          ).toList
+
+          val all = Project.findAll()
+          val selected = from(UserProject.dbTable)(up =>
+            where(up.userId === user.id and up.selected === true)
+            select(up.projectId)
+          ).toSet
+
+          all.map(p => (p, selected.contains(p.id)))
         }
       }
     }

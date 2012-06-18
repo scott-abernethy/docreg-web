@@ -93,11 +93,13 @@ object UserProjectTest extends Specification {
       UserProject.set(u,p1,false)
 
       val x = UserProject.listFor(Some(u))
-      x must haveSize(2)
+      x must haveSize(3)
       x(0)._1 must be_==(p1)
       x(0)._2 must beFalse
       x(1)._1 must be_==(p2)
       x(1)._2 must beTrue
+      x(2)._1 must be_==(p3)
+      x(2)._2 must beFalse
       }
     }
   }
