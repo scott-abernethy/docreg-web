@@ -36,13 +36,15 @@ trait DirectoryComponent {
 }
 
 class DirectoryImpl extends LDAPVendor with Directory {
-  val ldapBase = "DC=GNET,DC=global,DC=vpn"
   configure(
     Map(
       "ldap.url" -> "ldap://dcgnetnz1.gnet.global.vpn:3268",
-      "ldap.userName" -> "gnet\\***REMOVED***",
+      "ldap.userName" -> "gnet\\DocRegSystem",
       "ldap.password" -> "***REMOVED***",
-      "ldap.base" -> ldapBase
+      "ldap.base" -> DirectoryConfig.ldapBase,
+      "lift-ldap.testLookup" -> DirectoryConfig.testLookup,
+      "lift-ldap.retryInterval" -> "3000",
+      "lift-ldap.maxRetries" -> "5"
     )
   )
 
@@ -86,7 +88,7 @@ class DirectoryImpl extends LDAPVendor with Directory {
 
   def findFromDn(dn: String): Box[UserAttributes] = {
     def extractValue(attr: Attributes, key: String): Option[String] = Option(attr).map(_.get(key)).filter(_ != null).map(_.get()).filter(_ != null).map(_.toString)
-    tryo(attributesFromDn(dn + "," + ldapBase)) match {
+    tryo(attributesFromDn(dn + "," + DirectoryConfig.ldapBase)) match {
       case Full(attr) if (attr != null) => {
         Box(
           for {
@@ -105,4 +107,9 @@ class DirectoryImpl extends LDAPVendor with Directory {
 
 trait DirectoryComponentImpl extends DirectoryComponent {
   val directory = new DirectoryImpl
+}
+
+object DirectoryConfig {
+  val ldapBase = "DC=GNET,DC=global,DC=vpn"
+  val testLookup = "CN=DocRegUser,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn"
 }
