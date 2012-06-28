@@ -67,13 +67,15 @@ create table Document (
 -- indexes on Document
 create unique index idx2eed05f6 on Document (number);
 create table Revision (
+    rawAuthor varchar(64) not null,
     version bigint not null,
     id bigint primary key not null auto_increment,
     date datetime not null,
     authorId bigint not null,
     filename varchar(128) not null,
     comment varchar(512) not null,
-    documentId bigint not null
+    documentId bigint not null,
+    clientVersion varchar(16) not null
   );
 -- indexes on Revision
 create index idx4b890789 on Revision (documentId);
@@ -89,6 +91,7 @@ create index idx41e506ff on Pending (documentId);
 create index idx284b055f on Pending (userId);
 create table Approval (
     state int not null,
+    rawUser varchar(64) not null,
     revisionId bigint not null,
     id bigint primary key not null auto_increment,
     date datetime not null,
