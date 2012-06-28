@@ -41,6 +41,8 @@ trait Directory {
   def findFromMail(mailUserName: String): Box[UserAttributes]
   def findFromUserName(userName: String): Box[UserAttributes]
   def findFromPartialName(partialName: String): Box[UserAttributes]
+  def findAttributes(dn: String): Box[UserAttributes]
+  def groupMembers(dn: String): Box[List[String]]
   def login(dn: String, password: String): Boolean
 }
 
@@ -126,6 +128,15 @@ class DirectoryImpl extends LDAPVendor with Directory {
     }
   }
 
+  def groupMembers(dn: String): Box[List[String]] = {
+    tryo(attributesFromDn(dn + "," + DirectoryConfig.ldapBase)) match {
+      case Full(attrs) if (attrs != null) =>
+        Full(new GroupAttributes(attrs).members().map(_.replace(","+DirectoryConfig.ldapBase, "")))
+      case f @ Failure(_, _, _) => f
+      case _ => Empty
+    }
+  }
+
   def login(dn: String, password: String): Boolean = {
     if (!password.isEmpty) {
       bindUser(dn, password)
@@ -156,10 +167,41 @@ trait UserAttributes {
   def debug() = {}
 }
 
-class NamingUserAttributes(val foundDn: String, val attrs: javax.naming.directory.Attributes) extends UserAttributes {
+class AttributesWrapper(val attrs: javax.naming.directory.Attributes) {
   def extractValue(key: String): Option[String] = {
     Option( attrs.get(key) ).flatMap( x => Option(x.get()) ).map(_.toString)
   }
+
+  def extractList(key: String): List[String] = {
+    val listAttr = attrs.get(key)
+    if (listAttr != null) {
+      tryo(lameEnumToListOfString(listAttr.getAll)).getOrElse(List.empty[Any]).map(_.toString())
+    }
+    else {
+      List.empty
+    }
+  }
+
+  def lameEnumToListOfString(enum: javax.naming.NamingEnumeration[_]): List[String] = {
+    if (!enum.hasMore) {
+      Nil
+    }
+    else {
+      enum.next().toString :: lameEnumToListOfString(enum)
+    }
+  }
+
+  def lameEnumToList[T](enum: javax.naming.NamingEnumeration[T]): List[T] = {
+    if (!enum.hasMore) {
+      Nil
+    }
+    else {
+      enum.next() :: lameEnumToList(enum)
+    }
+  }
+}
+
+class NamingUserAttributes(val foundDn: String, attrs: javax.naming.directory.Attributes) extends AttributesWrapper(attrs) with UserAttributes {
 
   def dn() = Some(foundDn)
 
@@ -174,24 +216,6 @@ class NamingUserAttributes(val foundDn: String, val attrs: javax.naming.director
   def description() = extractValue("title")
 
   def location() = extractValue("physicalDeliveryOfficeName")
-
-  private def lameEnumToListOfString(enum: javax.naming.NamingEnumeration[_]): List[String] = {
-    if (!enum.hasMore) {
-      Nil
-    }
-    else {
-      enum.next().toString :: lameEnumToListOfString(enum)
-    }
-  }
-
-  private def lameEnumToList[T](enum: javax.naming.NamingEnumeration[T]): List[T] = {
-    if (!enum.hasMore) {
-      Nil
-    }
-    else {
-      enum.next() :: lameEnumToList(enum)
-    }
-  }
 
   def memberOf(): List[String] = {
     val memberOf = attrs.get("memberOf")
@@ -208,6 +232,10 @@ class NamingUserAttributes(val foundDn: String, val attrs: javax.naming.director
   }
 }
 
+class GroupAttributes(attrs: javax.naming.directory.Attributes) extends AttributesWrapper(attrs) {
+  def members() = extractList("member")
+}
+
 trait DirectoryComponentImpl extends DirectoryComponent {
   val directory = new DirectoryImpl
 }
@@ -217,6 +245,14 @@ object DirectoryConfig {
   val testLookup = "CN=DocRegUser,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn"
   val docRegUser = """^CN=DocRegUser,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn$""".r
   val docRegProject = """^CN=DocRegProject(.*),OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn$""".r
+
+  def userGroup(): String = {
+    "CN=DocRegUser,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC"
+  }
+
+  def projectAuthorizationGroup(project: String): String = {
+    "CN=DocRegProject%s,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC".format(project)
+  }
 }
 
 object DirectoryTest {
@@ -248,3 +284,10 @@ object DirectoryTest {
   }
 
 }
+
+/*
+groups have
+member - list
+objectClass - list (top, group)
+whenChanged
+*/

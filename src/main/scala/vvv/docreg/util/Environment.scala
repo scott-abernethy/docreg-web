@@ -19,6 +19,7 @@ trait EnvironmentImpl extends Environment with BackendComponent with DocumentSer
   val daemonAgent = actorOf(Props[DaemonAgentImpl], "DaemonAgent")
   val backend = actorOf(Props(new Backend(directory, daemonAgent, documentServer)), "Backend")
   val poller = actorOf(Props(new ChangePoller(AgentVendor.server, backend, daemonAgent)))
+  val userStorage = actorOf(Props[UserStorage], "UserStorage")
 
   def start()
   {

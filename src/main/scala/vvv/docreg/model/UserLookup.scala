@@ -145,7 +145,7 @@ object UserLookup extends UserLookup with Loggable {
     lookupUser(Some(username), x => directory.findFromUserName(x))
   }
   
-  protected def fromAttributes(attributes: UserAttributes, active: Boolean): Box[User] = {
+  def fromAttributes(attributes: UserAttributes, active: Boolean): Box[User] = {
     attributes.userName() match {
       case Some(userName) => {
         from(User.dbTable)(u => where(u.username === userName) select(u)).headOption match {
