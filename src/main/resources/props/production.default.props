@@ -3,6 +3,6 @@ db.url=jdbc:mysql://localhost/docregweb
 db.user=docreguser
 db.password=docregsux
 
-agent.server=10.15.168.23
+agent.server=localhost
 agent.home=/home/docreg
 agent.secure=true
