@@ -25,6 +25,7 @@ import org.squeryl.PrimitiveTypeMode._
 import scala._
 import vvv.docreg.model.Document.DocumentRevision
 import scala.Some
+import org.streum.configrity.Configuration
 
 /**
  * A class that's instantiated early and run.  It allows the application
@@ -34,6 +35,8 @@ class Boot
 {
   def boot
   {
+    //val config = Configuration.load("/etc/docreg/docreg.conf")
+
     DbVendor.init()
     //DbVendor.describe()
 
