@@ -24,6 +24,16 @@ object Sample
 
 class History
 {
+  val defaultOptions: FlotOptions = new FlotOptions {
+    override def yaxis = Full(new FlotAxisOptions {
+      override def min = Full(0)
+    })
+
+    override def legend = Full(new FlotLegendOptions {
+      override def position = Full("nw")
+    })
+  }
+
   def mini(in: NodeSeq) =
   {
     val series = new FlotSerie() {
@@ -34,22 +44,39 @@ class History
         override def fill = Full(true)
       })
     }
-    graph(in, series)
+
+    val options = new FlotOptions() {
+      override def legend = Empty
+      override def xaxis = Full(new FlotAxisOptions {
+        override protected def buildOptions = c("show", Full(false)) :: super.buildOptions
+      })
+      override def yaxis = Full(new FlotAxisOptions {
+        override protected def buildOptions = c("show", Full(false)) :: super.buildOptions
+      })
+
+      override def grid = Full(new FlotGridOptions {
+        override def borderWidth = Full(0)
+
+        override def color = Empty
+      })
+    }
+
+    graph(in, series, options)
   }
 
   def month(in: NodeSeq) =
   {
-    graph(in, historySeries(MonthHistory.data(), 1))
+    graph(in, historySeries(MonthHistory.data(), 1), defaultOptions)
   }
 
   def year(in: NodeSeq) =
   {
-    graph(in, historySeries(YearHistory.data(), 2))
+    graph(in, historySeries(YearHistory.data(), 2), defaultOptions)
   }
 
   def longTerm(in: NodeSeq) =
   {
-    graph(in, historySeries(LongTermHistory.data(), 3))
+    graph(in, historySeries(LongTermHistory.data(), 3), defaultOptions)
   }
 
   private def historySeries(d: List[(Double, Double)], c: Int): FlotSerie =
@@ -68,20 +95,11 @@ class History
     }
   }
 
-  private def graph(in: NodeSeq, data_to_plot: FlotSerie): NodeSeq =
+  private def graph(in: NodeSeq, data_to_plot: FlotSerie, flotOptions: FlotOptions): NodeSeq =
   {
     val graphDiv = in \\ "div" filter (_.attribute("class").exists(_.text contains "graph")) headOption
     val graphDivId = graphDiv.flatMap(_.attribute("id").map(_.text))
 
-    val flotOptions: FlotOptions = new FlotOptions {
-      override def yaxis = Full(new FlotAxisOptions {
-        override def min = Full(0)
-      })
-
-      override def legend = Full(new FlotLegendOptions {
-        override def position = Full("nw")
-      })
-    }
     in ++ Flot.render(graphDivId.getOrElse("foo"), List(data_to_plot), flotOptions, Flot.script(in))
   }
 }

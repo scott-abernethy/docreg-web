@@ -151,7 +151,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
           ".rev-approve" #> <a href={d.approveHref(r.version)}>Approve</a> &
           ".rev-author" #> u.knownOption.map(_.profileLink).getOrElse(Text(r.rawAuthor)) &
           ".rev-comment" #> r.comment &
-          ".rev-date" #> r.dateAsDT & // TODO date only, hover for time
+          ".rev-date" #> r.dateOnlyWithHint &
           ".rev-approval" #> as.map { y =>
             val a = y._1
             val u2 = y._2

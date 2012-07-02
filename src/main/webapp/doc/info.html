@@ -5,22 +5,23 @@
     <title>?</title>
   </head>
   <body class="lift:content_id=main">
-    <div id="main" class="lift:surround?with=default;at=body_content">
+    <div id="main" class="lift:surround?with=default;at=body_content row">
 
-      <div class="lift:snippet?type=DocumentSnippet.header">
-          <header class="page-header">
-              <h1><span class="doc-title">Title</span></h1>
+       <div class="lift:snippet?type=DocumentSnippet.info">
+
+       <div class="span8">
+       <div class="boxr">
+
+       <div class="lift:snippet?type=DocumentSnippet.header">
+          <div class="boxr-head border-bottom">
+              <h2><span class="doc-title">Title</span></h2>
               <p>Project: <span class="doc-project">Foo</span> <span class="doc-access">Access Icon</span></p>
-          </header>
+          </div>
           <div class="lift:Msg?id=edit-message"></div>
           <div class="lift:Msg?id=out-of-date-message"></div>
       </div>
 
-      <div class="lift:snippet?type=DocumentSnippet.info">
-
-      <div class="row">
-         <div class="span12">
-             <div id="doc-actions" class="btn-toolbar">
+             <div id="doc-actions" class="btn-toolbar boxr-body">
                <div class="btn-group">
                <a class="btn btn-info doc-link" href="#"><i class="icon-file icon-white"></i> Download</a>
                </div>
@@ -36,16 +37,8 @@
                  <a class="btn doc-subscribe" href="#">Subscribe</a>
                </div>
              </div>
-         </div>
-      </div>
 
-      <hr/>
-          
-      <div class="row">
-
-      <div class="span9">
-
-      <h3>Document History</h3>
+      <h3 class="boxr-body">Document History</h3>
       <table id="history" class="table table-striped">
         <thead>
           <tr>
@@ -92,17 +85,20 @@
       </table>
     </div>
 
+          </div>
+
       <div class="span3">
+      <div class="boxr boxr-dark boxr-body">
           <h3>Subscribers</h3>
           <ul id="subscribers" class="unstyled">
             <li class="doc-subscriber"><span class="subscriber-info"></span></li>
           </ul>
       </div>
+      </div>
 
+      </div>
       </div>
 
         </div>
-
-    </div>
   </body>
 </html>

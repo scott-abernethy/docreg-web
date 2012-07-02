@@ -5,13 +5,14 @@
     <title>?</title>
 </head>
 <body class="lift:content_id=main">
-<div id="main" class="lift:surround?with=no-sidebar;at=content">
+<div id="main" class="lift:surround?with=default;at=body_content row">
 
-    <header class="page-header">
-        <h1>Revision History</h1>
-    </header>
+   <div class="span10 offset1"><div class="boxr">
+    <div class="boxr-head border-bottom">
+        <h2>Revision History</h2>
+    </div>
 
-    <div class="row"><div class="span12">
+    <div class="boxr-body">
     <h2>Last 30 Days</h2>
     <!--<div class="lift:lazy-load">-->
         <div class="lift:snippet?type=History.month">
@@ -34,8 +35,8 @@
             <div id="g3" class="graph" style="width:600px;height:200px;"></div>
         </div>
     <!--</div>-->
-    <hr class="space"/>
-    </div></div>
+    </div>
+   </div></div>
 </div>
 </body>
 </html>

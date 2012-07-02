@@ -5,17 +5,16 @@
     <title>?</title>
   </head>
   <body class="lift:content_id=main">
-    <div id="main" class="lift:surround?with=no-sidebar;at=content">
+    <div id="main" class="lift:surround?with=default;at=body_content row">
 
-        <div class="lift:snippet?type=DocumentSnippet.header">
-            <header class="page-header">
-                <h1><span class="doc-title">Title</span></h1>
+       <div class="span8 offset2"><div class="boxr">
+
+       <div class="lift:snippet?type=DocumentSnippet.header boxr-head border-bottom">
+                <h2><span class="doc-title">Title</span></h2>
                 <p>Project: <span class="doc-project">Foo</span></p>
-            </header>
         </div>
 
-  <form class="lift:snippet?type=DocumentSnippet.requestApproval form-horizontal">
-    <div class="row"><div class="span12">
+  <form class="lift:snippet?type=DocumentSnippet.requestApproval form-horizontal boxr-body">
       <fieldset>
           <legend>Request Document Approval</legend>
           <div class="control-group">
@@ -41,9 +40,11 @@
           <div class="form-actions">
               <input type="submit" id="submit" value="Submit" class="btn btn-primary approval-submit"/> <input type="submit" id="cancel" value="Cancel" class="btn approval-cancel"/>
           </div>
-      </fieldset></div></div>
+      </fieldset>
   </form>
 
+    </div>
+    </div>
     </div>
   </body>
 </html>

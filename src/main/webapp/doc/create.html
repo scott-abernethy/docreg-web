@@ -5,18 +5,17 @@
     <title>?</title>
   </head>
   <body class="lift:content_id=main">
-    <div id="main" class="lift:surround?with=no-sidebar;at=content">
+    <div id="main" class="lift:surround?with=default;at=body_content row">
 
-        <div>
-            <header class="page-header">
-                <h1>Create Document</h1>
+        <div class="span8 offset2">
+        <div class="boxr">
+            <div class="boxr-head border-bottom">
+                <h2>Create Document</h2>
                 <p>Add a new document to the document register.</p>
-            </header>
-        </div>
+            </div>
 
-  <form class="lift:snippet?type=CreateDocumentSnippet.render;form=post;multipart=true form-horizontal">
+  <form class="lift:snippet?type=CreateDocumentSnippet.render;form=post;multipart=true form-horizontal boxr-body">
     <fieldset>
-          <legend>New document submission</legend>
           <div class="control-group">
               <label class="control-label" for="input01">Project</label>
               <div class="controls">
@@ -62,6 +61,8 @@
       </fieldset>
   </form>
 
+        </div>
+        </div>
     </div>
   </body>
 </html>

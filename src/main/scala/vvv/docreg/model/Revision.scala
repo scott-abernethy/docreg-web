@@ -34,6 +34,8 @@ class Revision extends DbObject[Revision] {
   def dateOnly() = DatePresentation.formatDay(date)
 
   def dateAsDT(): String = DatePresentation.formatDateTime(date)
+
+  def dateOnlyWithHint() = <abbr title={dateAsDT()}>{dateOnly()}</abbr>
 }
 
 object Revision extends Revision {

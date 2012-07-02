@@ -1,74 +1,74 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
-    <title>?</title>
-  </head>
-  <body class="lift:content_id=main">
-    <div id="main" class="lift:surround?with=default;at=body_content">
+<head>
+   <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+   <title>?</title>
+</head>
+<body class="lift:content_id=main">
+<div id="main" class="lift:surround?with=default;at=body_content">
 
-    <header class="page-header">
-        <h1>Dashboard</h1>
-    </header>
+   <div class="row">
+      <div class="span7">
+         <div class="boxr">
+            <div class="boxr-head">
+            <h2>Stream</h2>
+               <div class="lift:snippet?type=History.mini">
+               <a href="/doc/history">
+               <div id="g0" class="graph" style="width:200px;height:60px;"></div>
+               </a>
+            </div>
+            <div class="btn-toolbar" id="stream-actions">
+               <div class="btn-group" data-toggle="buttons-radio">
+                  <a href="#" class="btn active">All</a>
+                  <a href="#" class="btn">Watching</a>
+                  <a href="#" class="btn">@Me</a>
+               </div>
+               <div class="btn-group">
+                  <a href="#" class="btn dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                  <ul class="dropdown-menu">
+                     <li><a href="#">Select Projects</a></li>
+                  </ul>
+               </div>
+            </div>
+            </div>
 
-    <div class="row">
-    <div class="span3">
-      <div class="lift:snippet?type=Dashboard.projects well">
-        <div id="project_filter">
-          <h4>Projects <small>Filter</small></h4>
-            <ul class="nav nav-pills">
-              <li id="projects-all"><a href="#">All</a></li>
-              <li id="projects-sel"><a href="#">Selected</a></li>
+            <div class="lift:snippet?type=Dashboard.log">
+               <div class="lift:comet?type=Log">
+                  <ol id="log">
+                     <li class="log-item border-top boxr-pad" id="">
+                        <div><strong><span class="doc-title"></span></strong><small class="pull-right"><span class="doc-when"></span></small></div>
+                        <div><span class="doc-comment"></span> -- <span class="doc-author silent"></span></div>
+                     </li>
+                  </ol>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <div class="span5">
+         <div class="lift:snippet?type=UserSnippet.editing boxr boxr-dark boxr-body">
+            <h4>My Edits In Progress</h4>
+            <ul class="unstyled">
+               <li class="editing-item">La</li>
             </ul>
-          <div class="input projects">
-            <ul class="inputs-list">
-              <li class="project-item"><span class="project-check"></span> <span class="project-name"></span></li>
+         </div>
+
+         <div class="lift:snippet?type=UserSnippet.history boxr boxr-dark boxr-body">
+            <h4>My Submissions <small>Last 10 | <a href="#" class="history-user">More</a></small></h4>
+            <ul class="unstyled">
+               <li class="history-item">La</li>
             </ul>
-          </div>
-        </div>
-      </div>
-    </div>
+         </div>
 
-    <div class="span5">
-      <div class="lift:snippet?type=Dashboard.log">
-      <h3>Recent Activity</h3>
-      <div class="lift:comet?type=Log">
-        <ol id="log">
-            <li class="log-item border-top" id="">
-              <div class="row"><strong class="span5"><span class="doc-title"></span></strong></div>
-                <div class="row"><div class="span5"><span class="doc-comment"></span> -- <span class="doc-author silent"></span></div></div>
-                <div class="row"><div class="span5"><small class="pull-right"><span class="doc-when"></span></small></div></div>
-            </li>
-        </ol>
+         <div class="lift:snippet?type=UserSnippet.subscriptions boxr boxr-dark boxr-body">
+            <h4>My Subscriptions</h4>
+            <ul class="unstyled">
+               <li class="subscription:item"><a href=""><span class="item:title">001-Foo</span></a></li>
+            </ul>
+         </div>
       </div>
-      </div>
-    </div>
-    <div class="span4">
-    <div class="lift:snippet?type=UserSnippet.editing">
-      <h3>My Edits In Progress <small><a href="#" class="editing-user">More</a></small></h3>
-      <ul class="unstyled">
-        <li class="editing-item">La</li>
-      </ul>
-    </div>
-        <hr/>
+   </div>
 
-    <div class="lift:snippet?type=UserSnippet.history">
-      <h3>My Submissions <small>Last 10 | <a href="#" class="history-user">More</a></small></h3>
-      <ul class="unstyled">
-        <li class="history-item">La</li>
-      </ul>
-    </div>
-    <hr/>
-
-      <h3>My Subscriptions</h3>
-      <div class="lift:snippet?type=UserSnippet.subscriptions">
-        <ul class="unstyled">
-          <li class="subscription:item"><a href=""><span class="item:title">001-Foo</span></a></li>
-        </ul>
-      </div>
-    </div>
-    </div>
-
-    </div>
-  </body>
+</div>
+</body>
 </html>

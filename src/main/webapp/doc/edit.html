@@ -5,39 +5,41 @@
     <title>?</title>
   </head>
   <body class="lift:content_id=main">
-    <div id="main" class="lift:surround?with=no-sidebar;at=content">
+    <div id="main" class="lift:surround?with=default;at=body_content row">
 
-        <div class="lift:snippet?type=DocumentSnippet.header">
-            <header class="page-header">
-                <h1><span class="doc-title">Title</span></h1>
+       <div class="span8 offset2"><div class="boxr">
+
+        <div class="lift:snippet?type=DocumentSnippet.header boxr-head border-bottom">
+                <h2><span class="doc-title">Title</span></h2>
                 <p>Project: <span class="doc-project">Foo</span></p>
-            </header>
         </div>
 
-  <div class="lift:snippet?type=DocumentSnippet.edit">
-    <div>
-        <h4>Document Editing</h4>
-        <table class="table">
-            <tr>
-                <td><a class="btn btn-primary edit-download" href="#">Download For Editing</a></td>
-                <td>Download the latest version of this document, prepared for your editing. You will be prompted to select a download location. Once you have finished editing return to the document page and select the submit action.<br/><b>Use this option if you have changes to make to the document.</b></td>
-            </tr>
-            <tr>
-                <td><a class="btn edit-submit-file" href="#">Submit File...</a></td>
-                <td>Submit an existing file on your file-system now.<br/><b>Use this option if you have already prepared the next version of the document.</b></td>
-            </tr>
-            <!--<tr>-->
-                <!--<td><a class="btn edit-submit-previous" href="#">Submit Previous...</a></td>-->
-                <!--<td>Submit a previous version of the document in DocReg.</td>-->
-            <!--</tr>-->
-            <tr>
-                <td></td>
-                <td><br/><a class="btn edit-back" href="#">Close</a></td>
-            </tr>
-        </table>
+  <div class="lift:snippet?type=DocumentSnippet.edit boxr-body">
+    <div class="form-horizontal">
+
+       <fieldset>
+          <div class="control-group">
+             <legend>Document Editing</legend>
+             <label class="control-label" for="input01">Option 1.</label>
+             <div class="controls">
+               <a class="btn btn-primary edit-download" href="#" id="input01">Download For Editing</a>
+               <p class="help-block">Download the latest version of this document, prepared for your editing. You will be prompted to select a download location. Once you have finished editing return to the document page and select the submit action.<br/><b>Use this option if you have changes to make to the document.</b></p>
+             </div>
+          </div>
+          <div class="control-group">
+             <label class="control-label" for="input02">Option 2.</label>
+             <div class="controls">
+                <a class="btn edit-submit-file" href="#" id="input02">Submit File...</a>
+                <p class="help-block">Submit an existing file on your file-system now.<br/><b>Use this option if you have already prepared the next version of the document.</b></p>
+             </div>
+          </div>
+          <div class="form-actions">
+             <a class="btn edit-back" href="#">Close</a>
+          </div>
+       </fieldset>
     </div>
   </div>
-
+       </div></div>
     </div>
   </body>
 </html>

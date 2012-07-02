@@ -5,58 +5,92 @@
     <title>?</title>
   </head>
   <body class="lift:content_id=main">
-    <div id="main" class="lift:surround?with=no-sidebar;at=content">
+    <div id="main" class="lift:surround?with=default;at=body_content row">
 
-  <div class="lift:snippet?type=UserSnippet.profile">
-      <header class="page-header">
-          <h1><span class="profile-name"></span> <small>User Profile</small></h1>
-      </header>
+    <div class="lift:snippet?type=UserSnippet.profile">
+    <div class="span6">
 
-    <div>
-      <table class="table table-bordered">
-        <tr>
-          <th>Username:</th><td><span class="profile-username"/></td>
-        </tr>
-        <tr>
-          <th>Email:</th><td><span class="profile-email"/></td>
-        </tr>
-        <tr>
-          <th>Description:</th><td><span class="profile-description"></span><br/><span class="profile-department"></span><br/><span class="profile-location"></span></td>
-        </tr>
-        <tr>
-          <th>Time Zone:</th><td><span class="profile-time-zone"/></td>
-        </tr>
-        <tr>
-          <th>Activity:</th><td><span class="profile-activity"/></td>
-        </tr>
-        <tr>
-          <th>Access:</th><td><span class="profile-access-level">Normal</span><div class="profile-authorizations"><hr/><p>Project Authorizations:</p><ul><li class="authorized-item"></li></ul></div></td>
-        </tr>
-      </table>
-        <p><a href="#" class="profile-preferences btn">Edit Preferences</a></p>
-        <hr/>
-      <div class="row">
+  <div class="boxr">
+      <div class="boxr-head border-bottom">
+          <h2><span class="profile-name"></span> <small>User</small></h2>
+      </div>
+
+    <div class="boxr-body">
+       <div class="form-horizontal">
+      <fieldset>
+          <legend>Profile and Preferences</legend>
+          <div class="control-group">
+              <label class="control-label" for="input01">Username</label>
+              <div class="controls">
+                 <div id="input01" class="profile-username faux-input"></div>
+              </div>
+          </div>
+          <div class="control-group">
+              <label class="control-label" for="input02">Email</label>
+              <div class="controls">
+                <div id="input02" class="profile-email faux-input"></div>
+              </div>
+          </div>
+          <div class="control-group">
+              <label class="control-label" for="input03">Description</label>
+              <div class="controls">
+                <div id="input03" class="faux-input"><span class="profile-description"></span><br/><span class="profile-department"></span><br/><span class="profile-location"></span></div>
+              </div>
+          </div>
+          <div class="control-group">
+              <label class="control-label" for="input04">Time zone</label>
+              <div class="controls">
+                <div id="input04" class="profile-time-zone faux-input"></div>
+              </div>
+          </div>
+          <div class="control-group">
+              <label class="control-label" for="input05">Access</label>
+              <div class="controls">
+                 <div id="input05" class="profile-access-level faux-input">Normal</div><div class="profile-authorizations"><div class="faux-input"><p>Project Authorizations:</p><ul><li class="authorized-item"></li></ul></div></div>
+              </div>
+          </div>
+          <div class="control-group">
+              <label class="control-label" for="input06">Activity</label>
+              <div class="controls">
+                <div id="input06" class="profile-activity faux-input"/>
+              </div>
+          </div>
+          <div class="form-actions">
+             <a href="#" class="profile-preferences btn">Edit Preferences</a>
+          </div>
+      </fieldset>
+          </div>
+          </div>
+</div>
+
+       <div class="boxr boxr-body boxr-dark">
+          <h4>Subscriptions <small>By Document Number</small></h4>
+          <ul class="unstyled">
+             <li class="subscription-item"></li>
+          </ul>
+       </div>
+
+    </div>
+
           <div class="span6">
-        <h3>Edits In Progress <small>By Start Date</small></h3>
+
+             <div class="boxr boxr-body boxr-dark">
+             <h4>Edits In Progress <small>By Start Date</small></h4>
         <ul class="unstyled">
           <li class="editing-item"></li>
         </ul>
-        <hr/>
-          <h3>Submissions <small>By Submit Date</small></h3>
-        <ul class="unstyled">
-          <li class="history-item"></li>
-        </ul>
           </div>
-        <div class="span6">
-          <h3>Subscriptions <small>By Document Number</small></h3>
-        <ul class="unstyled">
-          <li class="subscription-item"></li>
-        </ul>
-        </div>
+
+             <div class="boxr boxr-body boxr-dark">
+                <h4>Submissions <small>By Submit Date</small></h4>
+                <ul class="unstyled">
+                   <li class="history-item"></li>
+                </ul>
+             </div>
+
+
       </div>
     </div>
-  </div>
-
     </div>
   </body>
 </html>
