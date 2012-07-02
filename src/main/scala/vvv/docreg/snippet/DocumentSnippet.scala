@@ -271,11 +271,11 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     User.loggedInUser.is match {
       case Full(u) if (u.subscribed_?(d))  =>
       {
-        SHtml.a(() => processSubscribe(d, u), <span id="subscribe"><i class="icon-eye-close"></i> Unsubscribe</span> , "class" -> "btn")
+        SHtml.a(() => processSubscribe(d, u), <span id="subscribe"><i class="icon-eye-close"></i> Unwatch</span> , "class" -> "btn")
       }
       case Full(u) =>
       {
-        SHtml.a(() => processSubscribe(d, u), <span id="subscribe"><i class="icon-eye-open"></i> Subscribe</span> , "class" -> "btn")
+        SHtml.a(() => processSubscribe(d, u), <span id="subscribe"><i class="icon-eye-open"></i> Watch</span> , "class" -> "btn")
       }
       case _ =>
       {
