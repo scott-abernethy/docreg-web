@@ -47,6 +47,7 @@ class Search extends Loggable with ProjectSelection {
 
   def items(in: NodeSeq, ds: List[(Document, Project, Revision, User)]): NodeSeq =
   {
+    val userId = User.loggedInUser.is.map(_.id) getOrElse -1L
     val inputText = Option(searchInput.is).getOrElse("")
     val (open, restricted) = ds.partition(i => UserSession.isAuthorized(i._1, i._2))
     (
@@ -54,8 +55,8 @@ class Search extends Loggable with ProjectSelection {
       ".match-count" #> <span>Results <span class="badge">{open.size}</span></span> &
       ".search-item" #> open.map { x =>
         val (d,p,r,u) = x
-        ".doc-project" #> p.name &
-        ".doc-author" #> u.profileLink &
+        ".doc-project" #> p.infoLink() &
+        ".doc-author" #> u.profileLabel(userId) &
         ".doc-key" #> <a href={d.infoLink}>{d.number}</a> &
         ".doc-date" #> r.dateOnly &
         ".doc-title" #> <a href={d.infoLink}>{d.title}</a>
