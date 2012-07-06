@@ -9,7 +9,7 @@ import org.squeryl.PrimitiveTypeMode._
 
 class UserStorage extends Actor {
   override def preStart() {
-    context.system.scheduler.schedule(Duration("10 sec"), Duration("24 hour"), self, 'Check)
+    context.system.scheduler.schedule(Duration("15 min"), Duration("24 hour"), self, 'Check)
     super.preStart()
   }
 
