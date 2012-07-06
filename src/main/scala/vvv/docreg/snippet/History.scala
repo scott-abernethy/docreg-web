@@ -2,12 +2,15 @@ package vvv.docreg.snippet
 
 import scala.xml.NodeSeq
 import net.liftweb.widgets.flot._
-import vvv.docreg.model.Revision
+import vvv.docreg.model._
 import net.liftweb.mapper._
 import java.util.{Calendar}
 import net.liftweb.common.{Empty, Full}
 import org.squeryl.PrimitiveTypeMode._
 import java.sql.Timestamp
+import net.liftweb.common.Full
+import scala.Right
+import scala.Some
 
 case class Sample(index: Int, count: Int, label: String)
 {
@@ -36,9 +39,35 @@ class History
 
   def mini(in: NodeSeq) =
   {
-    val series = new FlotSerie() {
-      override val data = MonthHistory.data()
+    val history = new MonthHistory();
+
+    val all = new FlotSerie() {
+      override val data = history.data( (d,r,p) => UserSession.inStream(StreamMode.all,d,r,p) )
       override def color = Full(Right(1))
+      override def lines = Full(new FlotLinesOptions {
+        override def show = Full(true)
+        override def fill = Full(true)
+      })
+    }
+    val favourites = new FlotSerie() {
+      override val data = history.data( (d,r,p) => UserSession.inStream(StreamMode.selected,d,r,p) )
+      override def color = Full(Right(2))
+      override def lines = Full(new FlotLinesOptions {
+        override def show = Full(true)
+        override def fill = Full(true)
+      })
+    }
+    val watching = new FlotSerie() {
+      override val data = history.data( (d,r,p) => UserSession.inStream(StreamMode.watching,d,r,p) )
+      override def color = Full(Right(3))
+      override def lines = Full(new FlotLinesOptions {
+        override def show = Full(true)
+        override def fill = Full(true)
+      })
+    }
+    val me = new FlotSerie() {
+      override val data = history.data( (d,r,p) => UserSession.inStream(StreamMode.me,d,r,p) )
+      override def color = Full(Right(4))
       override def lines = Full(new FlotLinesOptions {
         override def show = Full(true)
         override def fill = Full(true)
@@ -61,22 +90,22 @@ class History
       })
     }
 
-    graph(in, series, options)
+    graph(in, List(all,favourites,watching,me), options)
   }
 
   def month(in: NodeSeq) =
   {
-    graph(in, historySeries(MonthHistory.data(), 1), defaultOptions)
+    graph(in, List(historySeries(new MonthHistory().data(), 1)), defaultOptions)
   }
 
   def year(in: NodeSeq) =
   {
-    graph(in, historySeries(YearHistory.data(), 2), defaultOptions)
+    graph(in, List(historySeries(YearHistory.data(), 2)), defaultOptions)
   }
 
   def longTerm(in: NodeSeq) =
   {
-    graph(in, historySeries(LongTermHistory.data(), 3), defaultOptions)
+    graph(in, List(historySeries(LongTermHistory.data(), 3)), defaultOptions)
   }
 
   private def historySeries(d: List[(Double, Double)], c: Int): FlotSerie =
@@ -95,19 +124,20 @@ class History
     }
   }
 
-  private def graph(in: NodeSeq, data_to_plot: FlotSerie, flotOptions: FlotOptions): NodeSeq =
+  private def graph(in: NodeSeq, data_to_plot: List[FlotSerie], flotOptions: FlotOptions): NodeSeq =
   {
     val graphDiv = in \\ "div" filter (_.attribute("class").exists(_.text contains "graph")) headOption
     val graphDivId = graphDiv.flatMap(_.attribute("id").map(_.text))
 
-    in ++ Flot.render(graphDivId.getOrElse("foo"), List(data_to_plot), flotOptions, Flot.script(in))
+    in ++ Flot.render(graphDivId.getOrElse("foo"), data_to_plot, flotOptions, Flot.script(in))
   }
 }
 
-object MonthHistory
+class MonthHistory
 {
-  def data(): List[(Double, Double)] =
-  {
+  val raw = load()
+
+  def load() = {
     val cal: Calendar = Calendar.getInstance()
     cal.set(Calendar.SECOND, 0)
     cal.set(Calendar.MINUTE, 0)
@@ -116,14 +146,21 @@ object MonthHistory
     cal.add(Calendar.DAY_OF_YEAR, -30)
     val startDate = new Timestamp(cal.getTimeInMillis)
 
-    val rs = inTransaction{
-      from(Revision.dbTable)(r =>
+    inTransaction{
+      join(Document.dbTable, Revision.dbTable, Project.dbTable)( (d,r,p) =>
         where(r.date >= startDate)
-        select(r)
-        orderBy(r.date asc)
+          select( (d,r,p) )
+          orderBy(r.date asc)
+          on(r.documentId === d.id, d.projectId === p.id)
       ).toList
     }
+  }
 
+  def data(): List[(Double, Double)] = data((_,_,_) => true)
+
+  def data(accepted: (Document,Revision,Project) => Boolean): List[(Double, Double)] =
+  {
+    val rs = raw.filter(x => accepted(x._1, x._2, x._3)).map(_._2)
     analyse(Calendar.getInstance, rs).map(s => (s.index.toDouble, s.count.toDouble))
   }
 

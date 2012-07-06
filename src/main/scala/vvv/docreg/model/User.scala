@@ -290,7 +290,11 @@ object UserSession {
   }
 
   def inStream(document: Document, revision: Revision, project: Project): Boolean = {
-    val pass = UserSession.mode.is match {
+    inStream(UserSession.mode.is, document, revision, project)
+  }
+
+  def inStream(mode: StreamMode.Value, document: Document, revision: Revision, project: Project): Boolean = {
+    val pass = mode match {
       case StreamMode.all => true
       case StreamMode.selected => selectedProjects.contains(project.id)
       case StreamMode.watching => user.map(_.subscribed_?(document)) getOrElse false
