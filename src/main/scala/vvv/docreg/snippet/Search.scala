@@ -50,7 +50,8 @@ class Search extends Loggable with ProjectSelection {
     val inputText = Option(searchInput.is).getOrElse("")
     val (open, restricted) = ds.partition(i => UserSession.isAuthorized(i._1, i._2))
     (
-      ".match-count" #> <span>Results for &quot;{ inputText }&quot; <span class="badge">{open.size}</span></span> &
+      ".search-for *" #> <span>for &quot;{ inputText }&quot;</span> &
+      ".match-count" #> <span>Results <span class="badge">{open.size}</span></span> &
       ".search-item" #> open.map { x =>
         val (d,p,r,u) = x
         ".doc-project" #> p.name &

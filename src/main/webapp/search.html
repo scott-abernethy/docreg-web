@@ -8,15 +8,15 @@
     <div id="main" class="lift:surround?with=default;at=body_content">
 
        <div class="row">
-          <div class="boxr span12">
+          <div class="lift:snippet?type=Search.results boxr span12">
             <div class="boxr-head border-bottom">
-              <h2>Search</h2>
+              <h2>Search <small class="search-for">for X</small></h2>
               <div class="lift:snippet?type=Search.mode btn-toolbar" id="stream-actions">
                  <div class="btn-group" data-toggle="buttons-radio">
                    <a href="#" class="btn" id="mode-all">All</a>
                    <a href="#" class="btn" id="mode-select">Favourites</a>
                    <a href="#" class="btn" id="mode-watch">Watching</a>
-                   <a href="#" class="btn" id="mode-me">@Me</a>
+                   <a href="#" class="btn" id="mode-me">Me</a>
                  </div>
                 <!--<div class="btn-group">-->
                    <!--<a href="#" class="btn dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>-->
@@ -27,7 +27,7 @@
              </div>
           </div>
 
-      <div class="lift:snippet?type=Search.results boxr-body">
+      <div class="boxr-body">
         <script  type="text/javascript">
             $(function() {
     $.tablesorter.addParser({
