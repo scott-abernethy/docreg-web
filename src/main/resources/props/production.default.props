@@ -1,8 +1,2 @@
-db.driver=com.mysql.jdbc.Driver
-db.url=jdbc:mysql://localhost/docregweb
-db.user=docreguser
-db.password=docregsux
-
-agent.server=localhost
-agent.home=/home/docreg
-agent.secure=true
+# Using Configrity for properties
+conf=/etc/docreg/docreg.conf

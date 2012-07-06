@@ -25,7 +25,6 @@ import org.squeryl.PrimitiveTypeMode._
 import scala._
 import vvv.docreg.model.Document.DocumentRevision
 import scala.Some
-import org.streum.configrity.Configuration
 
 /**
  * A class that's instantiated early and run.  It allows the application
@@ -35,10 +34,9 @@ class Boot
 {
   def boot
   {
-    //val config = Configuration.load("/etc/docreg/docreg.conf")
-
-    DbVendor.init()
-    //DbVendor.describe()
+    val db = new DbVendor(Config.is)
+    db.init()
+    //db.describe()
 
     // where to search snippet
     LiftRules.addToPackages("vvv.docreg")
@@ -177,9 +175,9 @@ class Boot
     val env = new EnvironmentImpl{}
     env.start()
     Environment.env = env
-    LiftRules.unloadHooks.append(() => env.exit())
-
-    LiftRules.unloadHooks.append(() => DbVendor.close())
-
+    LiftRules.unloadHooks.append(() => {
+      env.exit()
+      db.close()
+    })
   }
 }

@@ -1,0 +1,11 @@
+db {
+   driver = com.mysql.jdbc.Driver
+   url = jdbc:mysql://localhost/docregweb
+   user = docreguser
+   password = changeit
+}
+agent {
+   server = localhost
+   home = /home/docreg
+   secure = true
+}

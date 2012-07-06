@@ -4,8 +4,9 @@ import vvv.docreg.model._
 import java.util.Date
 import org.squeryl.PrimitiveTypeMode._
 import java.sql.Timestamp
+import org.streum.configrity.Configuration
 
-trait TestDbVendor extends DbVendor {
+class TestDbVendor extends DbVendor(Configuration()) {
   def initAndClean() {
     init()
     clear()

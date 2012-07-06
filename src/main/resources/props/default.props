@@ -1,9 +1,2 @@
-db.driver=org.h2.Driver
-db.adapter=org.squeryl.adapters.H2Adapter
-db.url=jdbc:h2:docreg-web
-db.user=
-db.password=
-
-agent.server=10.16.9.179
-agent.home=/srv/docreg-fs
-agent.secure=true
+# Using Configrity for properties
+conf=/etc/docreg/docreg.conf
