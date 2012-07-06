@@ -199,16 +199,14 @@ class UserSnippet extends Loggable {
   }
 
   def editing = {
-    User.loggedInUser.is match {
-      case Full(u) => {
+    User.loggedInUser.is map(u => (u,u.editing())) match {
+      case Full( (u, list) ) if (list.size > 0) => {
         ".editing-user [href]" #> u.profile() &
-        ".editing-item" #> u.editing().map { d =>
+        ".editing-item" #> list.map { d =>
           "li *" #> d.info()
         }
       }
-      case _ => {
-        ".editing-item" #> NodeSeq.Empty
-      }
+      case _ => ClearNodes
     }
   }
 

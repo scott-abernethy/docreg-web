@@ -163,6 +163,9 @@ class DocumentSnippet extends DocumentRequest with Loggable {
         } &
         ".doc-subscriber" #> Subscription.usersFor(d).filter(_.knownOption.isDefined).map { u =>
           ".subscriber-info" #> u.profileLabel(user.map(_.id).getOrElse(-1L))
+        } &
+        ".contributor" #> d.contributors().filter(_.knownOption.isDefined).map { u =>
+          "li *" #> u.profileLabel(user.map(_.id).getOrElse(-1L))
         }
       ).apply(in)
       }

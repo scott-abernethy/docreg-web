@@ -52,14 +52,14 @@ class Log extends DocumentSubscriber {
       val update = revisions filter {x => x._2.documentId == document.id} map {x => JsCmds.Replace(x._2.id.toString, bindRevision(x._1, x._2, false))}
       partialUpdate(update)
     case ReloadLog() =>
-      revisions = FilteredRevision.findRecent(-1).filter(i => UserSession.isAuthorized(i._1, i._3)).take(loadLimit)
+      revisions = FilteredRevision.findRecent(-1).filter(i => UserSession.inStream(i._1, i._2, i._3)).take(loadLimit)
       reRender(true)
     case _ =>
   }
 
   private def add(d: Document, r: Revision) = {
     d.project() match {
-      case Some(p) if (ProjectSelection.isSelected(p) && UserSession.isAuthorized(d,p)) => {
+      case Some(p) if (UserSession.inStream(d,r,p)) => {
         revisions.lastOption match {
           case Some(remove) if revisions.size > (loadLimit + 10) => {
             revisions = (d,r,p) :: revisions.dropRight(1)
@@ -91,6 +91,7 @@ class Log extends DocumentSubscriber {
     ".doc-author" #> r.author().flatMap(_.knownOption).map(_.profileLink()).getOrElse(Text(r.rawAuthor)) &
     ".doc-comment" #> r.comment &
     ".doc-when" #> r.when &
+    ".doc-project" #> d.project().map(_.infoLink()).getOrElse(NodeSeq.Empty) &
     ".doc-info [href]" #> d.infoLink
   }
 

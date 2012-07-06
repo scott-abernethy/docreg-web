@@ -239,16 +239,64 @@ object AccessLevel extends Enumeration {
   val superuser = Value("Administrator")
 }
 
+object StreamMode extends Enumeration {
+  val all = Value("All")
+  val selected = Value("Selected")
+  val watching = Value("Watching")
+  val me = Value("@Me")
+}
+
 object UserSession {
+  val modeCookie = "DocRegWebMode"
+  object mode extends SessionVar[StreamMode.Value](loadModeCookie)
   object authorizedProjects extends SessionVar[Set[Long]](loadAuthorized)
+  object selectedProjects extends SessionVar[Set[Long]](loadSelected)
+
+  private def user: Box[User] = {
+    User.loggedInUser.is
+  }
 
   def loadAuthorized(): Set[Long] = {
-    User.loggedInUser.is.map(u =>
+    user.map(u =>
       ProjectAuthorization.authorizedProjectsFor(u).map(_.id).toSet
     ).getOrElse(Set.empty[Long])
   }
 
+  def loadSelected(): Set[Long] = {
+    user.map(u =>
+      UserProject.userSelected(u).map(_.id).toSet
+    ).getOrElse(Set.empty[Long])
+  }
+
+  def changeSelected(projectId: Long, selected: Boolean) {
+    selectedProjects( if (selected) selectedProjects.is + projectId else selectedProjects.is - projectId )
+  }
+
   def isAuthorized(d: Document, p: Project): Boolean = {
-    d.secure_?() == false || UserSession.authorizedProjects.contains(p.id)
+    d.secure_?() == false || authorizedProjects.contains(p.id)
+  }
+
+  private def loadModeCookie(): StreamMode.Value = {
+    S.cookieValue(modeCookie).toOption.flatMap(x => Option(StreamMode.withName(x))).getOrElse(StreamMode.all)
+  }
+
+  private def saveModeCookie(x: StreamMode.Value) {
+    S.addCookie(HTTPCookie(modeCookie, x.toString).setMaxAge(3600 * 24 * 365).setPath("/"))
+  }
+
+  def changeMode(x: StreamMode.Value) {
+    mode(x)
+    saveModeCookie(x)
+  }
+
+  def inStream(document: Document, revision: Revision, project: Project): Boolean = {
+    val pass = UserSession.mode.is match {
+      case StreamMode.all => true
+      case StreamMode.selected => selectedProjects.contains(project.id)
+      case StreamMode.watching => user.map(_.subscribed_?(document)) getOrElse false
+      case StreamMode.me => user.map(_.id == revision.authorId) getOrElse false
+      case _ => false
+    }
+    pass && isAuthorized(document, project)
   }
 }

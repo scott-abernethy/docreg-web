@@ -133,6 +133,17 @@ class Document extends DbObject[Document] {
   def fullTitle: String = number + ": " + title
 
   def info(): NodeSeq = <a href={ infoLink }>{ fullTitle }</a>
+
+  def contributors(): List[User] = {
+    inTransaction{
+      join(Document.dbTable, Revision.dbTable, User.dbTable)( (d,r,u) =>
+        where(d.id === id)
+          select(u)
+          orderBy(u.email)
+          on(d.id === r.documentId, r.authorId === u.id)
+      ).distinct.toList
+    }
+  }
 }
 
 object Document extends Document {
@@ -178,13 +189,13 @@ object FilteredDocument
     val sorted = result.sortWith{ (a,b) =>
       a._3.date.getTime > b._3.date.getTime
     }
-    println("Search took: " + (System.currentTimeMillis() - start))
+    //println("Search took: " + (System.currentTimeMillis() - start))
     sorted
   }
 
   private def searchAll() = {
-    val checked = ProjectSelection.projects.is.map(_.id)
-    if (ProjectSelection.showAll.is) {
+//    val checked = ProjectSelection.projects.is.map(_.id)
+//    if (ProjectSelection.showAll.is) {
       inTransaction{
         join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
           select( (d,p,r,u) )
@@ -192,27 +203,27 @@ object FilteredDocument
             on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
         ).toList
       }.groupBy(_._1).flatMap(x => x._2.headOption).toList
-    }
-    else if (checked.isEmpty) {
-      Nil
-    }
-    else {
-      inTransaction{
-        join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
-          where(p.id in checked)
-          select( (d,p,r,u) )
-          orderBy(d.id asc, r.version desc)
-          on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
-        ).toList
-      }.groupBy(_._1).flatMap(x => x._2.headOption).toList
-    }
+//    }
+//    else if (checked.isEmpty) {
+//      Nil
+//    }
+//    else {
+//      inTransaction{
+//        join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
+//          where(p.id in checked)
+//          select( (d,p,r,u) )
+//          orderBy(d.id asc, r.version desc)
+//          on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
+//        ).toList
+//      }.groupBy(_._1).flatMap(x => x._2.headOption).toList
+//    }
   }
 
   private def searchFor(request: String) = {
     val searchString: String = formatSearch(request)
     val number: String = prePadTo(request, 4, '0')
-    val checked = ProjectSelection.projects.is.map(_.id)
-    if (ProjectSelection.showAll.is) {
+//    val checked = ProjectSelection.projects.is.map(_.id)
+//    if (ProjectSelection.showAll.is) {
         inTransaction{
         join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
           where((d.title like searchString) or (u.name like searchString) or (d.number === number))
@@ -221,23 +232,23 @@ object FilteredDocument
             on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
         ).toList
       }.groupBy(_._1).flatMap(x => x._2.headOption).toList
-    }
-    else if (checked.isEmpty) {
-      Nil
-    }
-    else {
-      inTransaction{
-        join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
-          where(
-            ((d.title like searchString) or (u.name like searchString) or (d.number === number)) and
-            (p.id in checked)
-          )
-          select( (d,p,r,u) )
-          orderBy(d.id asc, r.version desc)
-          on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
-        ).toList
-      }.groupBy(_._1).flatMap(x => x._2.headOption).toList
-    }
+//    }
+//    else if (checked.isEmpty) {
+//      Nil
+//    }
+//    else {
+//      inTransaction{
+//        join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
+//          where(
+//            ((d.title like searchString) or (u.name like searchString) or (d.number === number)) and
+//            (p.id in checked)
+//          )
+//          select( (d,p,r,u) )
+//          orderBy(d.id asc, r.version desc)
+//          on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
+//        ).toList
+//      }.groupBy(_._1).flatMap(x => x._2.headOption).toList
+//    }
   }
 
   def formatSearch(in: String): String =

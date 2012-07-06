@@ -31,7 +31,7 @@ class Search extends Loggable with ProjectSelection {
 
   def bindResults(in: NodeSeq): NodeSeq =
   {
-    results(in, FilteredDocument.search(searchInput.is))
+    results(in, FilteredDocument.search(searchInput.is).filter(x => UserSession.inStream(x._1, x._3, x._2)))
   }
 
   var html: NodeSeq = NodeSeq.Empty
@@ -67,6 +67,6 @@ class Search extends Loggable with ProjectSelection {
 
   override def projectSelectionUpdate(): JsCmd = {
     CurrentLog.foreach(_ ! ReloadLog())
-    Replace("search_results", bindResults(html))
+    Replace("search_results", ("#search_results ^^" #> "noused").apply(bindResults(html)) )
   }
 }

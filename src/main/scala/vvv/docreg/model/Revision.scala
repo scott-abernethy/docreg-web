@@ -71,7 +71,7 @@ object FilteredRevision {
   import vvv.docreg.helper.ProjectSelection
   def findRecent(userId: Long): List[(Document,Revision,Project)] = {
     val recentCutoff: Timestamp = T.ago(1000L * 60 * 60 * 24 * 31)
-    if (ProjectSelection.showAll.is) {
+//    if (ProjectSelection.showAll.is) {
       inTransaction(
         join(Revision.dbTable, Document.dbTable, Project.dbTable)( (r, d, p) =>
           where(r.date > recentCutoff)
@@ -80,18 +80,18 @@ object FilteredRevision {
           on(r.documentId === d.id, d.projectId === p.id)
         ).toList
       )
-    }
-    else {
-      val checked = ProjectSelection.projects.is.toList
-      inTransaction(
-        join(Revision.dbTable, Document.dbTable, Project.dbTable)( (r, d, p) =>
-          where(d.projectId in checked.map(_.id) and r.date > recentCutoff)
-          select((d,r,p))
-          orderBy(r.date desc)
-          on(r.documentId === d.id, d.projectId === p.id)
-        ).toList
-      )
-    }
+//    }
+//    else {
+//      val checked = ProjectSelection.projects.is.toList
+//      inTransaction(
+//        join(Revision.dbTable, Document.dbTable, Project.dbTable)( (r, d, p) =>
+//          where(d.projectId in checked.map(_.id) and r.date > recentCutoff)
+//          select((d,r,p))
+//          orderBy(r.date desc)
+//          on(r.documentId === d.id, d.projectId === p.id)
+//        ).toList
+//      )
+//    }
   }
 }
 
