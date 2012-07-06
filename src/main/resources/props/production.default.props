@@ -1,2 +1,2 @@
 # Using Configrity for properties
-conf=/etc/docreg/docreg.conf
+conf=/etc/docreg-web.conf
