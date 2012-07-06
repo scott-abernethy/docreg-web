@@ -4,6 +4,7 @@ import vvv.docreg.backend.Connect._
 import vvv.docreg.backend._
 import vvv.docreg.agent._
 import akka.actor.{PoisonPill, Props, ActorSystem}
+import com.typesafe.config.{Config, ConfigFactory}
 
 trait Environment extends BackendComponent with DocumentServerComponent with DirectoryComponent with DaemonAgentComponent
 {
@@ -14,7 +15,8 @@ trait Environment extends BackendComponent with DocumentServerComponent with Dir
 
 trait EnvironmentImpl extends Environment with BackendComponent with DocumentServerComponentImpl with DirectoryComponentImpl with DaemonAgentComponent
 {
-  val system = ActorSystem("DocRegWebSystem")
+  val akkaConfig: Config = ConfigFactory.load("akka.conf")
+  val system = ActorSystem("DocRegWebSystem", akkaConfig.getConfig("docreg-web").withFallback(akkaConfig))
   import system._
   val daemonAgent = actorOf(Props[DaemonAgentImpl], "DaemonAgent")
   val backend = actorOf(Props(new Backend(directory, daemonAgent, documentServer)), "Backend")
