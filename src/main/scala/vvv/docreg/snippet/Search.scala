@@ -58,7 +58,7 @@ class Search extends Loggable with ProjectSelection {
         ".doc-project" #> p.infoLink() &
         ".doc-author" #> u.profileLabel(userId) &
         ".doc-key" #> <a href={d.infoLink}>{d.number}</a> &
-        ".doc-date" #> r.dateOnly &
+        ".doc-date" #> r.dateOnlyWithHint() &
         ".doc-title" #> <a href={d.infoLink}>{d.title}</a>
       } &
       ".d-restricted" #> restricted.headOption.map{ x =>
