@@ -35,7 +35,9 @@ object HistoryTest extends Specification
 
       val now = Calendar.getInstance
       now.set(2012, Calendar.JANUARY, 5, 11, 49, 59)
-      val x = new MonthHistory().analyse(now, revisions)
+      val x = new MonthHistory(){
+        override def load() = Nil
+      }.analyse(now, revisions)
       x must haveSize(30)
       x(29) must be_==(Sample(0, 1, "5"))
       x(28) must be_==(Sample(-1, 0, "4"))
