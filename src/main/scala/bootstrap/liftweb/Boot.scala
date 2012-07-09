@@ -23,7 +23,7 @@ import net.liftweb.widgets.flot._
 import scala.actors.Actor
 import org.squeryl.PrimitiveTypeMode._
 import scala._
-import vvv.docreg.model.Document.DocumentRevision
+import vvv.docreg.model.Document.{DocumentRef, DocumentRevision}
 import scala.Some
 
 /**
@@ -116,6 +116,11 @@ class Boot
       }
     }
 
+    // Rewrite ... (stateless)
+    LiftRules.statelessRewrite.append {
+      case RewriteRequest(ParsePath("docreg" :: something :: document :: Nil, suffix, _, _), _, _) =>
+        RewriteResponse(document :: "download" :: Nil)
+    }
     // Rewrite ... (stateful, so S is valid here)
     LiftRules.statefulRewrite.append {
       case RewriteRequest(ParsePath((ref @ Document.DocumentRef(number, version)) :: action, s, a, es), _, _) => {

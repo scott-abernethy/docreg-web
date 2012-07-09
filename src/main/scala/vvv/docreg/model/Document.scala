@@ -153,6 +153,7 @@ object Document extends Document {
 
   val ValidIdentifier: Regex = """^([0-9]+)(-[0-9]+)?$""".r
   val ValidDocumentFileName: Regex = """^([0-9]+)-([0-9]+)-(.+)$""".r
+  val IdentifierAndExtension: Regex = """^([0-9]+)\..+$""".r
 
   def sort(a: Document, b: Document): Boolean = {
     a.number.toLong < b.number.toLong

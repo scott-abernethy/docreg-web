@@ -135,6 +135,31 @@ object DocumentTest extends Specification {
       checkValid("6146-001-New Document Test 3.txt", "6146", "001", "New Document Test 3.txt")
     }
 
+    "check valid identifier and ext" >>
+    {
+      def checkValid(in: String, expectedKey: String)
+      {
+        in match {
+          case Document.IdentifierAndExtension(key) =>
+          {
+            key must be_==(expectedKey)
+          }
+          case _ =>
+          {
+            fail()
+          }
+        }
+      }
+      Document.IdentifierAndExtension.findFirstIn("6146.") must beNone
+      Document.IdentifierAndExtension.findFirstIn(".txt") must beNone
+      Document.IdentifierAndExtension.findFirstIn("my doco") must beNone
+      Document.IdentifierAndExtension.findFirstIn("1234 txt") must beNone
+
+      checkValid("987.foo", "987")
+      checkValid("0987.foo", "0987")
+      checkValid("1234.doc", "1234")
+    }
+
     "validate user access" >>
     {
       TestDbVendor.initAndClean()
