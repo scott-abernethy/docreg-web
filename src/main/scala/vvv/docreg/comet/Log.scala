@@ -85,7 +85,7 @@ class Log extends DocumentSubscriber {
 
   def render = {
     this ! 'Update
-    ".log-item *" #> <img src="/static/img/load-w.gif"></img>
+    ".log-item *" #> <img src="/static/img/load-w.gif" title="Loading..."></img>
   }
 
   def transform: NodeSeq => NodeSeq = {
@@ -104,7 +104,7 @@ class Log extends DocumentSubscriber {
     ".log-item [class+]" #> (if (hidden) Some("hide") else blank) &
     ".doc-title"  #> <a href={d.infoLink}>{d.fullTitle}</a> &
     ".doc-author" #> r.author().flatMap(_.knownOption).map(_.profileLink()).getOrElse(Text(r.rawAuthor)) &
-    ".doc-comment" #> r.comment &
+    ".doc-comment" #> <span>{r.comment}</span> &
     ".doc-when" #> r.when &
     ".doc-project" #> d.project().map(_.infoLink()).getOrElse(NodeSeq.Empty) &
     ".doc-info [href]" #> d.infoLink

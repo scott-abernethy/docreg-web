@@ -186,3 +186,6 @@ blockquote p {
   color: #555;
   padding: 4px;
 }
+.clr {
+    clear: both;
+}
