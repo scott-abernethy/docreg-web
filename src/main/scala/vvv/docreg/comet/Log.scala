@@ -18,7 +18,7 @@ import vvv.docreg.util.Environment
 
 object CurrentLog extends SessionVar[Box[Log]](Empty)
 
-case class ReloadLog()
+case object ResetLog
 
 class Log extends DocumentSubscriber {
   val loadLimit = 80
@@ -41,20 +41,28 @@ class Log extends DocumentSubscriber {
   }
 
   override def lowPriority = {
-    case Subscribed() => 
-      this ! ReloadLog()
-    case DocumentAdded(document) =>
+    case Subscribed() => {}
+    case DocumentAdded(document) => {
       add(document, document.latest)
-    case DocumentRevised(document, latest) =>
+    }
+    case DocumentRevised(document, latest) => {
       add(document, latest)
-    case DocumentChanged(document) =>
+    }
+    case DocumentChanged(document) => {
       revisions = revisions flatMap {x => if (x._2.documentId == document.id) x._2.reload.map( (x._1, _, x._3) ) else Some(x)}
       val update = revisions filter {x => x._2.documentId == document.id} map {x => JsCmds.Replace(x._2.id.toString, bindRevision(x._1, x._2, false))}
       partialUpdate(update)
-    case ReloadLog() =>
-      revisions = FilteredRevision.findRecent(-1).filter(i => UserSession.inStream(i._1, i._2, i._3)).take(loadLimit)
+    }
+    case ResetLog => {
+      this ! 'Update
       reRender(true)
-    case _ =>
+    }
+    case 'Update => {
+      // todo don't need to find recent. could store here instead. or store in other in memory actor.
+      revisions = FilteredRevision.findRecent(-1).filter(i => UserSession.inStream(i._1, i._2, i._3)).take(loadLimit)
+      partialUpdate(Replace("log", transform.apply(defaultHtml)))
+    }
+    case _ => {}
   }
 
   private def add(d: Document, r: Revision) = {
@@ -76,7 +84,14 @@ class Log extends DocumentSubscriber {
   }
 
   def render = {
-    ".log-item" #> revisions.map { x => transformRevision(false)(x._1, x._2) }
+    this ! 'Update
+    ".log-item *" #> <img src="/static/img/load-w.gif"></img>
+  }
+
+  def transform: NodeSeq => NodeSeq = {
+    ".log-item" #> revisions.map {
+      x => transformRevision(false)(x._1, x._2)
+    }
   }
 
   private def bindRevision(d: Document, r: Revision, hidden: Boolean): NodeSeq = {
@@ -94,25 +109,4 @@ class Log extends DocumentSubscriber {
     ".doc-project" #> d.project().map(_.infoLink()).getOrElse(NodeSeq.Empty) &
     ".doc-info [href]" #> d.infoLink
   }
-
-//  private def bindRevision(xml: NodeSeq, r: Revision, hidden: Boolean): NodeSeq = {
-//    r.document.obj match {
-//      case Full(d: Document) =>
-//    bind("doc", xml,
-//      AttrBindParam("id_attr", r.id.is.toString, "id"),
-//      AttrBindParam("style_attr", if (hidden) "display:none" else "", "style"),
-//      AttrBindParam("info_attr", r.info, "href"),
-//      "link" -> <span><a href={d.latest.link}>{d.key}</a></span><span class="quiet">v<a href={r.link}>{r.version}</a></span>,
-//      "info" -> <span><a href={d.infoLink}>more</a></span>,
-//      "key" -> d.key,
-//      "version" -> r.version,
-//      "project" -> d.projectName,
-//      "title" -> <a href={d.infoLink}>{r.fullTitle}</a>,
-//      "author" -> r.authorLink,
-//      "date" -> r.date,
-//      "when" -> r.when,
-//      "comment" -> r.comment)
-//      case _ => NodeSeq.Empty
-//    }
-//  }
 }

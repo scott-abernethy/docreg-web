@@ -21,6 +21,6 @@ class Dashboard extends Loggable
   //lazy val logXhtml = indexXhtml \\ "snippet" filter ( _.attribute("type") == Some(Text("Dashboard.log")) )
   lazy val logXhtml = indexXhtml \\ "surround" \ "div"
   override def projectSelectionUpdate(): JsCmd = {
-    CurrentLog.foreach(_ ! ReloadLog())
+    CurrentLog.foreach(_ ! ResetLog)
   }
 }

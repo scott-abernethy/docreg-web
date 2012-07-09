@@ -68,7 +68,7 @@ class Search extends Loggable with ProjectSelection {
   }
 
   override def projectSelectionUpdate(): JsCmd = {
-    CurrentLog.foreach(_ ! ReloadLog())
+//    CurrentLog.foreach(_ ! ResetLog)
     Replace("search_results", ("#search_results ^^" #> "noused").apply(bindResults(html)) )
   }
 }
