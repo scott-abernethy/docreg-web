@@ -164,6 +164,7 @@ object Document extends Document {
       ref match {
         case ValidIdentifier(num, null) => Some(num, Long.MaxValue)
         case ValidIdentifier(num, ver) => Some(num, ver.substring(1).toLong)
+        case ValidDocumentFileName(num, ver, _) => Some(num,ver.toLong)
         case _ => None
       }
     }
