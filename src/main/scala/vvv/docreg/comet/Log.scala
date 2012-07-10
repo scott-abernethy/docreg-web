@@ -23,7 +23,8 @@ case object ResetLog
 class Log extends DocumentSubscriber {
   val loadLimit = 80
   private val documentServer = Environment.env.documentServer
-  private var revisions: List[(Document,Revision,Project)] = Nil
+  private var recent: List[(Document,Revision,Project)] = FilteredRevision.findRecent(-1).take(loadLimit)
+  private var stream: List[(Document,Revision,Project)] = Nil
   private lazy val revisionPart: NodeSeq = (".log-item ^^" #> "foo").apply(defaultHtml)
 
   CurrentLog.set(Full(this))
@@ -49,8 +50,10 @@ class Log extends DocumentSubscriber {
       add(document, latest)
     }
     case DocumentChanged(document) => {
-      revisions = revisions flatMap {x => if (x._2.documentId == document.id) x._2.reload.map( (x._1, _, x._3) ) else Some(x)}
-      val update = revisions filter {x => x._2.documentId == document.id} map {x => JsCmds.Replace(x._2.id.toString, bindRevision(x._1, x._2, false))}
+      // todo inefficient and lame
+      recent = recent flatMap {x => if (x._2.documentId == document.id) x._2.reload.map( (x._1, _, x._3) ) else Some(x)}
+      stream = stream flatMap {x => if (x._2.documentId == document.id) x._2.reload.map( (x._1, _, x._3) ) else Some(x)}
+      val update = stream filter {x => x._2.documentId == document.id} map {x => JsCmds.Replace(x._2.id.toString, bindRevision(x._1, x._2, false))}
       partialUpdate(update)
     }
     case ResetLog => {
@@ -58,8 +61,8 @@ class Log extends DocumentSubscriber {
       reRender(true)
     }
     case 'Update => {
-      // todo don't need to find recent. could store here instead. or store in other in memory actor.
-      revisions = FilteredRevision.findRecent(-1).filter(i => UserSession.inStream(i._1, i._2, i._3)).take(loadLimit)
+      val f = UserSession.inStreamFilter()
+      stream = recent.filter(i => f(i._1, i._2, i._3))
       partialUpdate(Replace("log", transform.apply(defaultHtml)))
     }
     case _ => {}
@@ -67,15 +70,19 @@ class Log extends DocumentSubscriber {
 
   private def add(d: Document, r: Revision) = {
     d.project() match {
-      case Some(p) if (UserSession.inStream(d,r,p)) => {
-        revisions.lastOption match {
-          case Some(remove) if revisions.size > (loadLimit + 10) => {
-            revisions = (d,r,p) :: revisions.dropRight(1)
-            partialUpdate(PrependHtml("log", bindRevision(d, r, true)) & FadeIn(r.id.toString) & Replace(remove._2.id.toString, Text("")))
-          }
-          case _ => {
-            revisions = (d,r,p) :: revisions
-            partialUpdate(PrependHtml("log", bindRevision(d, r, true)) & FadeIn(r.id.toString))
+      case Some(p) => {
+        val addition = (d,r,p)
+        recent = addition :: recent.take(loadLimit + 10)
+        if (UserSession.inStreamFilter.apply(d,r,p)) {
+          stream.lastOption match {
+            case Some(remove) if stream.size > (loadLimit + 10) => {
+              stream = (d,r,p) :: stream.dropRight(1)
+              partialUpdate(PrependHtml("log", bindRevision(d, r, true)) & FadeIn(r.id.toString) & Replace(remove._2.id.toString, Text("")))
+            }
+            case _ => {
+              stream = (d,r,p) :: stream
+              partialUpdate(PrependHtml("log", bindRevision(d, r, true)) & FadeIn(r.id.toString))
+            }
           }
         }
       }
@@ -89,12 +96,12 @@ class Log extends DocumentSubscriber {
   }
 
   def transform: NodeSeq => NodeSeq = {
-    revisions match {
+    stream match {
       case Nil => {
         ".log-item *" #> "None"
       }
       case list => {
-        ".log-item" #> revisions.map {
+        ".log-item" #> list.map {
           x => transformRevision(false)(x._1, x._2)
         }
       }

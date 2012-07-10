@@ -289,18 +289,35 @@ object UserSession {
     saveModeCookie(x)
   }
 
-  def inStream(document: Document, revision: Revision, project: Project): Boolean = {
-    inStream(UserSession.mode.is, document, revision, project)
+  def inStreamFilter(): (Document, Revision, Project) => Boolean = {
+    inStreamFilter(UserSession.mode.is)
   }
 
-  def inStream(mode: StreamMode.Value, document: Document, revision: Revision, project: Project): Boolean = {
-    val pass = mode match {
-      case StreamMode.all => true
-      case StreamMode.selected => selectedProjects.contains(project.id)
-      case StreamMode.watching => user.map(_.subscribed_?(document)) getOrElse false
-      case StreamMode.me => user.map(_.id == revision.authorId) getOrElse false
-      case _ => false
+  def inStreamFilter(mode: StreamMode.Value): (Document, Revision, Project) => Boolean = {
+    val authorized = authorizedProjects.is
+    def filterAuthorized(document: Document, project: Project) = !document.secure_?() || authorized.contains(project.id)
+
+    val filterMode: (Document, Revision, Project) => Boolean = mode match {
+      case StreamMode.all => {
+        (_,_,_) => true
+      }
+      case StreamMode.selected => {
+        val selected = selectedProjects.is
+        (_,_,p) => selected.contains(p.id)
+      }
+      case StreamMode.watching => {
+        val subs = user.map(Subscription.documentsForUser(_)).getOrElse(Nil).map(_.id)
+        (d,_,_) => subs.contains(d.id)
+      }
+      case StreamMode.me => {
+        val uid = user.map(_.id) getOrElse -1
+        (_,r,_) => r.authorId == uid
+      }
+      case _ => {
+        (_,_,_) => false
+      }
     }
-    pass && isAuthorized(document, project)
+
+    (d,r,p) => { filterMode(d,r,p) && filterAuthorized(d,p) }
   }
 }

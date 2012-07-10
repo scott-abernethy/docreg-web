@@ -42,7 +42,7 @@ class History
     val history = new MonthHistory();
 
     val all = new FlotSerie() {
-      override val data = history.data( (d,r,p) => UserSession.inStream(StreamMode.all,d,r,p) )
+      override val data = history.data( (d,r,p) => UserSession.inStreamFilter(StreamMode.all).apply(d,r,p) )
       override def color = Full(Right(1))
       override def lines = Full(new FlotLinesOptions {
         override def show = Full(true)
@@ -50,7 +50,7 @@ class History
       })
     }
     val favourites = new FlotSerie() {
-      override val data = history.data( (d,r,p) => UserSession.inStream(StreamMode.selected,d,r,p) )
+      override val data = history.data( (d,r,p) => UserSession.inStreamFilter(StreamMode.selected).apply(d,r,p) )
       override def color = Full(Right(2))
       override def lines = Full(new FlotLinesOptions {
         override def show = Full(true)
@@ -58,7 +58,7 @@ class History
       })
     }
     val watching = new FlotSerie() {
-      override val data = history.data( (d,r,p) => UserSession.inStream(StreamMode.watching,d,r,p) )
+      override val data = history.data( (d,r,p) => UserSession.inStreamFilter(StreamMode.watching).apply(d,r,p) )
       override def color = Full(Right(3))
       override def lines = Full(new FlotLinesOptions {
         override def show = Full(true)
@@ -66,7 +66,7 @@ class History
       })
     }
     val me = new FlotSerie() {
-      override val data = history.data( (d,r,p) => UserSession.inStream(StreamMode.me,d,r,p) )
+      override val data = history.data( (d,r,p) => UserSession.inStreamFilter(StreamMode.me).apply(d,r,p) )
       override def color = Full(Right(4))
       override def lines = Full(new FlotLinesOptions {
         override def show = Full(true)
