@@ -52,7 +52,7 @@ trait ProjectSelection extends Loggable {
           "li [id]" #> id &
             ".f-name" #> project.infoLink &
             ".f-check" #> createProjectCheck(project, selected) &
-            ".f-clr" #> (if (!edit) PassThru else ClearNodes) &
+            ".f-clr" #> (if (!edit) PassThru else ClearNodes) andThen
             ".f-clr [onclick]" #> SHtml.ajaxInvoke(() => {clearFav(project.id); Hide(id)})
         }
       }

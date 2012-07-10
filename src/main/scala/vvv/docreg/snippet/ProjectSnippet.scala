@@ -5,7 +5,7 @@ import xml.NodeSeq
 import net.liftweb.util.Helpers._
 import vvv.docreg.model._
 import net.liftweb.http._
-import net.liftweb.util.CssSel
+import net.liftweb.util.{ClearNodes, PassThru, CssSel}
 import org.squeryl.PrimitiveTypeMode._
 import vvv.docreg.util.Bits
 
@@ -23,17 +23,18 @@ class ProjectSnippet extends Loggable {
       case Some(p) => {
         val (open,restricted) = p.documents.partition(d => user.filter(d.allows(_)).isDefined )
         val authorized: List[User] = p.authorized()
-        val contributors: List[User] = p.contributors()
+        val contributors: List[User] = p.contributors().filter(_.knownOption.isDefined)
         val t = ".p-name" #> p.name &
           ".d-count *" #> (open.size) &
           listOrNone[Document](".d-items", open, d => <span>{ d.accessIcon() } { d.info() }</span>) &
           ".d-restricted" #> restricted.headOption.map{ x =>
             Bits.restrictedNotice(restricted.size)
           } &
+          ".a-block" #> (if (authorized.size > 0) PassThru else ClearNodes) andThen
           ".a-count *" #> authorized.size &
           listOrNone[User](".a-items", authorized, u => u.profileLabel(uid)) &
           ".c-count *" #> contributors.size &
-          listOrNone[User](".c-items", contributors.filter(_.knownOption.isDefined), u => u.profileLabel(uid))
+          listOrNone[User](".c-items", contributors, u => u.profileLabel(uid))
         t(in)
       }
       case _ => {
