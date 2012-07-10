@@ -89,8 +89,15 @@ class Log extends DocumentSubscriber {
   }
 
   def transform: NodeSeq => NodeSeq = {
-    ".log-item" #> revisions.map {
-      x => transformRevision(false)(x._1, x._2)
+    revisions match {
+      case Nil => {
+        ".log-item *" #> "None"
+      }
+      case list => {
+        ".log-item" #> revisions.map {
+          x => transformRevision(false)(x._1, x._2)
+        }
+      }
     }
   }
 
