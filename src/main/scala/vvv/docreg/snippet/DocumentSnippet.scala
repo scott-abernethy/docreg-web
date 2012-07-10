@@ -135,7 +135,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
           editor.headOption match {
             case Some(editPending) => {
               ".doc-editor" #> editPending.user().map(_.profileLink()).getOrElse(<span>???</span>) &
-              ".edit-requested" #> editPending.dateAsDT &
+              ".edit-requested" #> editPending.dateOnlyWithHint &
               ".doc-next" #> d.nextVersion
             }
            case _ => {
@@ -159,7 +159,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
             ".approval-by" #> (u2.flatMap(_.knownOption).map(_.profileLabel(pageUserId)).getOrElse(Text(a.rawUser))) &
             ".approval-state" #> <span class={ApprovalState.style(a.state)}>{a.state}</span> &
             ".approval-comment" #> <span>{ if (a.comment == "No Comment") "" else a.comment }</span> &
-            ".approval-date" #> a.dateAsDT
+            ".approval-date" #> a.dateOnlyWithHint
           }
         } &
         ".doc-subscriber" #> Subscription.usersFor(d).filter(_.knownOption.isDefined).map { u =>

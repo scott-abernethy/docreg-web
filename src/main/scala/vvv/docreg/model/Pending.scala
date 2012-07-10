@@ -14,7 +14,11 @@ class Pending extends DbObject[Pending] {
   var action: PendingAction.Value = PendingAction.editCancel
   var date: Timestamp = new Timestamp(0)
 
+  def dateOnly() = DatePresentation.formatDay(date)
+
   def dateAsDT(): String = DatePresentation.formatDateTime(date)
+
+  def dateOnlyWithHint() = <abbr title={dateAsDT()}>{dateOnly()}</abbr>
 
   def user(): Option[User] = {
     inTransaction( DbSchema.usersToPendings.right(this).headOption )

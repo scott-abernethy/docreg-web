@@ -22,7 +22,11 @@ class Approval extends DbObject[Approval] {
     inTransaction( DbSchema.usersToApprovals.right(this).headOption )
   }
 
+  def dateOnly() = DatePresentation.formatDay(date)
+
   def dateAsDT(): String = DatePresentation.formatDateTime(date)
+
+  def dateOnlyWithHint() = <abbr title={dateAsDT()}>{dateOnly()}</abbr>
 }
 
 object Approval extends Approval with Loggable {
