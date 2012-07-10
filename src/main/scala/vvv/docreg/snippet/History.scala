@@ -101,7 +101,7 @@ class History
   {
     val period: MonthHistory = new MonthHistory()
     val combined: FlotSerie = historySeries(period.data(), 1, "All")
-    val drwOnly: FlotSerie = historySeries(period.data(HistoryHelpers.drwClient).filter(_._2 > 0), 5, "Beta")
+    val drwOnly: FlotSerie = historySeries(period.data(HistoryHelpers.drwClient), 5, "Beta")
     graph(in, List(combined,drwOnly), defaultOptions)
   }
 
@@ -109,7 +109,7 @@ class History
   {
     val period: YearHistory = new YearHistory()
     val combined: FlotSerie = historySeries(period.data(), 1, "All")
-    val drwOnly: FlotSerie = historySeries(period.data(HistoryHelpers.drwClient).filter(_._2 > 0), 5, "Beta")
+    val drwOnly: FlotSerie = historySeries(period.data(HistoryHelpers.drwClient), 5, "Beta")
     graph(in, List(combined,drwOnly), defaultOptions)
   }
 
