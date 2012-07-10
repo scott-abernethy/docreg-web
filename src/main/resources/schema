@@ -51,6 +51,7 @@ create index idx99710ae2 on ProjectAuthorization (userId);
 create table UserProject (
     projectId bigint not null,
     selected boolean not null,
+    interested boolean not null,
     id bigint primary key not null auto_increment,
     userId bigint not null
   );
