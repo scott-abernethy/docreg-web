@@ -43,6 +43,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     case _ => Empty
   }
   val user: Box[User] = User.loggedInUser.is
+  val pageUserId: Long = user.map(_.id).getOrElse(-1L)
   val editor: List[Pending] = {
     document match {
       case Full(d) => Pending.forAction(d, PendingAction.editing)
@@ -149,13 +150,13 @@ class DocumentSnippet extends DocumentRequest with Loggable {
           ".rev-number" #> r.version &
           ".rev-download" #> <a href={d.downloadHref(r.version)}>Download</a> &
           ".rev-approve" #> <a href={d.approveHref(r.version)}>Approve</a> &
-          ".rev-author" #> u.knownOption.map(_.profileLink).getOrElse(Text(r.rawAuthor)) &
+          ".rev-author" #> u.knownOption.map(_.profileLabel(pageUserId)).getOrElse(Text(r.rawAuthor)) &
           ".rev-comment" #> r.comment &
           ".rev-date" #> r.dateOnlyWithHint &
           ".rev-approval" #> as.map { y =>
             val a = y._1
             val u2 = y._2
-            ".approval-by" #> (u2.flatMap(_.knownOption).map(_.profileLink).getOrElse(Text(a.rawUser))) &
+            ".approval-by" #> (u2.flatMap(_.knownOption).map(_.profileLabel(pageUserId)).getOrElse(Text(a.rawUser))) &
             ".approval-state" #> <span class={ApprovalState.style(a.state)}>{a.state}</span> &
             ".approval-comment" #> <span>{ if (a.comment == "No Comment") "" else a.comment }</span> &
             ".approval-date" #> a.dateAsDT
