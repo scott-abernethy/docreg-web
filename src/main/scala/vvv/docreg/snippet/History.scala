@@ -25,6 +25,10 @@ object Sample
   }
 }
 
+object HistoryHelpers {
+  val drwClient: (Document, Revision, Project) => Boolean = (_, r, p) => Option(r.clientVersion).map(_.startsWith("dr+w")).getOrElse(false)
+}
+
 class History
 {
   val defaultOptions: FlotOptions = new FlotOptions {
@@ -95,24 +99,33 @@ class History
 
   def month(in: NodeSeq) =
   {
-    graph(in, List(historySeries(new MonthHistory().data(), 1)), defaultOptions)
+    val period: MonthHistory = new MonthHistory()
+    val combined: FlotSerie = historySeries(period.data(), 1, "All")
+    val drwOnly: FlotSerie = historySeries(period.data(HistoryHelpers.drwClient).filter(_._2 > 0), 5, "Beta")
+    graph(in, List(combined,drwOnly), defaultOptions)
   }
 
   def year(in: NodeSeq) =
   {
-    graph(in, List(historySeries(YearHistory.data(), 2)), defaultOptions)
+    val period: YearHistory = new YearHistory()
+    val combined: FlotSerie = historySeries(period.data(), 1, "All")
+    val drwOnly: FlotSerie = historySeries(period.data(HistoryHelpers.drwClient).filter(_._2 > 0), 5, "Beta")
+    graph(in, List(combined,drwOnly), defaultOptions)
   }
 
   def longTerm(in: NodeSeq) =
   {
-    graph(in, List(historySeries(LongTermHistory.data(), 3)), defaultOptions)
+    val period: LongTermHistory = new LongTermHistory()
+    val combined: FlotSerie = historySeries(period.data(), 1, "All")
+    val drwOnly: FlotSerie = historySeries(period.data(HistoryHelpers.drwClient).filter(_._2 > 0), 5, "Beta")
+    graph(in, List(combined,drwOnly), defaultOptions)
   }
 
-  private def historySeries(d: List[(Double, Double)], c: Int): FlotSerie =
+  private def historySeries(d: List[(Double, Double)], c: Int, labelText: String): FlotSerie =
   {
     new FlotSerie {
       override val data = d
-      override def label = Full("Revisions")
+      override def label = Full(labelText)
       override def color = Full(Right(c))
       override def lines = Full(new FlotLinesOptions {
         override def show = Full(true)
@@ -194,10 +207,11 @@ class MonthHistory
   }
 }
 
-object YearHistory
+class YearHistory
 {
-  def data(): List[(Double, Double)] =
-  {
+  val raw = load()
+
+  def load() = {
     val cal: Calendar = Calendar.getInstance()
     cal.set(Calendar.SECOND, 0)
     cal.set(Calendar.MINUTE, 0)
@@ -207,14 +221,21 @@ object YearHistory
     cal.add(Calendar.MONTH,-11)
     val startDate = new Timestamp(cal.getTimeInMillis)
 
-    val rs = inTransaction{
-      from(Revision.dbTable)(r =>
+    inTransaction{
+      join(Document.dbTable, Revision.dbTable, Project.dbTable)( (d,r,p) =>
         where(r.date >= startDate)
-        select(r)
-        orderBy(r.date asc)
+          select( (d,r,p) )
+          orderBy(r.date asc)
+          on(r.documentId === d.id, d.projectId === p.id)
       ).toList
     }
+  }
 
+  def data(): List[(Double, Double)] = data((_,_,_) => true)
+
+  def data(accepted: (Document,Revision,Project) => Boolean): List[(Double, Double)] =
+  {
+    val rs = raw.filter(x => accepted(x._1, x._2, x._3)).map(_._2)
     analyse(Calendar.getInstance, rs).map(s => (s.index.toDouble, s.count.toDouble))
   }
 
@@ -244,10 +265,11 @@ object YearHistory
   }
 }
 
-object LongTermHistory
+class LongTermHistory
 {
-  def data(): List[(Double, Double)] =
-  {
+  val raw = load()
+
+  def load() = {
     val cal: Calendar = Calendar.getInstance()
     cal.set(Calendar.SECOND, 0)
     cal.set(Calendar.MINUTE, 0)
@@ -257,14 +279,21 @@ object LongTermHistory
     cal.add(Calendar.YEAR,-15)
     val startDate = new Timestamp(cal.getTimeInMillis)
 
-    val rs = inTransaction{
-      from(Revision.dbTable)(r =>
+    inTransaction{
+      join(Document.dbTable, Revision.dbTable, Project.dbTable)( (d,r,p) =>
         where(r.date >= startDate)
-        select(r)
-        orderBy(r.date asc)
+          select( (d,r,p) )
+          orderBy(r.date asc)
+          on(r.documentId === d.id, d.projectId === p.id)
       ).toList
     }
+  }
 
+  def data(): List[(Double, Double)] = data((_,_,_) => true)
+
+  def data(accepted: (Document,Revision,Project) => Boolean): List[(Double, Double)] =
+  {
+    val rs = raw.filter(x => accepted(x._1, x._2, x._3)).map(_._2)
     analyse(Calendar.getInstance, rs).map(s => (s.index.toDouble, s.count.toDouble))
   }
 
