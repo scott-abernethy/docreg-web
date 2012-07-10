@@ -32,13 +32,36 @@ trait ProjectSelection extends Loggable {
     if (UserSession.mode.is == mode) Some("active") else None
   }
 
-  def favouriteProjects = {
-    ".item" #> UserProject.listFor(User.loggedInUser.is.toOption).map { i =>
-      val project = i._1
-      val selected = i._2
-      ".name" #> project.infoLink &
-      ".check" #> createProjectCheck(project, selected)
+  def favouriteProjects(in: NodeSeq): NodeSeq = {
+    (
+      "#fav-more [onclick]" #> SHtml.ajaxInvoke(() => moreFavs(in)) &
+      favs(false)
+    ).apply(in)
+  }
+
+  def favs(edit: Boolean): CssSel = {
+    UserProject.listFor(User.loggedInUser.is.toOption, edit) match {
+      case Nil => {
+        ".item *" #> "None"
+      }
+      case config => {
+        ".item" #> config.map { i =>
+          val project = i._1
+          val selected = i._2
+          val id = "fup" + project.id
+          "li [id]" #> id &
+            ".f-name" #> project.infoLink &
+            ".f-check" #> createProjectCheck(project, selected) &
+            ".f-clr" #> (if (!edit) PassThru else ClearNodes) &
+            ".f-clr [onclick]" #> SHtml.ajaxInvoke(() => {clearFav(project.id); Hide(id)})
+        }
+      }
     }
+  }
+
+  def moreFavs(in: NodeSeq): JsCmd = {
+    Hide("fav-more") &
+    Replace("favs", ("#favs ^^" #> "ignored" & favs(true)).apply(in))
   }
   
   private def createProjectCheck(p: Project, initial: Boolean): NodeSeq = {
@@ -54,6 +77,14 @@ trait ProjectSelection extends Loggable {
         projectSelectionUpdate
       case _ => 
         JsCmds.Noop
+    }
+  }
+
+  private def clearFav(projectId: Long) {
+    User.loggedInUser.is.foreach { user =>
+      UserProject.clear(user.id, projectId)
+      UserSession.changeSelected(projectId, false)
+      projectSelectionUpdate
     }
   }
 
