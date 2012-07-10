@@ -101,8 +101,7 @@ class History
   {
     val period: MonthHistory = new MonthHistory()
     val combined: FlotSerie = historySeries(period.data(), 1, "All")
-    val drwOnly: FlotSerie = historySeries(period.data(HistoryHelpers.drwClient), 5, "Beta")
-    graph(in, List(combined,drwOnly), defaultOptions)
+    graph(in, List(combined), defaultOptions)
   }
 
   def year(in: NodeSeq) =
