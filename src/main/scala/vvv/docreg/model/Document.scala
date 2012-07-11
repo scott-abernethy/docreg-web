@@ -165,6 +165,7 @@ object Document extends Document {
         case ValidIdentifier(num, null) => Some(num, Long.MaxValue)
         case ValidIdentifier(num, ver) => Some(num, ver.substring(1).toLong)
         case ValidDocumentFileName(num, ver, _) => Some(num,ver.toLong)
+        case IdentifierAndExtension(num) => Some(num, Long.MaxValue)
         case _ => None
       }
     }

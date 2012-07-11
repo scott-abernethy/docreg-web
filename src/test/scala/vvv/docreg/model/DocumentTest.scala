@@ -238,6 +238,8 @@ object DocumentTest extends Specification {
         DocumentRevision.unapply("0234-001") must beSome((d, r1))
         DocumentRevision.unapply("0234-001-Some garbage") must beSome((d, r1))
         DocumentRevision.unapply("0234-001-Some garbage.txt") must beSome((d, r1))
+        DocumentRevision.unapply("0234.txt") must beSome((d, r4))
+        DocumentRevision.unapply("0234txt") must beNone
         DocumentRevision.unapply("0234-1") must beSome((d, r1))
         DocumentRevision.unapply("0234-009") must beNone
         DocumentRevision.unapply("0234-9") must beNone
