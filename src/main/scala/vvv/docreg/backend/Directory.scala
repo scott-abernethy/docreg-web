@@ -5,6 +5,8 @@ import net.liftweb.util.ControlHelpers._
 import net.liftweb.common.{Full, Failure, Empty, Box}
 import vvv.docreg.model.User
 import vvv.docreg.util.StringUtil.ValidEmail
+import vvv.docreg.util.Config
+
 /*
 https://wiki.shibboleth.net/confluence/display/SHIB2/IdPADConfigIssues
 http://download.oracle.com/javase/jndi/tutorial/ldap/referral/jndi.html
@@ -58,9 +60,9 @@ Microsoft's AD LDAP is on port 3268 (and Global Catalog server)
 class DirectoryImpl extends LDAPVendor with Directory {
   configure(
     Map(
-      "ldap.url" -> "ldap://dcgnetnz1.gnet.global.vpn:3268",
-      "ldap.userName" -> "gnet\\DocRegSystem",
-      "ldap.password" -> "***REMOVED***",
+      "ldap.url" -> (Config.is.get[String]("ldap.url") getOrElse "ldap://dcgnetnz1.gnet.global.vpn:3268"),
+      "ldap.userName" -> (Config.is.get[String]("ldap.user") getOrElse "gnet\\sabernethy"),
+      "ldap.password" -> (Config.is.get[String]("ldap.password") getOrElse "notsecureenuf"),
       "ldap.base" -> DirectoryConfig.ldapBase,
       "lift-ldap.testLookup" -> DirectoryConfig.testLookup,
       "lift-ldap.retryInterval" -> "3000",

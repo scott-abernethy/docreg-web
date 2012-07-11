@@ -9,3 +9,8 @@ agent {
    home = /home/docreg
    secure = true
 }
+ldap {
+   url = "ldap://dcgnetnz1.gnet.global.vpn:3268"
+   user = "gnet\ldapuser"
+   password = "changeit"
+}
