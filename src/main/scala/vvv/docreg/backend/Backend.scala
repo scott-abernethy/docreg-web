@@ -255,6 +255,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
 
   def updateSubscriptions(document: Document, subscriptions: List[SubscriberInfo])
   {
+    // TODO
     val subscribers: List[User] = for {
       s <- subscriptions
       u <- UserLookup.lookup(Some(s.userName), Some(s.email), None, directory, "subscription on " + document + " for " + s)
@@ -267,6 +268,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
 
     for (u <- create)
     {
+      // TODO
       val subscription = new Subscription
       subscription.documentId = document.id
       subscription.userId = u.id

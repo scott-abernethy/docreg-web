@@ -42,7 +42,7 @@ case class RevisionInfo(fileName: String, project: String, comment: String, acce
 
 case class ApprovalInfo(fileName: String, approverName: String, approverEmail: String, status: String,  comment: String, date: Date, clientIp: String, clientHost: String, clientUserName: String)
 
-case class SubscriberInfo(userName: String, email: String, emailEvent: String)
+case class SubscriberInfo(userName: String, email: String, options: String)
 
 sealed abstract class Request
 sealed abstract class Reply

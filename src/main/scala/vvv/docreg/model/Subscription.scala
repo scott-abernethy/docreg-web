@@ -1,7 +1,5 @@
 package vvv.docreg.model
 
-import net.liftweb._
-import net.liftweb.common._
 import vvv.docreg.db.{DbObject, DbSchema}
 import org.squeryl.PrimitiveTypeMode._
 
@@ -9,15 +7,35 @@ class Subscription extends DbObject[Subscription] {
   def dbTable = DbSchema.subscriptions
   var documentId: Long = 0
   var userId: Long = 0
+  var notification: Boolean = false // if true sets the "always" option
+  var bookmark: Boolean = false // if true sets the "bookmark" option
 }
 
 object Subscription extends Subscription {
 
   def subscribe(d: Document, u: User) {
+    // TODO REMOVE
     val s = new Subscription
     s.documentId = d.id
     s.userId = u.id
+    s.notification = true
     inTransaction( dbTable.insert(s) )
+  }
+
+  def addNotification(d: Document, u: User) {
+
+  }
+
+  def addBookmark(d: Document, u: User) {
+
+  }
+
+  def removeNotification(d: Document, u: User) {
+
+  }
+
+  def removeBookmark(d: Document, u: User) {
+
   }
 
   def unsubscribe(d: Document, u: User) {

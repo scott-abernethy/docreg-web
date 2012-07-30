@@ -289,16 +289,15 @@ class DocumentSnippet extends DocumentRequest with Loggable {
   }
 
   private def processSubscribe(d: Document, u: vvv.docreg.model.User) = {
+    // TODO the backend request will depend on the current state of the subscription record.
     if (!u.subscribed_?(d)) {
       Subscription.subscribe(d, u)
       backend ! SubscribeRequested(d, u)
-//      S.notice("Subscribe request sent")
       S.redirectTo(d.infoLink)
     }
     else {
       Subscription.unsubscribe(d, u)
       backend ! UnsubscribeRequested(d, u)
-//      S.notice("Unsubscribe request sent")
       S.redirectTo(d.infoLink)
     }
   }

@@ -120,8 +120,8 @@ object FileDatabaseHelper {
 
   def createMailInfo(data: Array[String]): Option[SubscriberInfo] = {
     data.toList match {
-      case List(userName, email, emailEvent) => {
-        Some(SubscriberInfo(userName, email, emailEvent))
+      case List(userName, email, options) => {
+        Some(SubscriberInfo(userName, email, options))
       }
       case _ => {
         None
