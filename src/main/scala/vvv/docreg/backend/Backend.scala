@@ -9,8 +9,8 @@ import vvv.docreg.agent._
 import org.squeryl.PrimitiveTypeMode._
 import vvv.docreg.model._
 import akka.actor._
-
-case class Connect()
+import akka.util.Duration
+import akka.util.duration._
 
 case class Reload(d: Document)
 
@@ -51,10 +51,16 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
 
   val fileDatabase = context.actorOf(Props[FileDatabase], name = "FileDatabase")
 
+  override def preStart() {
+    logger.info("Backend up for " + product + " v" + version + " " + java.util.TimeZone.getDefault.getDisplayName)
+    logger.info("Backend connected to " + target)
+    context.system.scheduler.schedule(1 minutes, 24 hours, self, 'Resync)
+    super.preStart()
+  }
+
   protected def receive = {
-    case Connect() => {
-      logger.info("Starting " + product + " v" + version + " " + java.util.TimeZone.getDefault.getDisplayName)
-      logger.info("Connecting to " + target)
+    case 'Resync => {
+      logger.info("Backend resync against register, starting...")
       fileDatabase ! GetRegister
     }
     case ResponseRegister(ds) => {
@@ -79,10 +85,11 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
           reconciler ! Prepare(d, fileDatabase)
         }
       }
-      self ! Loaded(ds)
+      // Slow down the resync by delaying the remaining loads...
+      context.system.scheduler.scheduleOnce(100 milliseconds, self, Loaded(ds))
     }
     case Loaded(Nil) => {
-      logger.debug("Parsing register for changes to reconcile, complete.")
+      logger.debug("Backend resync against register, complete.")
     }
         case Changed(d) => {
           // Todo: Apply what we know of the change now, then reconcile. Though the reconcile typically takes <1 second.

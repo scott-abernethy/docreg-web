@@ -1,6 +1,5 @@
 package vvv.docreg.util
 
-import vvv.docreg.backend.Connect._
 import vvv.docreg.backend._
 import vvv.docreg.agent._
 import akka.actor.{PoisonPill, Props, ActorSystem}
@@ -26,7 +25,6 @@ trait EnvironmentImpl extends Environment with BackendComponent with DocumentSer
   def start()
   {
     documentServer.start()
-    backend ! Connect()
     poller ! 'Reset
   }
 
