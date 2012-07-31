@@ -305,9 +305,10 @@ object UserSession {
       case StreamMode.all => {
         (_,_,_) => true
       }
-      case StreamMode.selected => {
+      case StreamMode.selected => { // now favourites
         val selected = selectedProjects.is
-        (_,_,p) => selected.contains(p.id)
+        val bookmarks = user.map(Subscription.bookmarksFor(_)).getOrElse(Nil).map(_.id)
+        (d,_,p) => selected.contains(p.id) || bookmarks.contains(d.id)
       }
       case StreamMode.watching => {
         val subs = user.map(Subscription.watchingFor(_)).getOrElse(Nil).map(_.id)
