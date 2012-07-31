@@ -132,7 +132,10 @@ class UserSnippet extends Loggable {
       "li *" #> pa.infoLink()
     } &
     ".profile-preferences [href]" #> u.preferences() &
-    ".subscription-item" #> Subscription.documentsForUser(u).map { s =>
+    ".subscription-item" #> Subscription.watchingFor(u).map { s =>
+      "li *" #> s.info()
+    } &
+    ".bookmark-item" #> Subscription.bookmarksFor(u).map { s =>
       "li *" #> s.info()
     } &
     ".history-item" #> u.history.map { h =>
@@ -220,12 +223,21 @@ class UserSnippet extends Loggable {
   def bindSubscriptions(user: Option[vvv.docreg.model.User]) = {
     user match {
       case Some(u) => {
-        Subscription.documentsForUser(u).map(d =>
+        Subscription.watchingFor(u).map(d =>
           ".item:title" #> d.fullTitle &
           "a [href]" #> d.infoLink
         )
       }
       case _ => List(ClearClearable)
+    }
+  }
+
+  def favouriteDocuments = {
+    (User.loggedInUser.is.map(u => Subscription.bookmarksFor(u)) getOrElse Nil) match {
+      case Nil => ".item" #> Text("None")
+      case list => ".item" #> list.map{ d =>
+        ".item *" #> d.info()
+      }
     }
   }
 }

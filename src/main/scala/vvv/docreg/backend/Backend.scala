@@ -22,7 +22,7 @@ case class ApprovalApproved(document: Document, revision: Revision, user: User, 
 
 case class ApprovalRequested(document: Document, revision: Revision, users: Iterable[User], actionedBy: User)
 
-case class SubscribeRequested(document: Document, user: User)
+case class SubscribeRequested(document: Document, user: User, options: String)
 
 case class UnsubscribeRequested(document: Document, user: User)
 
@@ -38,7 +38,7 @@ trait BackendComponent {
   val backend: ActorRef
 }
 
-class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala.actors.Actor) extends Actor with Loggable with RevisionReconcile with ApprovalReconcile {
+class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala.actors.Actor) extends Actor with Loggable with RevisionReconcile with ApprovalReconcile with SubscriptionReconcile {
   val product = ProjectProps.get("project.name") openOr "drw"
   val version = ProjectProps.get("project.version") openOr "0.0"
   val clientVersion = "dr+w " + version
@@ -118,8 +118,8 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
         case ApprovalReply(response) => {
           logger.info("Approval reply, " + response)
         }
-        case SubscribeRequested(d, user) => {
-          daemonAgent ! RequestPackage(self, target, SubscribeRequest(d.latest.filename, user.shortUsername(), user.email, "always"))
+        case SubscribeRequested(d, user, options) => {
+          daemonAgent ! RequestPackage(self, target, SubscribeRequest(d.latest.filename, user.shortUsername(), user.email, options))
         }
         case SubscribeReply(response, fileName, userName) => {
           logger.info("Subscribe reply, " + List(response, fileName, userName))
@@ -191,7 +191,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
         val update = reconcileRevisions(document, reconcile.revisions)
         if (!update.contains(ReconcileDocumentRemoved)) {
           reconcileApprovals(document, reconcile.approvals)
-          updateSubscriptions(document, reconcile.subscriptions)
+          reconcileSubscriptions(document, reconcile.subscriptions)
           documentServer ! DocumentAdded(document)
         }
       }
@@ -206,7 +206,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
       if (update.contains(ReconcileDocumentRemoved)) {
         return
       }
-      updateSubscriptions(document, reconcile.subscriptions)
+      reconcileSubscriptions(document, reconcile.subscriptions)
       reconcileApprovals(document, reconcile.approvals)
 
       val docChanged = assignDocument(document, reconcile.document)
@@ -250,33 +250,6 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
     }
     else {
       Pending.unassignEditor(document)
-    }
-  }
-
-  def updateSubscriptions(document: Document, subscriptions: List[SubscriberInfo])
-  {
-    // TODO
-    val subscribers: List[User] = for {
-      s <- subscriptions
-      u <- UserLookup.lookup(Some(s.userName), Some(s.email), None, directory, "subscription on " + document + " for " + s)
-    } yield u
-
-    val listed = subscribers.distinct.toSet
-    val existing = Subscription.usersFor(document).toSet
-    val remove = existing.diff(listed)
-    val create = listed.diff(existing)
-
-    for (u <- create)
-    {
-      // TODO
-      val subscription = new Subscription
-      subscription.documentId = document.id
-      subscription.userId = u.id
-      Subscription.dbTable.insert(subscription)
-    }
-
-    if (remove.size > 0) {
-      Subscription.dbTable.deleteWhere(s => (s.documentId === document.id) and (s.userId in remove.map(_.id)))
     }
   }
 }

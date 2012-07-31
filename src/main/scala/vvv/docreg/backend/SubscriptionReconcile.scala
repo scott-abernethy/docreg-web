@@ -9,21 +9,22 @@ trait SubscriptionReconcile extends Loggable {
   val userLookup: UserLookupProvider
 
   def reconcileSubscriptions(document: Document, subscriptions: List[SubscriberInfo]) {
-    val subscribers: List[(User,String)] = for {
+    val subscribers: List[(Long,String)] = for {
       s <- subscriptions
       u <- userLookup.lookup(Some(s.userName), Some(s.email), None, "subscription on " + document + " for " + s)
-    } yield (u -> s.options)
+    } yield (u.id -> s.options)
 
     inTransaction {
       var userSubscriptions = Subscription.forDocument(document).map(s => s.userId -> s).toMap
 
-      subscribers.foreach { i =>
-        val u = i._1
+      // converting to a map makes the user distinct, and takes the last user option as the valid option.
+      subscribers.toMap.foreach { i =>
+        val uid = i._1
         val options = i._2.split(" ")
         val notification = options exists ("always".equalsIgnoreCase)
         val bookmark = options exists ("bookmark".equalsIgnoreCase)
 
-        userSubscriptions.get(u.id) match {
+        userSubscriptions.get(uid) match {
           case Some(s) if (s.notification != notification || s.bookmark != bookmark) => {
             s.notification = options exists ("always".equalsIgnoreCase)
             s.bookmark = options exists ("bookmark".equalsIgnoreCase)
@@ -32,7 +33,7 @@ trait SubscriptionReconcile extends Loggable {
           case None => {
             val s = new Subscription
             s.documentId = document.id
-            s.userId = u.id
+            s.userId = uid
             s.notification = options exists ("always".equalsIgnoreCase)
             s.bookmark = options exists ("bookmark".equalsIgnoreCase)
 
@@ -41,7 +42,7 @@ trait SubscriptionReconcile extends Loggable {
           case _ => {} // No change
         }
 
-        userSubscriptions -= u.id
+        userSubscriptions -= uid
       }
 
       if (userSubscriptions.size > 0) {

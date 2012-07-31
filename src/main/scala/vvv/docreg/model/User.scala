@@ -37,8 +37,12 @@ class User extends DbObject[User] {
   var localServer: String = ""
   var timeZone: String = ""
 
-  def subscribed_?(d: Document) = {
-    inTransaction( Subscription.dbTable.where(s => s.userId === id and s.documentId === d.id).isEmpty ) == false
+  def watching_?(d: Document) = {
+    Subscription.isNotified(d.id, id)
+  }
+
+  def bookmarked_?(d: Document) = {
+    Subscription.isBookmarked(d.id, id)
   }
 
   def displayName = name
@@ -306,7 +310,7 @@ object UserSession {
         (_,_,p) => selected.contains(p.id)
       }
       case StreamMode.watching => {
-        val subs = user.map(Subscription.documentsForUser(_)).getOrElse(Nil).map(_.id)
+        val subs = user.map(Subscription.watchingFor(_)).getOrElse(Nil).map(_.id)
         (d,_,_) => subs.contains(d.id)
       }
       case StreamMode.me => {

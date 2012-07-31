@@ -121,8 +121,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
         "key" -> d.key,
         "revised" -> r.dateAsDT(),
         "link" -> ((in: NodeSeq) => <a href={d.downloadHref(r.version)}>{in}</a>),
-        "version" -> r.version,
-        "subscriber" -> subscribers(d)
+        "version" -> r.version
       )
       (
         ".doc-title" #> <a href={d.infoLink}>{d.fullTitle}</a> &
@@ -162,7 +161,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
             ".approval-date" #> a.dateOnlyWithHint
           }
         } &
-        ".doc-subscriber" #> Subscription.usersFor(d).filter(_.knownOption.isDefined).map { u =>
+        ".doc-subscriber" #> Subscription.watchersFor(d).filter(_.knownOption.isDefined).map { u =>
           ".subscriber-info" #> u.profileLabel(user.map(_.id).getOrElse(-1L))
         } &
         ".contributor" #> d.contributors().filter(_.knownOption.isDefined).map { u =>
@@ -198,39 +197,9 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     ".doc-submit" #> submit(d) &
     ".doc-approve [href]" #> (d.approveHref(r.version)) &
     ".doc-request-approval [href]" #> (d.requestApprovalHref(r.version)) &
-    ".doc-subscribe" #> subscribe(d)
+    ".doc-watch" #> watch(d) &
+    ".doc-fav" #> favourite(d)
   }
-
-  private def subscribers(d: Document): NodeSeq =
-  {
-    Subscription.usersFor(d) match
-    {
-      case Nil =>
-      {
-        <li>No subscribers</li>
-      }
-      case list =>
-      {
-        for (u <- list.sortWith(User.sort))
-        yield <li><a href={ u.profileLink }>{ u.displayName }</a></li>
-      }
-    }
-  }
-
-//  private def revisions(xhtml: NodeSeq, d: Document, revisionInRequest: Revision): NodeSeq = {
-//    d.revisions flatMap { r =>
-//      bind("rev", xhtml,
-//        AttrBindParam("download_attr", "/d/" + d.key + "/v/" + r.version + "/download", "href"),
-//        AttrBindParam("approve_attr", "/d/" + d.key + "/v/" + r.version + "/approve", "href"),
-//        AttrBindParam("request-approval_attr", "/d/" + d.key + "/v/" + r.version + "/request-approval", "href"),
-//        "version" -> r.version,
-//        "author" -> r.authorLink,
-//        "date" -> r.date,
-//        "approvals" -> ((in: NodeSeq) => approvals(in, r)),
-//        "link" -> <a href={r.link}>{r.version.asHtml}</a>,
-//        "comment" -> r.comment)
-//    }
-//  }
 
   private def edit(d: Document): NodeSeq = {
     user match {
@@ -271,15 +240,15 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     JsCmds.RedirectTo(d.infoLink)
   }
 
-  private def subscribe(d: Document) = {
+  private def watch(d: Document) = {
     User.loggedInUser.is match {
-      case Full(u) if (u.subscribed_?(d))  =>
+      case Full(u) if (u.watching_?(d))  =>
       {
-        SHtml.a(() => processSubscribe(d, u), <span id="subscribe"><i class="icon-eye-close"></i> Unwatch</span> , "class" -> "btn")
+        SHtml.a(() => processWatch(d, u, false), <span><i class="icon-eye-open"></i> Watching</span> , "class" -> "btn active")
       }
       case Full(u) =>
       {
-        SHtml.a(() => processSubscribe(d, u), <span id="subscribe"><i class="icon-eye-open"></i> Watch</span> , "class" -> "btn")
+        SHtml.a(() => processWatch(d, u, true), <span><i class="icon-eye-close"></i> Watch</span> , "class" -> "btn")
       }
       case _ =>
       {
@@ -288,18 +257,53 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     }
   }
 
-  private def processSubscribe(d: Document, u: vvv.docreg.model.User) = {
-    // TODO the backend request will depend on the current state of the subscription record.
-    if (!u.subscribed_?(d)) {
-      Subscription.subscribe(d, u)
-      backend ! SubscribeRequested(d, u)
-      S.redirectTo(d.infoLink)
+  private def processWatch(d: Document, u: vvv.docreg.model.User, checked: Boolean) = {
+    if (checked) {
+      Subscription.addNotification(d, u)
     }
     else {
-      Subscription.unsubscribe(d, u)
-      backend ! UnsubscribeRequested(d, u)
-      S.redirectTo(d.infoLink)
+      Subscription.removeNotification(d, u)
     }
+    // Could return faster
+    val msg = Subscription.optionsFor(d, u) match {
+      case Some(options) => SubscribeRequested(d, u, options)
+      case None => UnsubscribeRequested(d, u)
+    }
+    backend ! msg
+    S.redirectTo(d.infoLink)
+  }
+
+  private def favourite(d: Document) = {
+    User.loggedInUser.is match {
+      case Full(u) if (u.bookmarked_?(d))  =>
+      {
+        SHtml.a(() => processFavourite(d, u, false), <span><i class="icon-star"></i> Favourite</span> , "class" -> "btn active")
+      }
+      case Full(u) =>
+      {
+        SHtml.a(() => processFavourite(d, u, true), <span><i class="icon-star-empty"></i> Favourite</span> , "class" -> "btn")
+      }
+      case _ =>
+      {
+        NodeSeq.Empty
+      }
+    }
+  }
+
+  private def processFavourite(d: Document, u: vvv.docreg.model.User, checked: Boolean) = {
+    if (checked) {
+      Subscription.addBookmark(d, u)
+    }
+    else {
+      Subscription.removeBookmark(d, u)
+    }
+    // Could return faster
+    val msg = Subscription.optionsFor(d, u) match {
+      case Some(options) => SubscribeRequested(d, u, options)
+      case None => UnsubscribeRequested(d, u)
+    }
+    backend ! msg
+    S.redirectTo(d.infoLink)
   }
 
   def approve(in: NodeSeq): NodeSeq =

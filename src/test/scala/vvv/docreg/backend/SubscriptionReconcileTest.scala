@@ -98,6 +98,41 @@ object SubscriptionReconcileTest extends Specification with Mockito {
       }
     }
 
+    "add multiple subscriptions, ignoring duplicates" >> {
+      TestDbVendor.initAndClean()
+      transaction{
+        val (p1, _, _) = TestDbVendor.createProjects
+        val (u1, u2) = TestDbVendor.createUsers
+        val (d, _, _, _) = TestDbVendor.createDocument(p1, u1)
+
+        val lookup = mock[UserLookupProvider]
+        lookup.lookup(Matchers.eq(Some("Asutherl")), Matchers.eq(Some("alan.sutherland@hstx.com")), Matchers.eq(None), Matchers.anyString()) returns(Full(u2))
+        lookup.lookup(Matchers.eq(Some("Sabernethy")), Matchers.eq(Some("scott_abernethy@stratexnet.com")), Matchers.eq(None), Matchers.anyString()) returns(Full(u1))
+        lookup.lookup(Matchers.eq(Some("scott.abernethy@aviatnet.com")), Matchers.eq(Some("scott.abernethy@Aviatnet.com")), Matchers.eq(None), Matchers.anyString()) returns(Full(u1))
+
+        val x = new SubscriptionReconcile {
+          val userLookup = lookup
+        }
+
+        val subsA = SubscriberInfo("Asutherl","alan.sutherland@hstx.com","always")
+        val subsB = SubscriberInfo("Sabernethy","scott_abernethy@stratexnet.com","always")
+        val subsC = SubscriberInfo("scott.abernethy@aviatnet.com","scott.abernethy@Aviatnet.com","always bookmark")
+
+        x.reconcileSubscriptions(d, List(subsA, subsB, subsC))
+
+        val ss = Subscription.forDocument(d)
+        ss must haveSize(2)
+        ss(0).userId must be_==(2)
+        ss(0).documentId must be_==(1)
+        ss(0).notification must be_==(true)
+        ss(0).bookmark must be_==(false)
+        ss(1).userId must be_==(1)
+        ss(1).documentId must be_==(1)
+        ss(1).notification must be_==(true)
+        ss(1).bookmark must be_==(true)
+      }
+    }
+
     "No change" >> {
       TestDbVendor.initAndClean()
       transaction{

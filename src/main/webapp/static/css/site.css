@@ -93,7 +93,10 @@ footer {
 }
 
 .boxr-head {
-    padding: 7px 12px;
+    padding-top: 7px;
+    padding-right: 12px;
+    padding-left: 12px;
+    padding-bottom: 3px;
 }
 
 .boxr-body {

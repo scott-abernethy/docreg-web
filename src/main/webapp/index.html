@@ -54,11 +54,24 @@
             </ul>
          </div>
 
-         <div class="lift:snippet?type=Dashboard.favouriteProjects boxr boxr-dark boxr-body">
-            <h3>Favourites <i class="icon-star"></i> <small>Project <a href="#" id="fav-more" class="btn btn btn-small pull-right">Choose More</a></small></h3>
-            <ul id="favs" class="unstyled">
-               <li class="item"><span class="f-check"></span> <span class="f-name"></span> <a href="#" class="f-clr"><i class="icon-remove icon-white"></i></a></li>
-            </ul>
+         <div class="boxr boxr-dark">
+            <div class="boxr-head border-bottom">
+               <h3>Favourites <i class="icon-star"></i></h3>
+            </div>
+
+            <div class="lift:snippet?type=Dashboard.favouriteProjects boxr-body border-bottom">
+               <h4>Projects <a href="#" id="fav-more" class="btn btn btn-small pull-right">Choose More</a></h4>
+               <ul id="favs" class="unstyled">
+                  <li class="item"><span class="f-check"></span> <span class="f-name"></span> <a href="#" class="f-clr"><i class="icon-remove icon-white"></i></a></li>
+               </ul>
+            </div>
+
+            <div class="lift:snippet?type=UserSnippet.favouriteDocuments boxr-body">
+               <h4>Documents</h4>
+               <ul id="bookmarks" class="unstyled">
+                  <li class="item"></li>
+               </ul>
+            </div>
          </div>
 
          <div class="lift:snippet?type=UserSnippet.subscriptions boxr boxr-dark boxr-body">
