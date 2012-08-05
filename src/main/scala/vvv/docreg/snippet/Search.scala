@@ -19,11 +19,13 @@ import xml.{Text, NodeSeq}
 import vvv.docreg.util.Bits
 
 class Search extends Loggable with ProjectSelection {
-  object searchInput extends RequestVar("")
+//  object searchInput extends RequestVar("")
+
+  val searchInput = S.param("q") openOr ""
 
   def input = {
     if (User.loggedIn_?) {
-      ".search-input" #> SHtml.onSubmit((s) => {val x = s; S.redirectTo("/search", () => searchInput(x))})
+      ".search-input" #> SHtml.onSubmit((s) => {val x = s; S.redirectTo("/search?q=" + x)})
     } else {
       ".all" #> NodeSeq.Empty
     }
@@ -32,7 +34,7 @@ class Search extends Loggable with ProjectSelection {
   def bindResults(in: NodeSeq): NodeSeq =
   {
     val f = UserSession.inStreamFilter()
-    results(in, FilteredDocument.search(searchInput.is).filter(x => f(x._1, x._3, x._2)))
+    results(in, FilteredDocument.search(searchInput).filter(x => f(x._1, x._3, x._2)))
   }
 
   var html: NodeSeq = NodeSeq.Empty
@@ -49,7 +51,7 @@ class Search extends Loggable with ProjectSelection {
   def items(in: NodeSeq, ds: List[(Document, Project, Revision, User)]): NodeSeq =
   {
     val pageUserId = User.loggedInUser.is.map(_.id) getOrElse -1L
-    val inputText = Option(searchInput.is).getOrElse("")
+    val inputText = Option(searchInput).getOrElse("")
     val open = ds
 //    val (open, restricted) = ds.partition(i => UserSession.isAuthorized(i._1, i._2))
     (
