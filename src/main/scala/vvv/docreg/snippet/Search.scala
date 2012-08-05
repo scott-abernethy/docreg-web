@@ -34,7 +34,7 @@ class Search extends Loggable with ProjectSelection {
   def bindResults(in: NodeSeq): NodeSeq =
   {
     val f = UserSession.inStreamFilter()
-    results(in, FilteredDocument.search(searchInput).filter(x => f(x._1, x._3, x._2)))
+    results(in, FilteredDocument.search(searchInput.trim).filter(x => f(x._1, x._3, x._2)))
   }
 
   var html: NodeSeq = NodeSeq.Empty
@@ -51,7 +51,7 @@ class Search extends Loggable with ProjectSelection {
   def items(in: NodeSeq, ds: List[(Document, Project, Revision, User)]): NodeSeq =
   {
     val pageUserId = User.loggedInUser.is.map(_.id) getOrElse -1L
-    val inputText = Option(searchInput).getOrElse("")
+    val inputText = Option(searchInput.trim).getOrElse("")
     val open = ds
 //    val (open, restricted) = ds.partition(i => UserSession.isAuthorized(i._1, i._2))
     (

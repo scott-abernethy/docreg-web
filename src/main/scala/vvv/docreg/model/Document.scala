@@ -184,11 +184,9 @@ object Document extends Document {
 
 object FilteredDocument
 {
-  import vvv.docreg.helper.ProjectSelection
-
   def search(request: String): List[(Document,Project,Revision,User)] = {
     val start = System.currentTimeMillis()
-    val result = if (request == null || request.isEmpty) searchAll() else searchFor(request)
+    val result = if (request == null || request.isEmpty) searchAll() else searchTerms(request)
     val sorted = result.sortWith{ (a,b) =>
       a._3.date.getTime > b._3.date.getTime
     }
@@ -196,9 +194,7 @@ object FilteredDocument
     sorted
   }
 
-  private def searchAll() = {
-//    val checked = ProjectSelection.projects.is.map(_.id)
-//    if (ProjectSelection.showAll.is) {
+  private def searchAll(): List[(Document,Project,Revision,User)] = {
       inTransaction{
         join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
           select( (d,p,r,u) )
@@ -206,27 +202,29 @@ object FilteredDocument
             on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
         ).toList
       }.groupBy(_._1).flatMap(x => x._2.headOption).toList
-//    }
-//    else if (checked.isEmpty) {
-//      Nil
-//    }
-//    else {
-//      inTransaction{
-//        join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
-//          where(p.id in checked)
-//          select( (d,p,r,u) )
-//          orderBy(d.id asc, r.version desc)
-//          on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
-//        ).toList
-//      }.groupBy(_._1).flatMap(x => x._2.headOption).toList
-//    }
+  }
+
+  private def searchTerms(request: String): List[(Document,Project,Revision,User)] = {
+    // for each term
+    // search
+    val results = request.split(" ").toList
+      .map(_.trim)
+      .filter(_.size > 0)
+      .map{ x =>
+        searchFor(x)
+          .map(i => i._1.id -> i)
+          .toMap
+      }
+
+    results match {
+      case Nil => Nil
+      case list => list.reduce( (a,b) => a.filterKeys(b.contains _) ).values.toList
+    }
   }
 
   private def searchFor(request: String) = {
     val searchString: String = formatSearch(request)
     val number: String = prePadTo(request, 4, '0')
-//    val checked = ProjectSelection.projects.is.map(_.id)
-//    if (ProjectSelection.showAll.is) {
         inTransaction{
         join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
           where((d.title like searchString) or (u.name like searchString) or (d.number === number))
@@ -235,23 +233,6 @@ object FilteredDocument
             on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
         ).toList
       }.groupBy(_._1).flatMap(x => x._2.headOption).toList
-//    }
-//    else if (checked.isEmpty) {
-//      Nil
-//    }
-//    else {
-//      inTransaction{
-//        join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
-//          where(
-//            ((d.title like searchString) or (u.name like searchString) or (d.number === number)) and
-//            (p.id in checked)
-//          )
-//          select( (d,p,r,u) )
-//          orderBy(d.id asc, r.version desc)
-//          on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
-//        ).toList
-//      }.groupBy(_._1).flatMap(x => x._2.headOption).toList
-//    }
   }
 
   def formatSearch(in: String): String =
