@@ -33,6 +33,7 @@ class LiftProject(info: ProjectInfo) extends DefaultWebProject(info) with IdeaPr
     "net.databinder" %% "dispatch-http" % "0.8.8",
     "ch.ethz.ganymed" % "ganymed-ssh2" % "build210",
     "org.streum" %% "configrity-core" % "0.10.2",
+    "org.apache.tika" % "tika-core" % "1.2",
 //    "org.apache.httpcomponents" % "httpclient" % "4.1.2",  // <- comes in via dispatch-http now.
     "log4j" % "log4j" % "1.2.16",
     "org.slf4j" % "slf4j-log4j12" % "1.6.1"

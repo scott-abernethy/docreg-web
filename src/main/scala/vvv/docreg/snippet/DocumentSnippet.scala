@@ -18,6 +18,7 @@ import java.util.Date
 import vvv.docreg.util.{Environment, StringUtil, TemplateParse}
 import vvv.docreg.model._
 import java.sql.Timestamp
+import org.apache.tika.Tika
 
 trait DocumentRequest
 {
@@ -127,6 +128,8 @@ class DocumentSnippet extends DocumentRequest with Loggable {
         ".doc-title" #> <a href={d.infoLink}>{d.fullTitle}</a> &
         ".doc-number" #> d.keyAndVersion(r.version) &
         ".doc-version" #> r.version &
+        ".doc-filename" #> <a href={d.downloadHref(r.version)} title="Download">{r.filename}</a> &
+        ".doc-mediatype" #> tryo(new Tika().detect(r.filename)).openOr("?") &
         ".doc-next" #> d.nextVersion &
         ".doc-project" #> d.project.map(_.infoLink).getOrElse(<span>?</span>) &
         docActions(d, r) &
