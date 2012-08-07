@@ -136,7 +136,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
         ".doc-pending" #> {
           editor.headOption match {
             case Some(editPending) => {
-              ".doc-editor" #> editPending.user().map(_.profileLink()).getOrElse(<span>???</span>) &
+              ".doc-editor" #> editPending.user().map(_.profileLabel(pageUserId)).getOrElse(<span>???</span>) &
               ".edit-requested" #> editPending.dateOnlyWithHint &
               ".doc-next" #> d.nextVersion
             }

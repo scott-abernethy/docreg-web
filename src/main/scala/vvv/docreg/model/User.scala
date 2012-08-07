@@ -154,7 +154,7 @@ object User extends User with Loggable {
     // This gives us an up to date user, i.e. LDAP attributes are reloaded
     UserLookup.lookupUser(username, directory) match {
       case Full(user) if (!user.canLogin_?()) => {
-        Right(SignInFailure("Not Authorized", "Your user account is not authorized to access this service."))
+        Right(SignInFailure("Not Authorized", "The user account '"+username+"' is not authorized to access this service. If you think this is in error, or if you would like to be granted access, please check the Help for support contact details."))
       }
       case Full(user) if (directory.login(user.dn, password)) => {
         Left(user)

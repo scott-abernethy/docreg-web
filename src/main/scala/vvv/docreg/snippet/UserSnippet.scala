@@ -7,7 +7,7 @@ import common._
 import Helpers._
 import http._
 import js._
-import scala.xml.{NodeSeq, Text}
+import xml.{Unparsed, NodeSeq, Text}
 import vvv.docreg.util.{Environment, StringUtil}
 import vvv.docreg.util.StringUtil._
 import org.squeryl.PrimitiveTypeMode._
@@ -67,7 +67,7 @@ class UserSnippet extends Loggable {
   }
 
   def loginFailed(title: String, desc: String) {
-    failure.apply(Some(title, desc))
+    failure.apply(Some((title, desc)))
   }
 
   def doSignIn(u: vvv.docreg.model.User) {
