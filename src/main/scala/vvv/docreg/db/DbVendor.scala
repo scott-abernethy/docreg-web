@@ -30,9 +30,12 @@ class DbVendor(config: Configuration) extends Loggable {
     pool.setMaxPoolSize(10)
 
     // Work around MySQL connection timeouts.
-    pool.setMaxIdleTimeExcessConnections(30 * 60) // 30 mins
-    pool.setMaxConnectionAge(4 * 60 * 60) // 4 hours
+    pool.setMaxIdleTime(1 * 60 * 60) // 1 hour
+    pool.setMaxConnectionAge(6 * 60 * 60) // 6 hours
     pool.setIdleConnectionTestPeriod(1 * 60 * 60) // 1 hour
+    pool.setPreferredTestQuery("SELECT 1")
+    pool.setAcquireRetryAttempts(30)
+    pool.setAcquireRetryDelay(1000) // 1 second (this setting is in millis)
 
     pool
   }
