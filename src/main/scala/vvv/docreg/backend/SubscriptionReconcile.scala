@@ -20,22 +20,22 @@ trait SubscriptionReconcile extends Loggable {
       // converting to a map makes the user distinct, and takes the last user option as the valid option.
       subscribers.toMap.foreach { i =>
         val uid = i._1
-        val options = i._2.split(" ")
-        val notification = options exists ("always".equalsIgnoreCase)
-        val bookmark = options exists ("bookmark".equalsIgnoreCase)
+        val options = i._2.toLowerCase
+        val notification = options contains "always"
+        val bookmark = options contains "bookmark"
 
         userSubscriptions.get(uid) match {
           case Some(s) if (s.notification != notification || s.bookmark != bookmark) => {
-            s.notification = options exists ("always".equalsIgnoreCase)
-            s.bookmark = options exists ("bookmark".equalsIgnoreCase)
+            s.notification = notification
+            s.bookmark = bookmark
             Subscription.dbTable.update(s)
           }
           case None => {
             val s = new Subscription
             s.documentId = document.id
             s.userId = uid
-            s.notification = options exists ("always".equalsIgnoreCase)
-            s.bookmark = options exists ("bookmark".equalsIgnoreCase)
+            s.notification = notification
+            s.bookmark = bookmark
 
             Subscription.dbTable.insert(s)
           }

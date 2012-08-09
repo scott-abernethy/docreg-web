@@ -95,6 +95,28 @@ object SubscriptionReconcileTest extends Specification with Mockito {
           s.notification must be_==(true)
           s.bookmark must be_==(false)
         }
+
+        "currently the mail files have no space separation in options" >> {
+          Subscription.unsubscribe(d, u1)
+          Subscription.forDocument(d) must beEmpty
+
+          x.reconcileSubscriptions(d, SubscriberInfo("jroads", "j@f.com", "alwaysalwaysalways") :: Nil)
+
+          val s = Subscription.forDocument(d).apply(0)
+          s.notification must be_==(true)
+          s.bookmark must be_==(false)
+        }
+
+        "currently the mail files have no space separation in options" >> {
+          Subscription.unsubscribe(d, u1)
+          Subscription.forDocument(d) must beEmpty
+
+          x.reconcileSubscriptions(d, SubscriberInfo("jroads", "j@f.com", "alwaysnomailbookmarkalwaysalways") :: Nil)
+
+          val s = Subscription.forDocument(d).apply(0)
+          s.notification must be_==(true)
+          s.bookmark must be_==(true)
+        }
       }
     }
 
