@@ -14,9 +14,11 @@ class AuthorizedUsersSnippet {
     val users = User.authorized()
     val authorizations = ProjectAuthorization.allAuthorizations().groupBy(_._1.userId)
     ClearClearable &
+    ".x-count *" #> users.size &
     ".x-user" #> users.map{ u =>
       val projects = authorizations.get(u.id).getOrElse(Nil).map(_._2).sortBy(_.name)
-      ".x-name *" #> u.displayName &
+      ".x-username *" #> u.shortUsername() &
+      ".x-name *" #> u.profileLabel(-1) &
       ".x-access *" #> u.accessLevel().toString() &
       ".x-authorizations *" #> projects.map(_.name).mkString(", ")
     }
