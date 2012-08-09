@@ -17,6 +17,8 @@ $SBT package ; abort_check $?
 
 # tag
 tag="0.0.0-1"
+latestgittag=$(git describe --abbrev=0 --tags)
+echo "Most recent tag in this branch is $latestgittag"
 unset userin
 read -p "Tag [$tag]: " userin
 if [ "$userin" ]; then
@@ -40,7 +42,9 @@ if [ "$userin" ]; then
 fi
 war=$(find target -iname '*.war')
 remote_war="$war_name$tag.war"
+echo "Backup copy to ./backup/$remote_war"
+cp $war ./backup/$remote_war
 echo "Deploying $war as $remote_war to $server_host"
-scp $war $server_host:$war_name$tag.war ; abort_check $?
+scp $war $server_host:$remote_war ; abort_check $?
 #ssh $server_host cp $remote_war /var/lib/jetty/webapps/docreg.war
 #ssh $server_host touch /etc/jetty/contexts/docreg.xml
