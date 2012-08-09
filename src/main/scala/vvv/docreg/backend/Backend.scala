@@ -52,8 +52,11 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
   val fileDatabase = context.actorOf(Props[FileDatabase], name = "FileDatabase")
 
   override def preStart() {
-    logger.info("Backend up for " + product + " v" + version + " " + java.util.TimeZone.getDefault.getDisplayName)
-    logger.info("Backend connected to " + target)
+    logger.info("Backend up for " + product + " v" + version + " connected to " + target)
+    val system = Map("java.version" -> System.getProperty("java.version"),
+      "java.vendor" -> System.getProperty("java.vendor"),
+      "timezone" -> java.util.TimeZone.getDefault.getDisplayName)
+    logger.info("System(" + system + ")")
     context.system.scheduler.schedule(1 minutes, 24 hours, self, 'Resync)
     super.preStart()
   }
