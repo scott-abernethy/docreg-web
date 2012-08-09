@@ -144,7 +144,7 @@ case class DownstreamMessage(header: Header, body: (ChannelBuffer) => Unit)
 
 object DaemonProtocol
 {
-  val protocolVersion: Int = 3
+  val protocolVersion: Int = 4
 
   def main(args: Array[String])
   {
