@@ -14,7 +14,7 @@ object DatePresentation {
   dayF.setTimeZone(TimeZone.getDefault)
   private val timeF = new SimpleDateFormat("h:mm a")
   timeF.setTimeZone(TimeZone.getDefault)
-  private val dateF = new SimpleDateFormat("MMM dd '('E')'")
+  private val dateF = new SimpleDateFormat("MMM dd")
   dateF.setTimeZone(TimeZone.getDefault)
 
   def now = new Date
@@ -23,7 +23,7 @@ object DatePresentation {
   {
     if (date == null) return "---"
     if (formatDay(now) == formatDay(date)) {
-      "Today " + formatTime(date)
+      formatTime(date)
     } else {
       formatDate(date)
     }
