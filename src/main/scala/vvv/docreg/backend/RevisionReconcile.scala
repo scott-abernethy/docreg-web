@@ -12,6 +12,7 @@ abstract class ReconcileAction
 case class ReconcileRevisionAdded(added: Long) extends ReconcileAction
 case object ReconcileRevisionUpdated extends ReconcileAction
 case object ReconcileDocumentRemoved extends ReconcileAction
+case object ReconcileRevisionPurged extends ReconcileAction
 
 trait RevisionReconcile extends Loggable
 {
@@ -31,7 +32,7 @@ trait RevisionReconcile extends Loggable
     }
     else
     {
-      var existing = Revision.forDocument(document).toSet
+      val existing = Revision.forDocument(document).toSet
 
       val filtered = revisions
       .groupBy{ _.fileName match {
@@ -41,6 +42,7 @@ trait RevisionReconcile extends Loggable
       .filter(_._1 > 0)
       .map(_._2.last)
 
+      var found = Set.empty[Revision]
       var results = Set.empty[ReconcileAction]
       filtered.foreach{
         case r @ RevisionInfo(fullFileName @ Document.ValidDocumentFileName(key, version, file), project, comment, access, author, date, _, _, _, clientUserName, clientVersion, _) =>
@@ -86,14 +88,16 @@ trait RevisionReconcile extends Loggable
             Revision.dbTable.update(record)
             results += ReconcileRevisionUpdated
           }
-          existing -= record
+          found += record
         }
       }
 
-      // Remove left overs
-      if (existing.size > 0) {
-        logger.warn("Purging invalid revisions " + existing)
-        Revision.dbTable.deleteWhere(r => r.id in existing.map(_.id))
+      // Remove left overs, unless there would be nothing left, which looks like an error.
+      val purge = existing -- found
+      if (found.size > 0 && purge.size > 0) {
+        logger.warn("Purging invalid revisions " + purge)
+        Revision.dbTable.deleteWhere(r => r.id in purge.map(_.id))
+        results += ReconcileRevisionPurged
       }
 
       results

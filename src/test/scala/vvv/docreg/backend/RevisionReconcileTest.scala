@@ -48,11 +48,6 @@ object RevisionReconcileTest extends Specification with Mockito
       }
     }
 
-    "Smite if there are Nil revisions?" >>
-    {
-
-    }
-
     "Remove missing revisions" >>
     {
       TestDbVendor.initAndClean()
@@ -83,11 +78,45 @@ object RevisionReconcileTest extends Specification with Mockito
           Nil
       )
 
-      result must containAll(ReconcileRevisionUpdated :: Nil)
+      result must containAll(ReconcileRevisionPurged :: ReconcileRevisionUpdated :: Nil)
 
       Document.forKey("234").toOption must beSomething
       Revision.forDocument(d) must haveSize(2)
       Revision.forDocument(d, 3) must beNone
+      Subscription.forDocument(d) must haveSize(1)
+      }
+    }
+
+    "Remove missing revisions, unless there were no revisions found" >>
+    {
+      TestDbVendor.initAndClean()
+      transaction{
+      val (p1, _, _) = TestDbVendor.createProjects
+      val (u1, u2) = TestDbVendor.createUsers
+      val (d, r1, r2, r3) = TestDbVendor.createDocument(p1, u1)
+      val s = new Subscription
+      s.documentId = (d.id)
+      s.userId = (u2.id)
+      Subscription.dbTable.insert(s)
+
+      val lookup = mock[UserLookupProvider]
+      val x = new RevisionReconcile {
+        val userLookup = lookup
+      }
+
+      lookup.lookup(Matchers.eq(Some("aaa")), Matchers.eq(None), Matchers.eq(Some("foo")), Matchers.anyString()) returns(Full(u1))
+
+      Document.forKey("234").toOption must beSomething
+      Revision.forDocument(d) must haveSize(3)
+      Subscription.forDocument(d) must haveSize(1)
+
+      val result = x.reconcileRevisions(d,Nil)
+
+      result must containAll(Nil)
+
+      Document.forKey("234").toOption must beSomething
+      Revision.forDocument(d) must haveSize(3)
+      Revision.forDocument(d, 3) must beSomething
       Subscription.forDocument(d) must haveSize(1)
       }
     }
