@@ -21,9 +21,9 @@ object CurrentLog extends SessionVar[Box[Log]](Empty)
 case object ResetLog
 
 class Log extends DocumentSubscriber {
-  val loadLimit = 80
+  val pageLimit = 80
   private val documentServer = Environment.env.documentServer
-  private var recent: List[(Document,Revision,Project)] = FilteredRevision.findRecent(-1).take(loadLimit)
+  private var recent: List[(Document,Revision,Project)] = FilteredRevision.findRecent(-1)
   private var stream: List[(Document,Revision,Project)] = Nil
   private lazy val revisionPart: NodeSeq = (".log-item ^^" #> "foo").apply(defaultHtml)
 
@@ -62,7 +62,7 @@ class Log extends DocumentSubscriber {
     }
     case 'Update => {
       val f = UserSession.inStreamFilter()
-      stream = recent.filter(i => f(i._1, i._2, i._3))
+      stream = recent.filter(i => f(i._1, i._2, i._3)).take(pageLimit)
       partialUpdate(Replace("log", transform.apply(defaultHtml)))
     }
     case _ => {}
@@ -72,10 +72,11 @@ class Log extends DocumentSubscriber {
     d.project() match {
       case Some(p) => {
         val addition = (d,r,p)
-        recent = addition :: recent.take(loadLimit + 10)
+        // TODO recent will increase in size forever. Need to reload once per day.
+        recent = addition :: recent
         if (UserSession.inStreamFilter.apply(d,r,p)) {
           stream.lastOption match {
-            case Some(remove) if stream.size > (loadLimit + 10) => {
+            case Some(remove) if stream.size > (pageLimit + 10) => {
               stream = (d,r,p) :: stream.dropRight(1)
               partialUpdate(PrependHtml("log", bindRevision(d, r, true)) & FadeIn(r.id.toString) & Replace(remove._2.id.toString, Text("")))
             }
