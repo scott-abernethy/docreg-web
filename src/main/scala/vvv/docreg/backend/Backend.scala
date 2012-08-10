@@ -43,8 +43,8 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
   val version = ProjectProps.get("project.version") openOr "0.0"
   val clientVersion = "dr+w " + version
   val target = AgentVendor.server
-  val reconciler = context.actorOf(Props(new Reconciler(self)), "Reconciler")
-  val priorityReconciler = context.actorOf(Props(new Reconciler(self)), "PriorityReconciler")
+  val clerk = context.actorOf(Props(new Clerk(self)), "Clerk")
+  val priorityClerk = context.actorOf(Props(new Clerk(self)), "PriorityClerk")
   val userLookup = new UserLookupProvider {
     def lookup(usernameOption: Option[String], emailOption: Option[String], nameOption: Option[String], why: String) = UserLookup.lookup(usernameOption, emailOption, nameOption, directory, why)
   }
@@ -81,11 +81,11 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
           // 2. editor (recently)
           val recentEditor = d.editor != null && d.editorStart != null && d.editorStart.after(new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 7)))
           if (!document.latest_?(d.version) || recentEditor) {
-            reconciler ! Prepare(d, fileDatabase)
+            clerk ! Prepare(d, fileDatabase)
           }
         }
         case _ => {
-          reconciler ! Prepare(d, fileDatabase)
+          clerk ! Prepare(d, fileDatabase)
         }
       }
       // Slow down the resync by delaying the remaining loads...
@@ -96,8 +96,8 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
     }
         case Changed(d) => {
           // Todo: Apply what we know of the change now, then reconcile. Though the reconcile typically takes <1 second.
-          logger.debug("Change received, sending to reconcile " + d.getKey)
-          priorityReconciler ! Prepare(d, fileDatabase)
+          logger.debug("Change received, sending to clerk " + d.getKey)
+          priorityClerk ! Prepare(d, fileDatabase)
         }
         case Some(msg @ Reconcile(d, revisions, approvals, subscriptions)) => {
           logger.debug("Reconcile " + d.getKey() + " : " + (revisions.size, approvals.size, subscriptions.size))
@@ -215,6 +215,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
     transaction {
       val update = reconcileRevisions(document, reconcile.revisions)
       if (update.contains(ReconcileDocumentRemoved)) {
+        // TODO reconcile this document again soon.
         return
       }
       reconcileSubscriptions(document, reconcile.subscriptions)
@@ -233,6 +234,9 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
       }
       if (docChanged || editorChanged || update.contains(ReconcileRevisionUpdated)) {
         documentServer ! DocumentChanged(document)
+      }
+      if (update.contains(ReconcileRevisionPurged)) {
+        // TODO reconcile this document again soon.
       }
     }
   }

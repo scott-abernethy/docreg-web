@@ -1,8 +1,5 @@
 package vvv.docreg.backend
 
-import vvv.docreg.model._
-import scala.collection.JavaConversions._
-import scala.actors.Futures._
 import net.liftweb.common.Loggable
 import akka.pattern.{ask,pipe}
 import akka.util.Timeout
@@ -13,7 +10,7 @@ import akka.actor.{Actor, ActorRef}
 
 case class Prepare(d: DocumentInfo, fileDatabase: ActorRef)
 
-class Reconciler(private val backend: ActorRef) extends Actor with Loggable {
+class Clerk(private val backend: ActorRef) extends Actor with Loggable {
 
   val fetchInParallel = false
 
