@@ -129,6 +129,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
           logger.info("Approval reply, " + response)
         }
         case SubscribeRequested(d, user, options) => {
+          logger.info("Subscribe request, " + List(d.latest.filename, user.shortUsername(), user.email, options))
           daemonAgent ! RequestPackage(self, target, SubscribeRequest(d.latest.filename, user.shortUsername(), user.email, options))
         }
         case SubscribeReply(response, fileName, userName) => {
