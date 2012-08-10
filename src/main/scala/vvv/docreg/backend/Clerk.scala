@@ -8,20 +8,26 @@ import akka.dispatch.Await
 import vvv.docreg.agent._
 import akka.actor.{Actor, ActorRef}
 
-case class Prepare(d: DocumentInfo, fileDatabase: ActorRef)
+case class Filing(db: ActorRef)
+case class Prepare(d: DocumentInfo)
+case class PrepareAlt(number: String)
 
 class Clerk(private val backend: ActorRef) extends Actor with Loggable {
 
+  var fileDatabase: ActorRef = context.system.deadLetters
   val fetchInParallel = false
+  val dbTimeout = Timeout(60 seconds)
 
   protected def receive = {
-        case Prepare(document, fileDatabase) => {
+    case Filing(db) => {
+      fileDatabase = db
+    }
+        case Prepare(document) => {
+          // leave this code as is for 0.8.1, it works, too risky to change.
           logger.debug("Preparing " + document.getKey())
           val key = document.getKey()
 
-          val timeout = Timeout(60 seconds)
-
-          val futureRevisions = ask(fileDatabase, GetLog(key, document.access))(timeout).map(_ match {
+          val futureRevisions = ask(fileDatabase, GetLog(key, document.access))(dbTimeout).map(_ match {
             case ResponseLog(_, items) => Some(items)
             case _ => {
               // A log should not fail.
@@ -30,11 +36,11 @@ class Clerk(private val backend: ActorRef) extends Actor with Loggable {
               None
             }
           })
-          val futureApprovals = ask(fileDatabase, GetApproval(key))(timeout).map(_ match {
+          val futureApprovals = ask(fileDatabase, GetApproval(key))(dbTimeout).map(_ match {
             case ResponseApproval(_, items) => items
             case _ => Nil
           })
-          val futureSubscriptions = ask(fileDatabase, GetMail(key))(timeout).map(_ match {
+          val futureSubscriptions = ask(fileDatabase, GetMail(key))(dbTimeout).map(_ match {
             case ResponseMail(_, items) => items
             case _ => Nil
           })
@@ -51,10 +57,17 @@ class Clerk(private val backend: ActorRef) extends Actor with Loggable {
           }
           else {
             // Alternatively block, useful in dev mode on slow VPN connection
-            val x = Await.result(result, timeout.duration)
+            val x = Await.result(result, dbTimeout.duration)
             backend ! x
           }
         }
-        case _ => {}
+        case PrepareAlt(number) => {
+          logger.debug("Preparing (alt) " + number)
+          // do this later.
+          // add to a list.
+        }
+        case msg => {
+          unhandled(msg)
+        }
       }
 }

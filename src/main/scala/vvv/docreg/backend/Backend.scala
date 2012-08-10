@@ -58,6 +58,8 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
       "timezone" -> java.util.TimeZone.getDefault.getDisplayName)
     logger.info("System(" + system + ")")
     context.system.scheduler.schedule(1 minutes, 24 hours, self, 'Resync)
+    clerk ! Filing(fileDatabase)
+    priorityClerk ! Filing(fileDatabase)
     super.preStart()
   }
 
@@ -81,11 +83,11 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
           // 2. editor (recently)
           val recentEditor = d.editor != null && d.editorStart != null && d.editorStart.after(new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 7)))
           if (!document.latest_?(d.version) || recentEditor) {
-            clerk ! Prepare(d, fileDatabase)
+            clerk ! Prepare(d)
           }
         }
         case _ => {
-          clerk ! Prepare(d, fileDatabase)
+          clerk ! Prepare(d)
         }
       }
       // Slow down the resync by delaying the remaining loads...
@@ -97,7 +99,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
         case Changed(d) => {
           // Todo: Apply what we know of the change now, then reconcile. Though the reconcile typically takes <1 second.
           logger.debug("Change received, sending to clerk " + d.getKey)
-          priorityClerk ! Prepare(d, fileDatabase)
+          priorityClerk ! Prepare(d)
         }
         case Some(msg @ Reconcile(d, revisions, approvals, subscriptions)) => {
           logger.debug("Reconcile " + d.getKey() + " : " + (revisions.size, approvals.size, subscriptions.size))
@@ -110,7 +112,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
           daemonAgent ! RequestPackage(self, target,
             ApprovalRequest(
               r.filename,
-              user.shortUsername(), // todo this was user.displayName?!
+              user.shortUsername(),
               user.email,
               state match {
                 case ApprovalState.approved => "Approved"
@@ -163,20 +165,12 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
         }
         case 'Die => {
           logger.info("Backend killed")
-          // TODO Kill off reconciler?
           self ! PoisonPill
         }
         case other => {
-          logger.warn("Unrecognised message " + other)
+          unhandled(other)
         }
   }
-
-  // TODO akka version of this!
-//  override def exceptionHandler = {
-//    case e: Exception => {
-//      logger.error("Backend exception " + e.getMessage, e)
-//    }
-//  }
 
   private def projectWithName(name: String): Project = {
     Project.forName(name) match {
@@ -215,7 +209,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
     transaction {
       val update = reconcileRevisions(document, reconcile.revisions)
       if (update.contains(ReconcileDocumentRemoved)) {
-        // TODO reconcile this document again soon.
+        clerk ! PrepareAlt(document.number)
         return
       }
       reconcileSubscriptions(document, reconcile.subscriptions)
@@ -236,7 +230,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
         documentServer ! DocumentChanged(document)
       }
       if (update.contains(ReconcileRevisionPurged)) {
-        // TODO reconcile this document again soon.
+        clerk ! PrepareAlt(document.number)
       }
     }
   }
