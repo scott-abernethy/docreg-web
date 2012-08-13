@@ -78,7 +78,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
       case (Full(d), Full(r)) =>
       {
         if (editor != Nil) S.notice("edit-message", <div class="alert alert-warning"><strong>Under edit!</strong> This document is currently being edited.</div>)
-        if (!d.latest_?(r.version)) S.warning("out-of-date-message", <div class="alert alert-info"><strong>Out of date!</strong> This is not the most recent version of the document.</div>)
+        if (!d.latest_?(r.version)) S.warning("out-of-date-message", <div class="alert alert-info"><strong>Out of date!</strong> The link you followed refers to a version that is not the most recent version of the document. The Download, Approve, and Request Approval options will take action on that out-of-date version. You may want to <a href={d.infoHref()}>see the most recent version</a> instead.</div>)
         ".doc-title" #> <a href={d.infoLink}>{d.fullTitle}</a> &
         ".doc-access" #> d.accessIcon() &
         ".doc-project" #> d.project().map(_.infoLink).getOrElse(<span>?</span>) apply(in)
