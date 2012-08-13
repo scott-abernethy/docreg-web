@@ -36,26 +36,6 @@ object DownloadService extends RestHelper with Loggable {
     case "doc" :: "log" :: key :: Nil Get req => {
       logResponse(key)
     }
-    case "docreg" :: tail Get req => {
-      // TODO argh, hack fix until old docregbeta is gone!
-      rawResponse(reunite(tail.mkString("/"),req.path.suffix))
-    }
-  }
-
-  def rawResponse(url: String): Box[LiftResponse] = {
-    val path = AgentVendor.home + "/docreg/" + url
-    for {
-      file <- Box !! new File(path)
-      stream <- tryo(new FileInputStream(file))
-    }
-    yield {
-      log("downloaded raw file for " + url)
-      StreamingResponse(stream, () => stream.close(), file.length(), Nil, Nil, 200)
-    }
-  }
-
-  private def reunite(name: String, suffix: String): String = {
-    if (suffix.isEmpty) name else name+"."+suffix
   }
 
   def fileResponse(key: String, revisionFunc: (Document) => Box[Revision], fileNameFunc: (Document, Revision) => String): Box[LiftResponse] = {

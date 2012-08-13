@@ -117,11 +117,10 @@ class Boot
     }
 
     // Rewrite ... (stateless)
-    // TODO argh, can't do this until old docregbeta is gone!
-//    LiftRules.statelessRewrite.append {
-//      case RewriteRequest(ParsePath("docreg" :: something :: document :: Nil, suffix, _, _), _, _) =>
-//        RewriteResponse(document :: Nil)
-//    }
+    LiftRules.statelessRewrite.append {
+      case RewriteRequest(ParsePath("docreg" :: something :: document :: Nil, suffix, _, _), _, _) =>
+        RewriteResponse(document :: Nil)
+    }
     // Rewrite ... (stateful, so S is valid here)
     LiftRules.statefulRewrite.append {
       case RewriteRequest(ParsePath((ref @ Document.DocumentRef(number, version)) :: action, s, a, es), _, _) => {
