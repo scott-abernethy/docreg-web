@@ -28,6 +28,7 @@ class LiftProject(info: ProjectInfo) extends DefaultWebProject(info) with IdeaPr
     "c3p0" % "c3p0" % "0.9.1.2",
     "org.jboss.netty" % "netty" % "3.2.3.Final",
     "com.typesafe.akka" % "akka-actor" % "2.0.1",
+    "com.typesafe.akka" % "akka-slf4j" % "2.0.1",
     "com.typesafe.akka" % "akka-testkit" % "2.0.1",
     "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.0",
     "net.databinder" %% "dispatch-http" % "0.8.8",
