@@ -88,13 +88,17 @@ trait ProjectSelection extends Loggable {
     }
   }
 
+  def modeSelectionUpdate: JsCmd = {
+    Noop
+  }
+
   def projectSelectionUpdate: JsCmd = {
     Noop
   }
 
   def showMode(mode: StreamMode.Value): JsCmd = {
     UserSession.changeMode(mode)
-    projectSelectionUpdate
+    modeSelectionUpdate
   }
 }
 

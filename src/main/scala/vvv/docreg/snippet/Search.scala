@@ -19,7 +19,6 @@ import xml.{Text, NodeSeq}
 import vvv.docreg.util.Bits
 
 class Search extends Loggable with ProjectSelection {
-//  object searchInput extends RequestVar("")
 
   val searchInput = S.param("q") openOr ""
 
@@ -68,8 +67,15 @@ class Search extends Loggable with ProjectSelection {
     ).apply(in)
   }
 
+  override def modeSelectionUpdate(): JsCmd = {
+    reload()
+  }
+
   override def projectSelectionUpdate(): JsCmd = {
-//    CurrentLog.foreach(_ ! ResetLog)
+    reload()
+  }
+
+  def reload(): JsCmd = {
     Replace("search_results", ("#search_results ^^" #> "noused").apply(bindResults(html)) )
   }
 }

@@ -38,7 +38,7 @@ trait BackendComponent {
   val backend: ActorRef
 }
 
-class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala.actors.Actor) extends Actor with Loggable with RevisionReconcile with ApprovalReconcile with SubscriptionReconcile {
+class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: ActorRef) extends Actor with Loggable with RevisionReconcile with ApprovalReconcile with SubscriptionReconcile {
   val product = ProjectProps.get("project.name") openOr "drw"
   val version = ProjectProps.get("project.version") openOr "0.0"
   val clientVersion = "dr+w " + version
@@ -197,7 +197,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
         if (!update.contains(ReconcileDocumentRemoved)) {
           reconcileApprovals(document, reconcile.approvals)
           reconcileSubscriptions(document, reconcile.subscriptions)
-          documentServer ! DocumentAdded(document)
+          documentStream ! DocumentAdded(document)
         }
       }
     } catch {
@@ -224,10 +224,10 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentServer: scala
         case ReconcileRevisionAdded(r) => r
       }.foreach {
         id =>
-          document.revision(id).foreach(revision => documentServer ! DocumentRevised(document, revision))
+          document.revision(id).foreach(revision => documentStream ! DocumentRevised(document, revision))
       }
       if (docChanged || editorChanged || update.contains(ReconcileRevisionUpdated)) {
-        documentServer ! DocumentChanged(document)
+        documentStream ! DocumentChanged(document)
       }
       if (update.contains(ReconcileRevisionPurged)) {
         clerk ! PrepareAlt(document.number)

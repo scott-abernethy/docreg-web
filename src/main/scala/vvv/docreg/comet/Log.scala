@@ -18,14 +18,16 @@ import vvv.docreg.util.Environment
 
 object CurrentLog extends SessionVar[Box[Log]](Empty)
 
-case object ResetLog
+case object StreamModeChanged
 
-class Log extends DocumentSubscriber {
+class Log extends CometActor {
   val pageLimit = 80
-  private val documentServer = Environment.env.documentServer
-  private var recent: List[(Document,Revision,Project)] = FilteredRevision.findRecent(-1)
-  private var stream: List[(Document,Revision,Project)] = Nil
+  private val documentServer = Environment.env.documentStream
+//  private var recent: List[(Document,Revision,Project)] = FilteredRevision.findRecent(-1)
+  private var filtered: List[(Document,Revision,Project)] = Nil
   private lazy val revisionPart: NodeSeq = (".log-item ^^" #> "foo").apply(defaultHtml)
+  var cachedFilter = UserSession.inStreamFilter()
+  var ready = false
 
   CurrentLog.set(Full(this))
 
@@ -42,62 +44,68 @@ class Log extends DocumentSubscriber {
   }
 
   override def lowPriority = {
-    case Subscribed() => {}
-    case DocumentAdded(document) => {
-      add(document, document.latest)
+    case StreamState(items) => {
+      ready = true
+      renderState(items)
     }
-    case DocumentRevised(document, latest) => {
-      add(document, latest)
+    case StreamModeChanged => {
+      documentServer ! StreamQuery(this)
+      ready = false
+      cachedFilter = UserSession.inStreamFilter()
+      reRender(true) // will render as "loading..."
     }
-    case DocumentChanged(document) => {
-      // todo inefficient and lame
-      recent = recent flatMap {x => if (x._2.documentId == document.id) x._2.reload.map( (x._1, _, x._3) ) else Some(x)}
-      stream = stream flatMap {x => if (x._2.documentId == document.id) x._2.reload.map( (x._1, _, x._3) ) else Some(x)}
-      val update = stream filter {x => x._2.documentId == document.id} map {x => JsCmds.Replace(x._2.id.toString, bindRevision(x._1, x._2, false))}
+    case _ if (!ready) => {
+      // Ignore
+    }
+    case StreamAddition(document, revision, project) => {
+      add(document, revision, project)
+    }
+    case StreamInsert(document, revision, project, items) => {
+      // TODO this is inefficient, could insert new item instead
+      renderState(items)
+    }
+    case StreamChange(documentId) => {
+      // TODO this is inefficient. DocumentStream has already done the same. Send in message.
+      // TODO check project and revision for change to?
+      filtered = filtered flatMap {x => if (x._2.documentId == documentId) x._2.reload.map( (x._1, _, x._3) ) else Some(x)}
+      val update = filtered filter {x => x._2.documentId == documentId} map {x => JsCmds.Replace(x._2.id.toString, bindRevision(x._1, x._2, false))}
       partialUpdate(update)
-    }
-    case ResetLog => {
-      this ! 'Update
-      reRender(true)
-    }
-    case 'Update => {
-      val f = UserSession.inStreamFilter()
-      stream = recent.filter(i => f(i._1, i._2, i._3)).take(pageLimit)
-      partialUpdate(Replace("log", transform.apply(defaultHtml)))
     }
     case _ => {}
   }
 
-  private def add(d: Document, r: Revision) = {
-    d.project() match {
-      case Some(p) => {
-        val addition = (d,r,p)
-        // TODO recent will increase in size forever. Need to reload once per day.
-        recent = addition :: recent
-        if (UserSession.inStreamFilter.apply(d,r,p)) {
-          stream.lastOption match {
-            case Some(remove) if stream.size > (pageLimit + 10) => {
-              stream = (d,r,p) :: stream.dropRight(1)
-              partialUpdate(PrependHtml("log", bindRevision(d, r, true)) & FadeIn(r.id.toString) & Replace(remove._2.id.toString, Text("")))
-            }
-            case _ => {
-              stream = (d,r,p) :: stream
-              partialUpdate(PrependHtml("log", bindRevision(d, r, true)) & FadeIn(r.id.toString))
-            }
-          }
+  def renderState(items: List[(Document,Revision,Project)]) {
+    filtered = items.filter(i => cachedFilter(i._1, i._2, i._3)).take(pageLimit)
+    partialUpdate(Replace("log", transform.apply(defaultHtml)))
+  }
+
+  private def add(d: Document, r: Revision, p: Project) = {
+    val addition = (d,r,p)
+    if (cachedFilter.apply(d,r,p)) {
+      filtered.lastOption match {
+        case Some(remove) if filtered.size > (pageLimit + 10) => {
+          filtered = (d,r,p) :: filtered.dropRight(1)
+          partialUpdate(PrependHtml("log", bindRevision(d, r, true)) & FadeIn(r.id.toString) & Replace(remove._2.id.toString, Text("")))
+        }
+        case _ => {
+          filtered = (d,r,p) :: filtered
+          partialUpdate(PrependHtml("log", bindRevision(d, r, true)) & FadeIn(r.id.toString))
         }
       }
-      case _ => {}
     }
   }
 
   def render = {
-    this ! 'Update
-    ".log-item *" #> <img src="/static/img/load-w.gif" title="Loading..."></img>
+    if (ready) {
+      transform
+    }
+    else {
+      ".log-item *" #> <img src="/static/img/load-w.gif" title="Loading..."></img>
+    }
   }
 
   def transform: NodeSeq => NodeSeq = {
-    stream match {
+    filtered match {
       case Nil => {
         ".log-item *" #> "None"
       }

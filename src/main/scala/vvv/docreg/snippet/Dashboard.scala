@@ -14,13 +14,28 @@ import scala.xml.{NodeSeq, Text}
 
 class Dashboard extends Loggable 
   with ProjectSelection {
+
+  lazy val indexXhtml = Templates("index" :: Nil) openOr <div/>
+  lazy val logXhtml = indexXhtml \\ "surround" \ "div"
+
   def log(in: NodeSeq): NodeSeq = {
     in
   }
-  lazy val indexXhtml = Templates("index" :: Nil) openOr <div/>
-  //lazy val logXhtml = indexXhtml \\ "snippet" filter ( _.attribute("type") == Some(Text("Dashboard.log")) )
-  lazy val logXhtml = indexXhtml \\ "surround" \ "div"
+
+  override def modeSelectionUpdate(): JsCmd = {
+    reload()
+  }
+
   override def projectSelectionUpdate(): JsCmd = {
-    CurrentLog.foreach(_ ! ResetLog)
+    if (UserSession.mode.is == StreamMode.selected) {
+      reload()
+    }
+    else {
+      Noop
+    }
+  }
+
+  def reload(): JsCmd = {
+    CurrentLog.foreach(_ ! StreamModeChanged)
   }
 }
