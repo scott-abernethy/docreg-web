@@ -34,5 +34,6 @@ sshfs -o idmap=user docreg@$SERVER: $LOCAL_DIR
 
 ## TO MOUNT VIA FSTAB
 #sshfs#docreg@$SERVER: $LOCAL_DIR fuse defaults,idmap=user 0 0
+#sshfs -o idmap=user,nonempty docreg@shelob: /home/docreg
 
 EXIT_ERROR=0
