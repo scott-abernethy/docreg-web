@@ -227,7 +227,7 @@ object FilteredDocument
     val number: String = prePadTo(request, 4, '0')
         inTransaction{
         join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
-          where((d.title like searchString) or (u.name like searchString) or (d.number === number))
+          where((d.title like searchString) or (u.name like searchString) or (d.number === number) or (r.comment like searchString) or (p.name like searchString))
             select( (d,p,r,u) )
             orderBy(d.id asc, r.version desc)
             on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
