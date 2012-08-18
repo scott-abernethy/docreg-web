@@ -46,21 +46,21 @@ class DocumentStream extends Actor {
     case Subscribe(subscriber) => {
       subscribers = subscribers + subscriber
       subscriber ! StreamState(stream)
-      logger.debug("Stream subscription, now have [{}] subscribers.", subscribers.size)
+      logger.debug("Stream subscription, now have {} subscribers.", subscribers.size)
     }
     case Unsubscribe(subscriber) => {
       subscribers = subscribers - subscriber
     }
     case DocumentAdded(d) => {
-      logger.info("Stream +++ [{}] added", d.key)
+      logger.info("Stream +++ {} added", d.key)
       insertInStream(d, d.latest, d.project()) foreach (distribute _)
     }
     case DocumentRevised(d, r) => {
-      logger.info("Stream *** [{}] revised", d.key)
+      logger.info("Stream *** {} revised", d.key)
       insertInStream(d, r, d.project()) foreach (distribute _)
     }
     case DocumentChanged(d) => {
-      logger.info("Stream ~~~ [{}] changed", d.key)
+      logger.info("Stream ~~~ {} changed", d.key)
       d.project() match {
         case Some(p) => {
           stream = inTransaction(
@@ -72,7 +72,7 @@ class DocumentStream extends Actor {
           distribute(StreamChange(d.id, stream))
         }
         case None => {
-          logger.warning("Can't find project matching [{}] change", d.key)
+          logger.warning("Can't find project matching {} change", d.key)
         }
       }
     }
@@ -108,7 +108,7 @@ class DocumentStream extends Actor {
         }
       }
       case None => {
-        logger.warning("Stream failed to insert for [{}], could not identify project!", document.key)
+        logger.warning("Stream failed to insert for {}, could not identify project!", document.key)
         None
       }
     }
