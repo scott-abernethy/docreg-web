@@ -24,14 +24,17 @@ class Search extends Loggable with ProjectSelection {
 
   def input = {
     if (User.loggedIn_?) {
-      ".search-input" #> SHtml.onSubmit((s) => {val x = s; S.redirectTo("/search?q=" + x)})
+      ".search-input" #> SHtml.onSubmit((s) => {val x = s; S.redirectTo("/search?q=" + escapeInput(x))})
     } else {
       ".all" #> NodeSeq.Empty
     }
   }
 
-  def bindResults(in: NodeSeq): NodeSeq =
-  {
+  def escapeInput(text: String): String = {
+    text.trim.replaceAll("#","%23")
+  }
+
+  def bindResults(in: NodeSeq): NodeSeq = {
     val f = UserSession.inStreamFilter()
     results(in, FilteredDocument.search(searchInput.trim).filter(x => f(x._1, x._3, x._2)))
   }
