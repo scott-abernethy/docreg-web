@@ -64,12 +64,12 @@ class Log extends CometActor {
       // TODO this is inefficient, could insert new item instead
       renderState(items)
     }
-    case StreamChange(documentId) => {
+    case StreamChange(documentId, items) => {
       // TODO this is inefficient. DocumentStream has already done the same. Send in message.
-      // TODO check project and revision for change to?
-      filtered = filtered flatMap {x => if (x._2.documentId == documentId) x._2.reload.map( (x._1, _, x._3) ) else Some(x)}
-      val update = filtered filter {x => x._2.documentId == documentId} map {x => JsCmds.Replace(x._2.id.toString, bindRevision(x._1, x._2, false))}
-      partialUpdate(update)
+      //filtered = filtered flatMap {x => if (x._2.documentId == documentId) x._2.reload.map( (x._1, _, x._3) ) else Some(x)}
+      //val update = filtered filter {x => x._2.documentId == documentId} map {x => JsCmds.Replace(x._2.id.toString, bindRevision(x._1, x._2, false))}
+      //partialUpdate(update)
+      renderState(items)
     }
     case _ => {}
   }

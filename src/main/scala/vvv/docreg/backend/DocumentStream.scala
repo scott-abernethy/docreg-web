@@ -18,7 +18,7 @@ case class DocumentChanged(document: Document)
 case class StreamState(items: List[(Document,Revision,Project)])
 case class StreamAddition(document: Document, revision: Revision, project: Project)
 case class StreamInsert(document: Document, revision: Revision, project: Project, result: List[(Document,Revision,Project)])
-case class StreamChange(documentId: Long)
+case class StreamChange(documentId: Long, items: List[(Document,Revision,Project)])
 case class StreamQuery(subscriber: LiftActor)
 
 trait DocumentStreamComponent {
@@ -60,12 +60,21 @@ class DocumentStream extends Actor {
       insertInStream(d, r, d.project()) foreach (distribute _)
     }
     case DocumentChanged(d) => {
-      // TODO check project and revision for change to? Send in distributed message.
       logger.info("Stream ~~~ [{}] changed", d.key)
-      stream = inTransaction( stream flatMap { x =>
-        if (x._2.documentId == d.id) x._2.reload.map( (x._1, _, x._3) ) else Some(x)
-      })
-      distribute(StreamChange(d.id))
+      d.project() match {
+        case Some(p) => {
+          stream = inTransaction(
+            stream flatMap { x =>
+              if (x._1.id == d.id) x._2.reload.map( (d, _, p) ) else Some(x)
+            }
+          )
+          // may be more efficient to send changed items, in map with revId -> d,r,p
+          distribute(StreamChange(d.id, stream))
+        }
+        case None => {
+          logger.warning("Can't find project matching [{}] change", d.key)
+        }
+      }
     }
     case StreamQuery(subscriber) => {
       subscriber ! StreamState(stream)

@@ -220,14 +220,16 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
       if (docChanged) {
         Document.dbTable.update(document)
       }
+      // send DocumentChanged before DocumentRevised for optimal ui updates
+      if (docChanged || update.contains(ReconcileRevisionUpdated)) {
+        // we don't care about editorChanged here, as it is not reflected in current listeners
+        documentStream ! DocumentChanged(document)
+      }
       update.collect {
         case ReconcileRevisionAdded(r) => r
       }.foreach {
         id =>
           document.revision(id).foreach(revision => documentStream ! DocumentRevised(document, revision))
-      }
-      if (docChanged || editorChanged || update.contains(ReconcileRevisionUpdated)) {
-        documentStream ! DocumentChanged(document)
       }
       if (update.contains(ReconcileRevisionPurged)) {
         clerk ! PrepareAlt(document.number)
@@ -236,13 +238,28 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
   }
 
   private def assignDocument(document: Document, d: DocumentInfo): Boolean = {
-    document.number = d.getKey()
-    document.projectId = projectWithName(d.projectName).id
-    document.title = d.title
-    document.access = d.access
-    true
-//    document.dirty_?
-    // todo check that revision based info here, such as access, is correct in the AgentDocument object.
+    var dirty = false
+    val number = d.getKey
+    val projectId = projectWithName(d.projectName).id
+    val title = d.title
+    val access = d.access
+    if (document.number != number) {
+      document.number = number
+      dirty = true
+    }
+    if (document.projectId != projectId) {
+      document.projectId = projectId
+      dirty = true
+    }
+    if (document.title != title) {
+      document.title = title
+      dirty = true
+    }
+    if (document.access != access) {
+      document.access = access
+      dirty = true
+    }
+    dirty
   }
 
   private def assignEditor(document: Document, d: DocumentInfo): Boolean = {
