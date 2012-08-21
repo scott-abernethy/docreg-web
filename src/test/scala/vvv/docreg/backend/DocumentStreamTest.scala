@@ -11,6 +11,7 @@ import java.sql.Timestamp
 object DocumentStreamTest extends Specification {
   "DocumentStream" should {
     "check most recent" >> {
+      TestDbVendor.initAndClean()
       implicit val system = ActorSystem()
       val ref = TestActorRef[DocumentStream]
       val x = ref.underlyingActor
@@ -96,6 +97,14 @@ object DocumentStreamTest extends Specification {
         x.insertInStream(d, r2, Some(p)) must beSome(StreamAddition( d,r2,p ))
         x.insertInStream(d, r3, Some(p)) must beSome(StreamAddition( d,r3,p ))
         x.stream must haveSize(2)
+      }
+
+      "and retain only within scope" >> {
+        x.retainOnlyWithinScope must haveSize(2)
+        x.start = new Timestamp(now - 200)
+        x.retainOnlyWithinScope must haveSize(1)
+        x.start = new Timestamp(now - 100)
+        x.retainOnlyWithinScope must beEmpty
       }
 
       system.shutdown

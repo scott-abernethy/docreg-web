@@ -40,8 +40,8 @@ class DocumentStream extends Actor {
   def receive = {
     case 'SetStart => {
       start = cutoff()
-      // TODO filter stream
-      // TODO distribute
+      stream = retainOnlyWithinScope
+      distribute(StreamState(stream))
     }
     case Subscribe(subscriber) => {
       subscribers = subscribers + subscriber
@@ -82,6 +82,11 @@ class DocumentStream extends Actor {
     case other => {
       unhandled(other)
     }
+  }
+
+
+  def retainOnlyWithinScope: List[(Document, Revision, Project)] = {
+    stream.filter(i => withinScope(i._2.date))
   }
 
   def cutoff(): Timestamp = {
