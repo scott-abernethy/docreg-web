@@ -81,8 +81,9 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
           // reconcile if
           // 1. not latest version
           // 2. editor (recently)
+          // 3. changed access
           val recentEditor = d.editor != null && d.editorStart != null && d.editorStart.after(new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 7)))
-          if (!document.latest_?(d.version) || recentEditor) {
+          if (!document.latest_?(d.version) || recentEditor || !document.access.equalsIgnoreCase(d.access)) {
             clerk ! Prepare(d)
           }
         }
