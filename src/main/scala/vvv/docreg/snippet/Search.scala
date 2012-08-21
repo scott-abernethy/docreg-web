@@ -65,6 +65,7 @@ class Search extends Loggable with ProjectSelection {
         ".doc-author" #> u.knownOption.map(_.profileLabel(pageUserId)).getOrElse(Text(r.rawAuthor)) &
         ".doc-key" #> <a href={d.infoLink}>{d.number}</a> &
         ".doc-date" #> r.dateOnlyWithHint() &
+        ".doc-download [href]" #> d.downloadHref() &
         ".doc-title" #> <a href={d.infoLink}>{d.title}</a>
       }
     ).apply(in)
