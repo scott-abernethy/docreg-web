@@ -118,8 +118,8 @@ class Boot
 
     // Rewrite ... (stateless)
     LiftRules.statelessRewrite.append {
-      case RewriteRequest(ParsePath("docreg" :: something :: document :: Nil, suffix, _, _), _, _) =>
-        RewriteResponse(document :: Nil)
+      case RewriteRequest(ParsePath("docreg" :: something :: document :: remainder, suffix, _, _), _, _) =>
+        RewriteResponse(document :: remainder)
     }
     // Rewrite ... (stateful, so S is valid here)
     LiftRules.statefulRewrite.append {

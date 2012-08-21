@@ -189,7 +189,40 @@ object DocumentTest extends Specification {
     }
   }
 
-  "DocumentRevision extractor " should {
+  "DocumentRef extractor" should {
+    import Document.DocumentRef
+
+    "Fail to extract garbage" >> {
+      DocumentRef.unapply("garbage") must beNone
+    }
+
+    "Extract 1234 or 0066 like" >> {
+      DocumentRef.unapply("1234") must beSome(("1234", Long.MaxValue))
+      DocumentRef.unapply("546") must beSome(("546", Long.MaxValue))
+      DocumentRef.unapply("9") must beSome(("9", Long.MaxValue))
+      DocumentRef.unapply("0066") must beSome(("0066", Long.MaxValue))
+    }
+
+    "Extract 2345-499 or 765-34 or 8-001 like" >> {
+      DocumentRef.unapply("2345-499") must beSome(("2345", 499l))
+      DocumentRef.unapply("765-34") must beSome(("765", 34l))
+      DocumentRef.unapply("8-001") must beSome(("8", 1l))
+      DocumentRef.unapply("7-2") must beSome(("7", 2l))
+      DocumentRef.unapply("0066-002") must beSome(("0066", 2l))
+    }
+
+    "Extract 1234.txt or 1234-876.txt like" >> {
+      DocumentRef.unapply("1234.txt") must beSome(("1234", Long.MaxValue))
+      DocumentRef.unapply("1234-876.txt") must beSome(("1234", 876l))
+    }
+
+    "Extract 1234-My title.zip or 0666-666-Snap.jpg" >> {
+      DocumentRef.unapply("1234-My title.zip") must beSome(("1234", Long.MaxValue))
+      DocumentRef.unapply("0666-666-Snap.jpg") must beSome(("0666", 666l))
+    }
+  }
+
+  "DocumentRevision extractor" should {
     import Document.DocumentRevision
 
     "Not extract garbage input" >> {
@@ -243,7 +276,8 @@ object DocumentTest extends Specification {
         DocumentRevision.unapply("0234-1") must beSome((d, r1))
         DocumentRevision.unapply("0234-009") must beNone
         DocumentRevision.unapply("0234-9") must beNone
-        DocumentRevision.unapply("0234-XYZ") must beNone
+        DocumentRevision.unapply("0234-XYZ") must beSome(d, r4)
+        DocumentRevision.unapply("0234-XYZ.jpg") must beSome(d, r4)
         DocumentRevision.unapply("0234-") must beNone
       }
     }
