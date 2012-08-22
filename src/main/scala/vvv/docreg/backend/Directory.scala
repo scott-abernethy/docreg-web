@@ -65,8 +65,8 @@ class DirectoryImpl extends LDAPVendor with Directory {
       "ldap.password" -> (Config.is.get[String]("ldap.password") getOrElse "notsecureenuf"),
       "ldap.base" -> DirectoryConfig.ldapBase,
       "lift-ldap.testLookup" -> DirectoryConfig.testLookup,
-      "lift-ldap.retryInterval" -> "3000",
-      "lift-ldap.maxRetries" -> "5"
+      "lift-ldap.retryInterval" -> "1000",
+      "lift-ldap.maxRetries" -> "10"
     )
   )
 
