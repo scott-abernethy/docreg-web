@@ -10,7 +10,7 @@ import net.liftweb.common.{Loggable, Full}
 
 class CreateDocumentSnippet extends Loggable
 {
-  private val projects = Project.findAll()
+  private val projects = Project.findAllUsed()
   private object name extends RequestVar("")
   private object nameError extends RequestVar[Option[String]](None)
   private object project extends RequestVar(projects.headOption.map(_.name).getOrElse("???"))

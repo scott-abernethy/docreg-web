@@ -61,4 +61,15 @@ object Project extends Project {
       ).toList
     }
   }
+
+  def findAllUsed(): List[Project] = {
+    inTransaction {
+      join(DbSchema.projects, DbSchema.documents.leftOuter)( (p, d) =>
+        where(d.map(_.id).~.isNotNull)
+        select( p )
+        orderBy(p.name asc)
+        on(p.id === d.map(_.projectId))
+      ).toList.distinct
+    }
+  }
 }

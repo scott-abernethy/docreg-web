@@ -77,7 +77,7 @@ object UserProject extends UserProject {
           p4 u2
            */
 
-          val all = Project.findAll()
+          val all = Project.findAllUsed()
           val interest = from(UserProject.dbTable)(up =>
             where(up.userId === user.id and (up.selected === true or up.interested === true))
             select( (up.projectId, up) )

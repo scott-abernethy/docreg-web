@@ -396,7 +396,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     S.redirectTo(d.infoHref())
   }
 
-  private val projects = Project.findAll()
+  private val projects = Project.findAllUsed()
 
   private object name extends RequestVar(document.map(_.title).getOrElse("???"))
   private object nameError extends RequestVar[Option[String]](None)

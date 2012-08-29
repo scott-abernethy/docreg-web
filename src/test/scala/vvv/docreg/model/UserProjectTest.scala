@@ -84,9 +84,30 @@ object UserProjectTest extends Specification {
     "provide all projects, sorted by name, marking selected" >> {
       TestDbVendor.initAndClean
 
+      val (p1, p2, p3) = transaction( TestDbVendor.createProjects )
+      val (u, other) = transaction( TestDbVendor.createUsers )
+
       transaction {
-      val (p1, p2, p3) = TestDbVendor.createProjects
-      val (u, other) = TestDbVendor.createUsers
+      val d1_p1 = new Document
+      d1_p1.number = "0001"
+      d1_p1.projectId = p1.id
+      d1_p1.title = "Foo"
+      Document.dbTable.insert(d1_p1)
+      val d2_p1 = new Document
+      d2_p1.number = "0002"
+      d2_p1.projectId = p1.id
+      d2_p1.title = "Bar"
+      Document.dbTable.insert(d2_p1)
+      val d3_p2 = new Document
+      d3_p2.number = "0003"
+      d3_p2.projectId = p2.id
+      d3_p2.title = "Red"
+      Document.dbTable.insert(d3_p2)
+      val d4_p3 = new Document
+      d4_p3.number = "0004"
+      d4_p3.projectId = p3.id
+      d4_p3.title = "Night"
+      Document.dbTable.insert(d4_p3)
 
       UserProject.set(u,p2,true)
       UserProject.set(other,p3,true)
@@ -107,6 +128,24 @@ object UserProjectTest extends Specification {
       y(0)._2 must beFalse
       y(1)._1 must be_==(p2)
       y(1)._2 must beTrue
+      }
+
+      transaction {
+         Document.dbTable.deleteWhere(_.projectId === p2.id)
+      }
+
+      transaction{
+      val z = UserProject.listFor(Some(u), false)
+      z must haveSize(1)
+      z(0)._1 must be_==(p1)
+      z(0)._2 must beFalse
+         
+      val z_ = UserProject.listFor(Some(u), true)
+      z_ must haveSize(2)
+      z_(0)._1 must be_==(p1)
+      z_(0)._2 must beFalse
+      z_(1)._1 must be_==(p3)
+      z_(1)._2 must beFalse
       }
     }
   }
