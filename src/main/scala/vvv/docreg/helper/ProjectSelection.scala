@@ -101,30 +101,3 @@ trait ProjectSelection extends Loggable {
     modeSelectionUpdate
   }
 }
-
-//object ProjectSelection {
-//  import scala.collection.immutable._
-//
-//  object projects extends SessionVar[Set[Project]] (findSelected()) {
-//    def all() {  }
-//    def none() {  }
-//    def checked(p: Project) {  }
-//    def unchecked(p: Project) {  }
-//    def save(ps: Set[Project]) {
-//    }
-//  }
-//
-//  def findSelected(): Set[Project] = {
-//    User.loggedInUser.is match {
-//      case Full(user) =>
-//        UserProject.userSelected(user).toSet
-//      case _ =>
-//        Set.empty
-//    }
-//  }
-//
-//  def isSelected(project: Project): Boolean = {
-//    if (.is) return true
-//    projects.is.contains(project)
-//  }
-//}

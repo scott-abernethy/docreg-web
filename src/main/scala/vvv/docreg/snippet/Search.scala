@@ -36,7 +36,8 @@ class Search extends Loggable with ProjectSelection {
 
   def bindResults(in: NodeSeq): NodeSeq = {
     val f = UserSession.inStreamFilter()
-    results(in, FilteredDocument.search(searchInput.trim).filter(x => f(x._1, x._3, x._2)))
+    val list: List[(Document, Project, Revision, User)] = FilteredDocument.search(searchInput.trim)
+    results(in, list.filter(x => f(x._1, x._3, x._2)), list.size >= FilteredDocument.searchLimit)
   }
 
   var html: NodeSeq = NodeSeq.Empty
@@ -46,12 +47,7 @@ class Search extends Loggable with ProjectSelection {
     bindResults(html)
   }
 
-  def results(in: NodeSeq, ds: List[(Document, Project, Revision, User)]): NodeSeq = {
-    items(in, ds)
-  }
-
-  def items(in: NodeSeq, ds: List[(Document, Project, Revision, User)]): NodeSeq =
-  {
+  def results(in: NodeSeq, ds: List[(Document, Project, Revision, User)], tooBig: Boolean): NodeSeq = {
     val pageUserId = User.loggedInUser.is.map(_.id) getOrElse -1L
     val inputText = Option(searchInput.trim).getOrElse("")
     val open = ds
@@ -59,6 +55,7 @@ class Search extends Loggable with ProjectSelection {
     (
       ".search-for *" #> <span>for &quot;{ inputText }&quot;</span> &
       ".match-count" #> <span>Results <span class="badge">{open.size}</span></span> &
+      "#search-too-big" #> (if (tooBig) PassThru else ClearNodes) &
       ".search-item" #> open.map { x =>
         val (d,p,r,u) = x
         ".doc-project" #> p.infoLink() &

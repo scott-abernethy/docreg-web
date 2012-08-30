@@ -186,64 +186,87 @@ object Document extends Document {
 
 object FilteredDocument
 {
+  lazy val searchLimit = 1000
+
   def search(request: String): List[(Document,Project,Revision,User)] = {
-    val start = System.currentTimeMillis()
-    val result = if (request == null || request.isEmpty) searchAll() else searchTerms(request)
-    val sorted = result.sortWith{ (a,b) =>
-      a._3.date.getTime > b._3.date.getTime
-    }
-    //println("Search took: " + (System.currentTimeMillis() - start))
-    sorted
-  }
+     (request match {
+        case text if (text == null || text.isEmpty) => searchAll()
+        case text => searchTerms(text)
+     }).sortWith( (a,b) => a._3.date.getTime > b._3.date.getTime )
+   }
 
   private def searchAll(): List[(Document,Project,Revision,User)] = {
-      inTransaction{
-        join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
-          select( (d,p,r,u) )
-            orderBy(d.id asc, r.version desc)
-            on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
-        ).toList
-      }.groupBy(_._1).flatMap(x => x._2.headOption).toList
+     inTransaction(
+        join(
+           Document.dbTable,
+           Project.dbTable,
+           Revision.dbTable,
+           User.dbTable,
+           from(Revision.dbTable)(r2 => groupBy(r2.documentId) compute(max(r2.version)))
+        ) ( (d, p, r, u, rMax) =>
+           where(r.version === rMax.measures)
+              select ((d, p, r, u))
+              orderBy (r.date desc)
+              on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id, rMax.key === d.id)
+        ).
+           page(0, searchLimit).
+           toList
+     )
   }
 
   private def searchTerms(request: String): List[(Document,Project,Revision,User)] = {
     // for each term
     // search
-    val results = request.split(" ").toList
-      .map(_.trim)
-      .filter(_.size > 0)
-      .map{ x =>
-        searchFor(x)
-          .map(i => i._1.id -> i)
-          .toMap
-      }
+    request.split(" ").toList.
+      map(_.trim).
+      filter(_.size > 0).
+      map(searchFor _). // List[Set[Long]]
+      reduceOption(_ & _). // Option[Set[Long]]
+      map(fill(_, searchLimit)).
+      getOrElse(Nil)
+  }
 
-    results match {
-      case Nil => Nil
-      case list => list.reduce( (a,b) => a.filterKeys(b.contains _) ).values.toList
+  private def searchFor(request: String): Set[Long] = {
+    def searching(textSearch: String, numberSearch: String) = inTransaction {
+       join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
+          where((d.title like textSearch) or (u.name like textSearch) or (d.number === numberSearch) or (r.comment like textSearch) or (p.name like textSearch))
+             select( d.id )
+             on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
+       ).toList.toSet
     }
+    searching(formatSearch(request), prePadTo(request, 4, '0'))
   }
 
-  private def searchFor(request: String) = {
-    val searchString: String = formatSearch(request)
-    val number: String = prePadTo(request, 4, '0')
-        inTransaction{
-        join(Document.dbTable, Project.dbTable, Revision.dbTable, User.dbTable)( (d,p,r,u) =>
-          where((d.title like searchString) or (u.name like searchString) or (d.number === number) or (r.comment like searchString) or (p.name like searchString))
-            select( (d,p,r,u) )
-            orderBy(d.id asc, r.version desc)
-            on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id)
-        ).toList
-      }.groupBy(_._1).flatMap(x => x._2.headOption).toList
-  }
-
-  def formatSearch(in: String): String =
-  {
-    val out: Option[String] = for {
-      s <- Option(in)
+  def formatSearch(in: String): String = {
+    def formatted(x: String): Option[String] = for {
+      s <- Option(x)
       surrounded = "%" + s + "%"
     } yield surrounded.replaceAll("[ *]", "%").replaceAll("[%]+", "%")
 
-    out.getOrElse("%")
+    formatted(in).getOrElse("%")
   }
+
+   def fill(ids: Set[Long], limit: Int): List[(Document, Project, Revision, User)] = ids.toSeq match {
+      case Nil => {
+         Nil
+      }
+      case xs => {
+         inTransaction(
+            join(
+               Document.dbTable,
+               Project.dbTable,
+               Revision.dbTable,
+               User.dbTable,
+               from(Revision.dbTable)(r2 => where(r2.documentId in xs) groupBy(r2.documentId) compute(max(r2.version)))
+            ) ( (d, p, r, u, rMax) =>
+               where((d.id in xs) and (r.version === rMax.measures))
+               select ((d, p, r, u))
+               orderBy (r.date desc)
+               on(d.projectId === p.id, d.id === r.documentId, r.authorId === u.id, rMax.key === d.id)
+            ).
+               page(0, limit).
+               toList
+         )
+      }
+   }
 }
