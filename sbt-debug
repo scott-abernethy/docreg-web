@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [ -z "$JREBEL_HOME" ]; then
+  JREBEL_HOME=/opt/JRebel
+fi
+
+java -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=127.0.0.1:5005 -XX:MaxPermSize=786m -Xmx712M -Xss2M -XX:+CMSClassUnloadingEnabled -noverify -javaagent:$JREBEL_HOME/jrebel.jar -jar `dirname $0`/sbt-launcher.jar "$@"
