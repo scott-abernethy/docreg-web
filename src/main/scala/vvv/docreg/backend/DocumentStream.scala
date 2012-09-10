@@ -100,6 +100,7 @@ class DocumentStream extends Actor {
   def insertInStream(document: Document, revision: Revision, projectOption: Option[Project]): Option[AnyRef] = {
     projectOption match {
       case _ if (!withinScope(revision.date)) => {
+        logger.warning("Stream ignoring insert for {}, not within scope.", document.key)
         None
       }
       case Some(project) => {

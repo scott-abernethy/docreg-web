@@ -188,7 +188,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
 
   private def createDocument(reconcile: Reconcile) {
     try {
-      transaction {
+      val msgs = transaction {
         val document = new Document
         assignDocument(document, reconcile.document)
         Document.dbTable.insert(document)
@@ -199,15 +199,20 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
         if (!update.contains(ReconcileDocumentRemoved)) {
           reconcileApprovals(document, reconcile.approvals)
           reconcileSubscriptions(document, reconcile.subscriptions)
-          documentStream ! DocumentAdded(document)
+          List(DocumentAdded(document))
+        }
+        else {
+          Nil
         }
       }
+      msgs.foreach(m => documentStream ! m)
     } catch {
       case e: java.lang.NullPointerException => logger.error("Exception " + e + " with " + reconcile.document.getKey()); e.printStackTrace
     }
   }
 
   private def updateDocument(document: Document, reconcile: Reconcile) {
+    var msgs = List.empty[Any]
     transaction {
       val update = reconcileRevisions(document, reconcile.revisions)
       if (update.contains(ReconcileDocumentRemoved)) {
@@ -225,18 +230,19 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
       // send DocumentChanged before DocumentRevised for optimal ui updates
       if (docChanged || update.contains(ReconcileRevisionUpdated)) {
         // we don't care about editorChanged here, as it is not reflected in current listeners
-        documentStream ! DocumentChanged(document)
+        msgs = msgs ::: DocumentChanged(document) :: Nil
       }
       update.collect {
         case ReconcileRevisionAdded(r) => r
       }.foreach {
         id =>
-          document.revision(id).foreach(revision => documentStream ! DocumentRevised(document, revision))
+          document.revision(id).foreach(revision => msgs = msgs ::: DocumentRevised(document, revision) :: Nil)
       }
       if (update.contains(ReconcileRevisionPurged)) {
         clerk ! PrepareAlt(document.number)
       }
     }
+    msgs.foreach(m => documentStream ! m)
   }
 
   private def assignDocument(document: Document, d: DocumentInfo): Boolean = {
