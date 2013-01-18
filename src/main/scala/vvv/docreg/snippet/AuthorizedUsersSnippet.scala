@@ -1,7 +1,7 @@
 package vvv.docreg.snippet
 
 import net.liftweb.util.Helpers._
-import xml.{NodeSeq, Text}
+import xml.{Unparsed, NodeSeq, Text}
 import vvv.docreg.model.{ProjectAuthorization, User, UserLookup}
 import org.squeryl.PrimitiveTypeMode._
 import net.liftweb.util.{PassThru, ClearClearable}
@@ -20,7 +20,7 @@ class AuthorizedUsersSnippet {
       ".x-username *" #> u.shortUsername() &
       ".x-name *" #> u.profileLabel(-1) &
       ".x-access *" #> u.accessLevel().toString() &
-      ".x-authorizations *" #> projects.map(_.name).mkString(", ")
+      ".x-authorizations *" #> (projects.foldLeft(NodeSeq.Empty)( (xml,p) => xml ++ p.infoLink() ++ Unparsed(", ")))
     }
   }
 }
