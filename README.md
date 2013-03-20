@@ -1,7 +1,7 @@
 # DocReg+Web
 
 A distributed document management system web interface.
-Created by @scott-abernethy.
+Created by Scott Abernethy (github @scott-abernethy).
 
 ## License
 
