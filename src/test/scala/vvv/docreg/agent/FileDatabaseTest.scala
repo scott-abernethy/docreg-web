@@ -23,7 +23,7 @@ import akka.testkit.{TestProbe, TestKit}
 import akka.util.Duration
 import java.util.concurrent.TimeUnit
 
-object FileDatabaseTest extends Specification
+class FileDatabaseTest extends Specification
 {
   "FileDatabase" should {
     "bar" >> {

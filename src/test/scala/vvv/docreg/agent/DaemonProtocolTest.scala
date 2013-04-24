@@ -21,7 +21,7 @@ import org.specs.Specification
 import akka.testkit.TestActorRef
 import akka.actor.ActorSystem
 
-object DaemonProtocolTest extends Specification
+class DaemonProtocolTest extends Specification
 {
   "DaemonAgentImpl" should
   {

@@ -23,7 +23,7 @@ import akka.testkit.TestProbe
 import akka.actor.{Props, ActorSystem}
 import akka.util.duration._
 
-object ChangePollerTest extends Specification
+class ChangePollerTest extends Specification
 {
   "ChangePoller" should
   {

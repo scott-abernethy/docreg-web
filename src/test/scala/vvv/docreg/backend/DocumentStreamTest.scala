@@ -25,7 +25,7 @@ import vvv.docreg.db.TestDbVendor
 import org.squeryl.PrimitiveTypeMode._
 import java.sql.Timestamp
 
-object DocumentStreamTest extends Specification {
+class DocumentStreamTest extends Specification {
   "DocumentStream" should {
     "check most recent" >> {
       TestDbVendor.initAndClean()

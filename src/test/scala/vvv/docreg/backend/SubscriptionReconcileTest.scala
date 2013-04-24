@@ -26,7 +26,7 @@ import vvv.docreg.agent.SubscriberInfo
 import net.liftweb.common.Full
 import org.mockito.Matchers
 
-object SubscriptionReconcileTest extends Specification with Mockito {
+class SubscriptionReconcileTest extends Specification with Mockito {
   "SubscritionReconcile" should {
     "Do nothing for no subscriptions" >> {
       TestDbVendor.initAndClean()

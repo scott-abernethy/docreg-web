@@ -26,7 +26,7 @@ import net.liftweb.mapper.By
 import vvv.docreg.db.{TestDbVendor, DbVendor}
 import org.squeryl.PrimitiveTypeMode._
 
-object UserProjectTest extends Specification {
+class UserProjectTest extends Specification {
 
   "UserProject Model" should {
     "find none where no UserProject record exists for the user" >> {

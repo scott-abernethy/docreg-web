@@ -19,8 +19,6 @@ package vvv.docreg.backend
 
 import vvv.docreg.agent._
 import net.liftweb.common.Loggable
-import java.io.File
-import vvv.docreg.model.{Document, User}
 import akka.actor.{PoisonPill, Actor, ActorRef}
 
 class SubmitNewEngine(agent: ActorRef, target: String, clientHost: String, clientVersion: String) extends Actor with Loggable
@@ -32,7 +30,7 @@ class SubmitNewEngine(agent: ActorRef, target: String, clientHost: String, clien
         {
           // todo check the fields, including comment which should default to "[no description]"? Check default for approval etc also.
           cachedRequest = msg
-          agent ! RequestPackage(self, target, RegisterRequest(userFileName, projectName, if (comment.length() < 1) "[no description]" else comment, "Everyone", user.displayName, user.shortUsername(), clientHost, clientVersion))
+          agent ! RequestPackage(self, target, SubmitEngine.registerRequest(projectName, "Everyone", userFileName, comment, user, clientHost, clientVersion))
         }
         case RegisterReply(response, suggestedFileName) =>
         {
@@ -46,7 +44,7 @@ class SubmitNewEngine(agent: ActorRef, target: String, clientHost: String, clien
               // Submit with suggested file name assuming, as long as it is version 001 and has same fileName part.
             val submittedFileName = suggestedFileName
             logger.debug("Copying file")
-            SubmitBin.copyTo(cachedRequest.localFile.apply(), submittedFileName);
+            SubmitBin.copyTo(cachedRequest.localFile.apply(), submittedFileName)
             logger.debug("Copying file, done")
             // todo check file size
             agent ! RequestPackage(self, target, SubmitRequest(submittedFileName, -1))
@@ -73,36 +71,6 @@ class SubmitNewEngine(agent: ActorRef, target: String, clientHost: String, clien
           logger.warn("Submit engine got unexpected " + other)
         }
         // todo timeout
+        // todo supervision
   }
-
-  // TODO akka equiv
-//  override def exceptionHandler =
-//  {
-//    case e: Exception =>
-//    {
-//      logger.error("SubmitNewEngine exception " + e.getMessage, e)
-//      Actor.self ! 'Die
-//    }
-//  }
 }
-
-//object SubmitNewEngine
-//{
-//  def main(args: Array[String])
-//  {
-//    val u = new User
-//    u.name = "Scott Abernethy"
-//    u.username = "sabernethy@GNET.global.vpn"
-//
-//    val agent = new DaemonAgentImpl()
-//    agent.start()
-//    val x = new SubmitNewEngine(agent, "shelob", "10.16.2.0", "dr+w 0.7.0.dev")
-//    x.start()
-//    x ! Create("DocReg", () => new File("/tmp/garbage.txt"), "New Document Test 4.txt", "Testing document addition with docregweb", u)
-//    Actor.receiveWithin(30000) {
-//      case in => println("XX " + in)
-//    }
-//    agent ! 'Die
-//    x ! 'Die
-//  }
-//}

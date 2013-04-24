@@ -29,7 +29,7 @@ import java.sql.Timestamp
 import vvv.docreg.util.T
 import org.squeryl.PrimitiveTypeMode._
 
-object RevisionReconcileTest extends Specification with Mockito
+class RevisionReconcileTest extends Specification with Mockito
 {
   "RevisionReconcile" should
   {

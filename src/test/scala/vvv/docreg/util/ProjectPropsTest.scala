@@ -25,10 +25,7 @@ import org.specs.specification._
 import java.util.Properties
 import net.liftweb.common._
 
-class ProjectPropsTestSpecsAsTest extends JUnit4(ProjectPropsTestSpecs)
-object ProjectPropsTestSpecsRunner extends ConsoleRunner(ProjectPropsTestSpecs)
-
-object ProjectPropsTestSpecs extends Specification {
+class ProjectPropsTestSpecs extends Specification {
   "ProjectProps" should {
     "load from project properties file" in {
       ProjectProps.get("project.name") must be equalTo(Full("DocReg+Web"))

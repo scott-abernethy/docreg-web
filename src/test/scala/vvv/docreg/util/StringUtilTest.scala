@@ -19,7 +19,7 @@ package vvv.docreg.util
 
 import org.specs._
 
-object StringUtilTest extends Specification {
+class StringUtilTest extends Specification {
   "StringUtil" should {
     "parse valid email" >> {
       StringUtil.ValidEmail.findFirstIn("scott.abernethy@aviatnet.com") must beSome("scott.abernethy@aviatnet.com")

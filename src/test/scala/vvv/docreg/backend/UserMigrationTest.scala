@@ -21,10 +21,7 @@ import org.specs.runner.{ConsoleRunner, JUnit4}
 import org.specs.Specification
 import net.liftweb.common.{Full, Empty, Failure}
 
-class UserMigrationTestSpecsAsTest extends JUnit4(UserMigrationTestSpecs)
-object UserMigrationTestSpecsRunner extends ConsoleRunner(UserMigrationTestSpecs)
-
-object UserMigrationTestSpecs extends Specification {
+class UserMigrationTestSpecs extends Specification {
   "UserMigration" should {
     "reject non emails" >> {
       val x = UserMigration

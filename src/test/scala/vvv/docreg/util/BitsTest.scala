@@ -20,7 +20,7 @@ package vvv.docreg.util
 import org.specs.Specification
 import xml.{PrettyPrinter, NodeSeq}
 
-object BitsTest extends Specification {
+class BitsTest extends Specification {
   "Bits" should {
     "restrictedNotice" >> {
       xmlCheck(Bits.restrictedNotice(0), <p><span class="badge badge-warning">0</span> Restricted documents not shown</p>)

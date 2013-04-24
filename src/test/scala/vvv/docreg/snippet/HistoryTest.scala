@@ -22,7 +22,7 @@ import java.util.Calendar
 import vvv.docreg.model.Revision
 import java.sql.Timestamp
 
-object HistoryTest extends Specification
+class HistoryTest extends Specification
 {
   "MonthHistory" should
   {

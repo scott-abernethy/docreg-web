@@ -51,7 +51,7 @@ class NothingUserAttributes extends UserAttributes {
   def memberOf(): List[String] = Nil
 }
 
-object UserLookupTest extends Specification with Mockito {
+class UserLookupTest extends Specification with Mockito {
   "UserLookup" should {
     "Reject empty lookup" >> {
       TestDbVendor.initAndClean()

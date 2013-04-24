@@ -24,7 +24,7 @@ import net.liftweb.http.js.JsCmds._Noop
 import vvv.docreg.util.T
 import org.squeryl.PrimitiveTypeMode._
 
-object DocumentTest extends Specification {
+class DocumentTest extends Specification {
   "Document Model" should {
     "next version is 1 if no revisions" >> {
       TestDbVendor.initAndClean()

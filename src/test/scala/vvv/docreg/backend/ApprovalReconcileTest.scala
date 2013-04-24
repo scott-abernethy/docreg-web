@@ -28,7 +28,7 @@ import vvv.docreg.model.{ApprovalState, UserLookupProvider, Approval, Document}
 import java.sql.Timestamp
 import org.squeryl.PrimitiveTypeMode._
 
-object ApprovalReconcileTest extends Specification with Mockito
+class ApprovalReconcileTest extends Specification with Mockito
 {
   "ApprovalReconcile" should
   {
