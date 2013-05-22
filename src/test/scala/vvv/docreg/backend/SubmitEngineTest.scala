@@ -47,5 +47,24 @@ class SubmitEngineTest extends Specification with Mockito {
          val x = SubmitEngine.registerRequest("proj", "all", """This*? "'name: has<> /ba|:dness \in it""", "foo", u, "localhost", "v2")
          x.fileName must beEqual("This name has ba dness in it")
       }
+
+      "shorten names that are too long" >> {
+         val u = new User
+
+         SubmitEngine.registerRequest("proj", "all", """123456789a123456789b123456789c123456789d123456789e123456789f1234""", "foo", u, "localhost", "v2").
+           fileName must beEqual("123456789a123456789b123456789c123456789d123456789e123456789f1234")
+
+         SubmitEngine.registerRequest("proj", "all", """123456789a123456789b123456789c123456789d123456789e123456789f1234X""", "foo", u, "localhost", "v2").
+           fileName must beEqual("123456789a123456789b123456789c123456789d123456789e123456789f1234")
+
+         SubmitEngine.registerRequest("proj", "all", """123456789a123456789b123456789c123456789d123456789e123456789f1234.ext""", "foo", u, "localhost", "v2").
+           fileName must beEqual("123456789a123456789b123456789c123456789d123456789e123456789f1234.ext")
+
+         SubmitEngine.registerRequest("proj", "all", """123456789a123456789b123456789c123456789d123456789e123456789f1234G.ext""", "foo", u, "localhost", "v2").
+           fileName must beEqual("123456789a123456789b123456789c123456789d123456789e123456789f1234.ext")
+
+         SubmitEngine.registerRequest("proj", "all", """1234-456-123456789a123456789b123456789c123456789d123456789e123456789f1234G.ext""", "foo", u, "localhost", "v2").
+           fileName must beEqual("1234-456-123456789a123456789b123456789c123456789d123456789e123456789f1234.ext")
+      }
    }
 }

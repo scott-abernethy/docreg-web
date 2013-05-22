@@ -12,6 +12,8 @@ object StringUtil {
   val DomainUsername: Regex = """([a-zA-Z0-9.-]+)[\\/]([a-zA-Z0-9._%+-]+)""".r
   val ValidEmail: Regex = """([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})""".r
   val FileName: Regex = """.*\.(.+)""".r
+  val FileNameAndExt: Regex = """(.*)(\.[^.]+)""".r
+  val ValidDocumentFileName: Regex = """^([0-9]+-[0-9]+-)(.+)$""".r
 
   def nameFromEmail(email: String): String = {
     email indexOf '@' match {
@@ -53,6 +55,23 @@ object StringUtil {
       case _ =>
       {
         None
+      }
+    }
+  }
+
+  def truncateFilename(filename: String, maxSize: Int, maxSizeBase: Int): String = {
+    filename match {
+      case ValidDocumentFileName(prefix, FileNameAndExt(name, ext)) => {
+        prefix + name.take(scala.math.min(maxSize - (prefix.size + ext.size), maxSizeBase)) + ext
+      }
+      case ValidDocumentFileName(prefix, text) => {
+        prefix + text.take(scala.math.min(maxSize - prefix.size, maxSizeBase))
+      }
+      case FileNameAndExt(name, ext) => {
+        name.take(scala.math.min(maxSize - ext.size, maxSizeBase)) + ext
+      }
+      case text => {
+        text.take(scala.math.min(maxSize, maxSizeBase))
       }
     }
   }

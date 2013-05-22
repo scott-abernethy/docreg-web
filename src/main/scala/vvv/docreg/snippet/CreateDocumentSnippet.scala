@@ -27,7 +27,7 @@ class CreateDocumentSnippet extends Loggable
   {
     val projectList = projects.map(i => (i.name, i.name))
     ".submission-project" #> SHtml.select(projectList, Option(project.is), project(_)) &
-    ".submission-name" #> SHtml.text(name.is, name(_), "maxlength" -> "110") &
+    ".submission-name" #> SHtml.text(name.is, name(_), "maxlength" -> "64") &
     "#name-group [class+]" #> nameError.is.map(_ => "error").getOrElse("") &
     ".submission-version *" #> "1" &
     ".submission-file" #> SHtml.fileUpload(ul => file(Some(ul))) &

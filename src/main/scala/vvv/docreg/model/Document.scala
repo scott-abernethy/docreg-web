@@ -81,7 +81,7 @@ class Document extends DbObject[Document] {
       "-" +
       prePadTo(nextVersion.toString, 3, '0') +
       "-" +
-      retitleFile(newTitle, userFileName).getOrElse("")
+      retitleFile(newTitle, userFileName).getOrElse(number)
   }
 
   def editingFileName(username: String): String =
@@ -91,7 +91,7 @@ class Document extends DbObject[Document] {
       prePadTo(nextVersion.toString, 3, '0') +
       "#" + username +
       "-" +
-      retitleFile(title, latest.filename).getOrElse("")
+      retitleFile(title, latest.filename).getOrElse(number)
   }
 
   def keyAndVersion(version: Long) = {

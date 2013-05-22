@@ -10,6 +10,12 @@ import net.liftweb.common.Loggable
 import vvv.docreg.model.Document.ValidDocumentFileName
 import akka.actor.{PoisonPill, Actor, ActorRef}
 import vvv.docreg.model.{Document, User}
+import vvv.docreg.util.StringUtil._
+import vvv.docreg.agent.SubmitRequest
+import vvv.docreg.agent.RegisterRequest
+import vvv.docreg.agent.SubmitReply
+import vvv.docreg.agent.RegisterReply
+import vvv.docreg.agent.RequestPackage
 
 class SubmitEngine(agent: ActorRef, target: String, clientHost: String, clientVersion: String) extends Actor with Loggable
 {
@@ -90,7 +96,7 @@ class SubmitEngine(agent: ActorRef, target: String, clientHost: String, clientVe
 object SubmitEngine {
    def registerRequest(projectName: String, access: String, userFileName: String, comment: String, user: User, clientHost: String, clientVersion: String): RegisterRequest = {
       RegisterRequest(
-         userFileName.replaceAll("[\t\n\r:*?<>|/\"'\\\\]", " ").replaceAll("[ ]+", " "),
+         truncateFilename(userFileName.replaceAll("[\t\n\r:*?<>|/\"'\\\\]", " ").replaceAll("[ ]+", " "), 80, 64),
          projectName,
          if (comment.length() < 1) "[no description]" else comment,
          access,

@@ -420,7 +420,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     (
 //      ".doc-title" #> <a href={d.infoLink}>{r.fullTitle}</a> &
       ".submission-project" #> SHtml.select(projectList, Option(project.is), project(_)) &
-      ".submission-name" #> SHtml.text(name.is, name(_), "maxlength" -> "110") &
+      ".submission-name" #> SHtml.text(name.is, name(_), "maxlength" -> "64") &
       "#name-group [class+]" #> nameError.is.map(_ => "error").getOrElse("") &
       ".submission-version *" #> d.nextVersion &
       ".submission-file" #> SHtml.fileUpload(ul => file(Some(ul))) &

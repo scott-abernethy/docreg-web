@@ -45,7 +45,7 @@ trait RegisterRequestEncoder extends RequestEncoder[RegisterRequest]
 //    char acClientName[64];     // name of the client PC as resolved by client
 //    char acUserName[64];       // user name client is running under
 //    char acClientVersion[16];  // client software version
-    writeString(buffer, request.fileName, 128)
+    writeString(buffer, request.fileName, 128) // the title actually has max size of 64, the extra is for doc number, version, and ext, which must be max 80.
     writeString(buffer, request.project, 64)
     writeString(buffer, request.comment, 512)
     writeString(buffer, request.access, 128)
