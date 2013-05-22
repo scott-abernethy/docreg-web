@@ -11,6 +11,7 @@ import vvv.docreg.model.{Document, User}
 
 class SubmitEngineTest extends Specification with Mockito {
    "SubmitEngine" should {
+
       "create register request" >> {
          val u = new User
          u.name = "Me Who"
@@ -26,6 +27,7 @@ class SubmitEngineTest extends Specification with Mockito {
          x.clientHost must beEqual("localhost")
          x.clientVersion must beEqual("v2")
       }
+
       "correct empty comment" >> {
          val u = new User
          u.name = "Me Who"
@@ -33,14 +35,16 @@ class SubmitEngineTest extends Specification with Mockito {
          val x = SubmitEngine.registerRequest("proj", "Every1", "Good Name", "", u, "localhost", "v2")
          x.comment must beEqual("[no description]")
       }
+
       "remove multiple space in document name" >> {
          val u = new User
          val x = SubmitEngine.registerRequest("proj", "all", "Good  Name     Again", "foo", u, "localhost", "v2")
          x.fileName must beEqual("Good Name Again")
       }
+
       "remove bad characters from document name" >> {
          val u = new User
-         val x = SubmitEngine.registerRequest("proj", "all", """This name: has ba:dness \in it""", "foo", u, "localhost", "v2")
+         val x = SubmitEngine.registerRequest("proj", "all", """This*? "'name: has<> /ba|:dness \in it""", "foo", u, "localhost", "v2")
          x.fileName must beEqual("This name has ba dness in it")
       }
    }

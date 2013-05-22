@@ -90,7 +90,7 @@ class SubmitEngine(agent: ActorRef, target: String, clientHost: String, clientVe
 object SubmitEngine {
    def registerRequest(projectName: String, access: String, userFileName: String, comment: String, user: User, clientHost: String, clientVersion: String): RegisterRequest = {
       RegisterRequest(
-         userFileName.replaceAll("[\t\n\r:\\\\]", " ").replaceAll("[ ]+", " "),
+         userFileName.replaceAll("[\t\n\r:*?<>|/\"'\\\\]", " ").replaceAll("[ ]+", " "),
          projectName,
          if (comment.length() < 1) "[no description]" else comment,
          access,
