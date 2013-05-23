@@ -16,7 +16,12 @@ class Project extends DbObject[Project] {
   var name: String = ""
 
   def infoLink(): NodeSeq = {
-    <a href={ "/project/" + name.replaceAll(" ", "+") }>{ name }</a>
+    <a href={ url }>{ name }</a>
+  }
+
+
+  def url: String = {
+    "/project/" + name.replaceAll(" ", "+")
   }
 
   lazy val documentsQuery: OneToMany[Document] = DbSchema.projectsToDocuments.left(this)
@@ -76,5 +81,23 @@ object Project extends Project {
         on(p.id === d.map(_.projectId))
       ).toList.distinct
     }
+  }
+
+  def recentChanges(projectId: Long, limit: Int = 100): List[(Document,Revision,User)] = {
+    inTransaction {
+      join(DbSchema.revisions, DbSchema.documents, DbSchema.users)( (r,d,u) =>
+        where(d.projectId === projectId)
+        select( (d,r,u) )
+        orderBy(r.date desc, r.id desc)
+        on(r.documentId === d.id, r.authorId === u.id)
+      ).page(0, limit).toList
+    }
+  }
+
+}
+
+object ValidProject {
+  def unapply(name: String): Option[Project] = {
+    Project.forName(name)
   }
 }

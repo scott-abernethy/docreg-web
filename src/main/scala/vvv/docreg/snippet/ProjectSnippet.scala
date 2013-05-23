@@ -26,7 +26,7 @@ class ProjectSnippet extends Loggable {
     val uid = user.map(_.id).getOrElse(-1L)
     project match {
       case Some(p) => {
-        val (open,restricted) = p.documents.partition(d => user.filter(d.allows(_)).isDefined )
+        val (open,restricted) = UserSession.partitionAuthorized(p.documents(), (x: Document) => x)
         val authorized: List[User] = p.authorized()
         val contributors: List[User] = p.contributors().filter(_.knownOption.isDefined)
         val t = ".p-name" #> p.name &

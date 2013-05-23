@@ -56,7 +56,6 @@ class Search extends Loggable with ProjectSelection {
     val pageUserId = User.loggedInUser.is.map(_.id) getOrElse -1L
     val inputText = Option(searchInput.trim).getOrElse("")
     val open = ds
-//    val (open, restricted) = ds.partition(i => UserSession.isAuthorized(i._1, i._2))
     (
       ".search-for *" #> <span>for &quot;{ inputText }&quot;</span> &
       ".match-count" #> <span>Results <span class="badge">{open.size}</span></span> &

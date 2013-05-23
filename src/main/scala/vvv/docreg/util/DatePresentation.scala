@@ -70,5 +70,15 @@ object DatePresentation {
     dateF.format(date)
   }
 
+  def formatDateTimeAsRfc822(date: Date): String = {
+    // Wed, 02 Oct 2002 15:00:00 +0200
+    if (date != null) {
+      val f = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z")
+      f.setTimeZone(TimeZone.getDefault)
+      f.format(date)
+    }
+    else "---"
+  }
+
 
 }

@@ -281,8 +281,14 @@ object UserSession {
     selectedProjects( if (selected) selectedProjects.is + projectId else selectedProjects.is - projectId )
   }
 
-  def isAuthorized(d: Document, p: Project): Boolean = {
-    d.secure_?() == false || authorizedProjects.contains(p.id)
+  def isAuthorized(d: Document): Boolean = {
+    d.secure_?() == false || authorizedProjects.contains(d.projectId)
+  }
+
+  def partitionAuthorized[T](in: List[T], documentF: T => Document): (List[T], List[T]) = {
+    in.partition{i =>
+      isAuthorized(documentF(i))
+    }
   }
 
   private def loadModeCookie(): StreamMode.Value = {
