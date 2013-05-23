@@ -71,6 +71,7 @@ class Boot
       Menu.i("Submit Document") / "doc" / "submit" >> loggedIn,
       Menu.i("Restricted Document") / "doc" / "restricted" >> loggedIn,
       Menu.i("Invalid Document") / "doc" / "invalid" >> loggedIn,
+      Menu.i("Project List") / "project" >> loggedIn,
       Menu.i("Project Information") / "project" / "info" >> loggedIn,
       Menu.i("User Lookup Admin") / "admin" / "user-lookup" >> loggedIn,
       Menu.i("User Lookup Change Admin") / "admin" / "user-lookup-change" >> loggedIn,
