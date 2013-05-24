@@ -31,8 +31,18 @@
           </a>
             <div class="lift:snippet?type=UserSnippet.control pull-right nav-collapse">
               <ul class="nav">
-                  <li class="signed-in"><a href="/">Dashboard</a></li>
-                  <li class="signed-in"><a href="/doc/create">Create Document</a></li>
+                  <li class="signed-in dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Documents<b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                      <li><a href="/">Dashboard</a></li>
+                      <li class="divider"></li>
+                      <li><a href="/doc/create">Create Document</a></li>
+                      <li class="divider"></li>
+                      <li><a href="/doc/history">Revision History</a></li>
+                      <li><a href="/project">Projects</a></li>
+                    </ul>
+                  </li>
+                  <li>
                   <li class="signed-in dropdown">
                       <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span class="user-id">Fred Foo</span><b class="caret"></b></a>
                       <ul class="dropdown-menu">
