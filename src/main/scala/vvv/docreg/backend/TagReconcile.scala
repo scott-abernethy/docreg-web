@@ -17,7 +17,7 @@ trait TagReconcile extends Loggable {
 
   def reconcileTags(document: Document, texts: List[String]) {
     inTransaction {
-      val existing = Tag.forDocument(document.id).map(_.name).toSet
+      val existing = Tag.namesForDocument(document.id).toSet
 
       val found: Set[String] = (
         for {

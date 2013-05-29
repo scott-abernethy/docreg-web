@@ -8,7 +8,6 @@ class Tag extends DbObject[Tag] {
   def dbTable = tags
   var documentId: Long = 0
   var name: String = ""
-  var ignored: Boolean = false
 }
 
 object Tag extends Tag {
@@ -46,15 +45,24 @@ object Tag extends Tag {
     )
   }
 
-  def all(): List[Tag] = {
+  def names(): List[String] = {
     inTransaction(
-      from(tags)(t => select(t)).toList
+      from(tags)(t => select(t.name) orderBy(t.name asc)).distinct.toList
     )
   }
 
-  def forDocument(documentId: Long): List[Tag] = {
+  def namesForDocument(documentId: Long): List[String] = {
     inTransaction(
-      from(tags)(t => where(t.documentId === documentId) select(t)).toList
+      from(tags)(t => where(t.documentId === documentId) select(t.name) orderBy(t.name asc)).distinct.toList
     )
+  }
+
+  def url(name: String): String = {
+    if (name.startsWith("#")) {
+      "/tag/" + name.substring(1) // there is nothing to escape in a tag name
+    }
+    else {
+      "/tag"
+    }
   }
 }

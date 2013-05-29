@@ -17,7 +17,7 @@ import js.JE.JsRaw
 import js.jquery.JqJE._
 import js._
 import js.jquery._
-import scala.xml.{NodeSeq, Text, Elem}
+import scala.xml.{Unparsed, NodeSeq, Text, Elem}
 import net.liftweb.http.js.JsCmds._
 import java.util.Date
 import vvv.docreg.util.{Environment, StringUtil, TemplateParse}
@@ -48,6 +48,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
       }
     case _ => Empty
   }
+  val tags: List[String] = document.map(d => Tag.namesForDocument(d.id)).getOrElse(Nil)
   val user: Box[User] = User.loggedInUser.is
   val pageUserId: Long = user.map(_.id).getOrElse(-1L)
   val editor: List[Pending] = {
@@ -133,6 +134,9 @@ class DocumentSnippet extends DocumentRequest with Loggable {
         ".doc-title" #> <a href={d.infoLink}>{d.fullTitle}</a> &
         ".doc-number" #> d.keyAndVersion(r.version) &
         ".doc-version" #> r.version &
+        ".doc-tags" #> (if (tags.isEmpty) ClearNodes else (".doc-tag *" #> tags.map { tag =>
+          <a href={ Tag.url(tag) }>{ tag }</a> ++ Unparsed("&nbsp; ")
+        })) &
         ".doc-filename" #> <a href={d.downloadHref(r.version)} title="Download">{r.filename}</a> &
         ".doc-mediatype" #> tryo(new Tika().detect(r.filename)).openOr("?") &
         ".doc-next" #> d.nextVersion &

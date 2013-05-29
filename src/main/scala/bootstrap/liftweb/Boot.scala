@@ -71,6 +71,8 @@ class Boot
       Menu.i("Submit Document") / "doc" / "submit" >> loggedIn,
       Menu.i("Restricted Document") / "doc" / "restricted" >> loggedIn,
       Menu.i("Invalid Document") / "doc" / "invalid" >> loggedIn,
+      Menu.i("Tag List") / "tag" >> loggedIn,
+      Menu.i("Tag Information") / "tag" / "info" >> loggedIn,
       Menu.i("Project List") / "project" >> loggedIn,
       Menu.i("Project Information") / "project" / "info" >> loggedIn,
       Menu.i("User Lookup Admin") / "admin" / "user-lookup" >> loggedIn,
@@ -170,6 +172,9 @@ class Boot
       }
       case RewriteRequest(ParsePath("project" :: key :: Nil, suffix, absolute, endSlash), _, _) => {
         RewriteResponse(ParsePath("project" :: "info" :: Nil, suffix, absolute, endSlash), Map("key" -> key), true)
+      }
+      case RewriteRequest(ParsePath("tag" :: key :: Nil, suffix, absolute, endSlash), _, _) => {
+        RewriteResponse(ParsePath("tag" :: "info" :: Nil, suffix, absolute, endSlash), Map("key" -> key), true)
       }
     }
 
