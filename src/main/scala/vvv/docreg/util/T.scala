@@ -20,4 +20,6 @@ object T {
   def now() = {
     new Timestamp(System.currentTimeMillis())
   }
+
+  def daysAgo(days: Long) = ago(days * 24 * 60 * 60 * 1000)
 }

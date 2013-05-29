@@ -33,6 +33,7 @@ object DbSchema extends org.squeryl.Schema {
   val pendings = table[Pending]
   val approvals = table[Approval]
   val subscriptions = table[Subscription]
+  val tags = table[Tag]
 
   on(users)(u => declare(
     u.username is(indexed, unique, dbType("varchar(64)")),
@@ -103,6 +104,11 @@ object DbSchema extends org.squeryl.Schema {
     s.documentId is(indexed),
     s.userId is(indexed),
     columns(s.documentId, s.userId) are (unique, indexed)
+  ))
+
+  on(tags)(t => declare(
+    t.name is(indexed, dbType("varchar(128)")),
+    t.documentId is(indexed)
   ))
 
   val projectsToDocuments = oneToManyRelation(projects, documents).via( (p,d) => p.id === d.projectId)

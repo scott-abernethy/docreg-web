@@ -5,14 +5,6 @@
 
 package vvv.docreg.util
 
-/**
- * Created by IntelliJ IDEA.
- * User: sabernethy
- * Date: 23/08/11
- * Time: 4:23 PM
- * To change this template use File | Settings | File Templates.
- */
-
 object Millis
 {
   def now() = new Millis().mark()

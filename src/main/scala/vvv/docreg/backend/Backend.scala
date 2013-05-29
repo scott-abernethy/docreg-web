@@ -16,6 +16,7 @@ import vvv.docreg.model._
 import akka.actor._
 import akka.util.Duration
 import akka.util.duration._
+import vvv.docreg.db.DbSchema
 
 case class Reload(d: Document)
 
@@ -43,7 +44,7 @@ trait BackendComponent {
   val backend: ActorRef
 }
 
-class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: ActorRef) extends Actor with Loggable with RevisionReconcile with ApprovalReconcile with SubscriptionReconcile {
+class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: ActorRef) extends Actor with Loggable with RevisionReconcile with ApprovalReconcile with SubscriptionReconcile with TagReconcile {
   val product = ProjectProps.get("project.name") openOr "drw"
   val version = ProjectProps.get("project.version") openOr "0.0"
   val clientVersion = "dr+w " + version
@@ -83,13 +84,10 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
     case Loaded(d :: ds) => {
       Document.forKey(d.getKey) match {
         case Full(document) => {
-          // reconcile if
-          // 1. not latest version
-          // 2. editor (recently)
-          // 3. changed access
-          // 4. TODO - what about project change?
-          val recentEditor = d.editor != null && d.editorStart != null && d.editorStart.after(new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 24 * 7)))
-          if (!document.latest_?(d.version) || recentEditor || !document.access.equalsIgnoreCase(d.access)) {
+          val weekAgo = T.daysAgo(7)
+          val recentEditor = d.editor != null && d.editorStart != null && d.editorStart.after(weekAgo)
+          val reconcileOutOfDate = document.reconciled == null || document.reconciled.before(weekAgo)
+          if (!document.latest_?(d.version) || recentEditor || !document.access.equalsIgnoreCase(d.access) || reconcileOutOfDate) {
             clerk ! Prepare(d)
           }
         }
@@ -204,6 +202,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
         if (!update.contains(ReconcileDocumentRemoved)) {
           reconcileApprovals(document, reconcile.approvals)
           reconcileSubscriptions(document, reconcile.subscriptions)
+          reconcileTags(document, reconcile.revisions.map(_.comment))
           List(DocumentAdded(document))
         }
         else {
@@ -219,6 +218,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
   private def updateDocument(document: Document, reconcile: Reconcile) {
     var msgs = List.empty[Any]
     transaction {
+      DbSchema.documents.update(d => where(d.id === document.id) set(d.reconciled := T.now))
       val update = reconcileRevisions(document, reconcile.revisions)
       if (update.contains(ReconcileDocumentRemoved)) {
         clerk ! PrepareAlt(document.number)
@@ -226,6 +226,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
       }
       reconcileSubscriptions(document, reconcile.subscriptions)
       reconcileApprovals(document, reconcile.approvals)
+      reconcileTags(document, reconcile.revisions.map(_.comment))
 
       val docChanged = assignDocument(document, reconcile.document)
       val editorChanged = assignEditor(document, reconcile.document)

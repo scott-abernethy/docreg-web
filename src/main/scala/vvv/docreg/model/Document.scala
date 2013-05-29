@@ -13,6 +13,7 @@ import util.matching.Regex
 import vvv.docreg.db.{DbSchema, DbObject}
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.dsl.OneToMany
+import java.sql.Timestamp
 
 class Document extends DbObject[Document] {
   def dbTable = DbSchema.documents
@@ -20,6 +21,7 @@ class Document extends DbObject[Document] {
   var projectId: Long = 0
   var title: String = ""
   var access: String = ""
+  var reconciled: Timestamp = new Timestamp(0)
 
   def key(): String = number
 
