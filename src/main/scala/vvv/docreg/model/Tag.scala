@@ -3,6 +3,7 @@ package vvv.docreg.model
 import vvv.docreg.db.{DbObject}
 import vvv.docreg.db.DbSchema.{tags, documents}
 import org.squeryl.PrimitiveTypeMode._
+import scala.xml._
 
 class Tag extends DbObject[Tag] {
   def dbTable = tags
@@ -64,5 +65,13 @@ object Tag extends Tag {
     else {
       "/tag"
     }
+  }
+
+  def addLinks(text: String, tags: List[String]): Node = {
+    var out = text
+    for (tag <- tags) {
+      out = out.replaceAll(tag, "<a href='" + Tag.url(tag) + "'>" + tag + "</a>")
+    }
+    Unparsed(out)
   }
 }
