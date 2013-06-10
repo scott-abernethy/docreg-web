@@ -6,7 +6,7 @@
 package vvv.docreg.snippet
 
 import scala.xml.NodeSeq
-import net.liftweb.widgets.flot._
+import net.liftmodules.widgets.flot._
 import vvv.docreg.model._
 import net.liftweb.mapper._
 import java.util.{Calendar}

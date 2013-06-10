@@ -11,10 +11,7 @@ import _root_.net.liftweb.util._
 
 import rest.RestHelper
 import vvv.docreg.backend.Backend
-import org.apache.http.HttpEntity
 import net.liftweb.util.ControlHelpers._
-import org.apache.http.impl.client.DefaultHttpClient
-import org.apache.http.client.methods.HttpGet
 import vvv.docreg.agent.AgentVendor
 import vvv.docreg.model._
 import java.io.{FileInputStream, File}

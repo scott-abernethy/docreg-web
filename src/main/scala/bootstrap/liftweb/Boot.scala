@@ -24,7 +24,7 @@ import _root_.vvv.docreg.util._
 import sitemap.Loc.If
 import vvv.docreg.backend._
 import vvv.docreg.db.DbVendor
-import net.liftweb.widgets.flot._
+import net.liftmodules.widgets.flot._
 import scala.actors.Actor
 import org.squeryl.PrimitiveTypeMode._
 import scala._
@@ -83,9 +83,6 @@ class Boot
     // set the sitemap.  Note if you don't want access control for
     // each page, just comment this line out.
     LiftRules.setSiteMapFunc(() => SiteMap(entries:_*))
-
-    // Use jQuery 1.4
-    LiftRules.jsArtifacts = net.liftweb.http.js.jquery.JQuery14Artifacts
 
     // Force the request to be UTF-8
     LiftRules.early.append(_.setCharacterEncoding("UTF-8"))

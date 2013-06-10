@@ -117,7 +117,7 @@ object UserLookup extends UserLookup with Loggable {
         dbTable.insertOrUpdate(x)
         //logger.debug((usernameOption :: emailOption :: nameOption :: Nil) + " ??? " + (i.username.is :: i.email.is :: i.name.is :: Nil))
       } catch {
-        case _ =>
+        case e: Exception =>
       }
     }
   }

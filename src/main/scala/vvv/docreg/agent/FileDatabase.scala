@@ -91,7 +91,7 @@ object FileDatabaseHelper {
       x.parse(dateString);
     }
     catch {
-      case x => {
+      case x: Exception => {
         println("Failed to parse '" + dateString + "' - " + x);
         null;
       }
@@ -179,7 +179,7 @@ object FileDatabaseHelper {
     val processor = for {
       in <- items.processor
       _ <- in.repeatUntilEmpty()
-      next <- in.next.timeout(15.seconds)
+      next <- in.next.timeout(scala.concurrent.duration.Duration.apply(15, "seconds"))
     } yield encoder(next)
 
     processor.traversable[Option[X]].async.foldLeft(List.empty[X]) {
