@@ -8,10 +8,10 @@ package vvv.docreg.backend
 import net.liftweb.common.Loggable
 import akka.pattern.{ask,pipe}
 import akka.util.Timeout
-import akka.util.duration._
-import akka.dispatch.Await
 import vvv.docreg.agent._
 import akka.actor.{Actor, ActorRef}
+import scala.concurrent.duration._
+import scala.concurrent.Await
 
 case class Filing(db: ActorRef)
 case class Prepare(d: DocumentInfo)
@@ -21,9 +21,9 @@ class Clerk(private val backend: ActorRef) extends Actor with Loggable {
 
   var fileDatabase: ActorRef = context.system.deadLetters
   val fetchInParallel = false
-  val dbTimeout = Timeout(60 seconds)
+  val dbTimeout = Timeout(60.seconds)
 
-  protected def receive = {
+  def receive = {
     case Filing(db) => {
       fileDatabase = db
     }
@@ -32,6 +32,7 @@ class Clerk(private val backend: ActorRef) extends Actor with Loggable {
           logger.debug("Preparing " + document.getKey())
           val key = document.getKey()
 
+          import context.dispatcher
           val futureRevisions = ask(fileDatabase, GetLog(key, document.access))(dbTimeout).map(_ match {
             case ResponseLog(_, items) => Some(items)
             case _ => {

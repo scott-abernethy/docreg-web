@@ -5,23 +5,19 @@
 
 package vvv.docreg.model
 
-import org.specs._
-import org.specs.runner.JUnit4
-import org.specs.runner.ConsoleRunner
-import org.specs.matcher._
-import org.specs.specification._
-import net.liftweb.mapper.By
-import vvv.docreg.db.{TestDbVendor, DbVendor}
-import org.squeryl.PrimitiveTypeMode._
+import org.specs2.mutable._
+import vvv.docreg.db.{TestDbScope}
 
 class UserProjectTest extends Specification {
 
+  sequential
+
   "UserProject Model" should {
-    "find none where no UserProject record exists for the user" >> {
-      TestDbVendor.initAndClean
+    "find none where no UserProject record exists for the user" >> new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-      val (p1, p2, p3) = TestDbVendor.createProjects
-      val (u1, u2) = TestDbVendor.createUsers
+      val (p1, p2, p3) = db.createProjects
+      val (u1, u2) = db.createUsers
 
       val up = new UserProject
       up.userId = u1.id
@@ -33,11 +29,11 @@ class UserProjectTest extends Specification {
       }
     }
 
-    "find some, based on the selected field value" >> {
-      TestDbVendor.initAndClean
+    "find some, based on the selected field value" >> new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       transaction {
-      val (p1, p2, p3) = TestDbVendor.createProjects
-      val (u1, u2) = TestDbVendor.createUsers
+      val (p1, p2, p3) = db.createProjects
+      val (u1, u2) = db.createUsers
 
       val up1 = new UserProject
       up1.userId = u1.id
@@ -57,40 +53,36 @@ class UserProjectTest extends Specification {
 
       val x = UserProject.userSelected(u1)
       x must haveSize(2)
-      x must haveSameElementsAs(p1 :: p3 :: Nil)
+      x must haveTheSameElementsAs(p1 :: p3 :: Nil)
       }
     }
 
-    "update existing user project, or create one" >> {
-      TestDbVendor.initAndClean
+    "update existing user project, or create one" >> new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       transaction {
-        val (p1, p2, p3) = TestDbVendor.createProjects
-      val (u1, u2) = TestDbVendor.createUsers
+        val (p1, p2, p3) = db.createProjects
+      val (u1, u2) = db.createUsers
 
       UserProject.set(u1, p1, true)
       var found = UserProject.find(u1, p1)
-      found must haveSize(1)
       found.map(_.userId) must beSome(u1.id)
       found.map(_.projectId) must beSome(p1.id)
       found.map(_.selected) must beSome(true)
 
       UserProject.set(u1, p1, true)
       found = UserProject.find(u1, p1)
-      found must haveSize(1)
       found.map(_.selected) must beSome(true)
 
       UserProject.set(u1, p1, false)
       found = UserProject.find(u1, p1)
-      found must haveSize(1)
       found.map(_.selected) must beSome(false)
       }
     }
 
-    "provide all projects, sorted by name, marking selected" >> {
-      TestDbVendor.initAndClean
-
-      val (p1, p2, p3) = transaction( TestDbVendor.createProjects )
-      val (u, other) = transaction( TestDbVendor.createUsers )
+    "provide all projects, sorted by name, marking selected" >> new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
+      val (p1, p2, p3) = transaction( db.createProjects )
+      val (u, other) = transaction( db.createUsers )
 
       transaction {
       val d1_p1 = new Document
@@ -144,7 +136,7 @@ class UserProjectTest extends Specification {
       z must haveSize(1)
       z(0)._1 must be_==(p1)
       z(0)._2 must beFalse
-         
+
       val z_ = UserProject.listFor(Some(u), true)
       z_ must haveSize(2)
       z_(0)._1 must be_==(p1)
@@ -153,8 +145,5 @@ class UserProjectTest extends Specification {
       z_(1)._2 must beFalse
       }
     }
-  }
-
-  override def doBeforeSpec(actions: => Any) {
   }
 }

@@ -7,17 +7,19 @@ package vvv.docreg.db
 
 import vvv.docreg.model._
 import java.util.Date
-import org.squeryl.PrimitiveTypeMode._
 import java.sql.Timestamp
 import org.streum.configrity.Configuration
+import org.specs2.mutable.After
+import org.specs2.specification.Scope
 
-class TestDbVendor extends DbVendor(Configuration()) {
+class TestDbVendor extends DbVendor(Configuration(), 1) {
   def initAndClean() {
     init()
     clear()
   }
 
   def createUsers = {
+    import org.squeryl.PrimitiveTypeMode._
     val u = new User
     u.name = ("foo")
     u.email = ("foo@bar.com")
@@ -30,6 +32,7 @@ class TestDbVendor extends DbVendor(Configuration()) {
   }
   
   def createProjects = {
+    import org.squeryl.PrimitiveTypeMode._
     val p1 = new Project
     p1.name = ("p1")
     val p3 = new Project
@@ -41,6 +44,7 @@ class TestDbVendor extends DbVendor(Configuration()) {
   
   def createDocument(p: Project, author: User) =
   {
+    import org.squeryl.PrimitiveTypeMode._
     var d: Document = new Document
     d.number = ("234")
     d.projectId = (p.id)
@@ -72,4 +76,11 @@ class TestDbVendor extends DbVendor(Configuration()) {
   }
 }
 
-object TestDbVendor extends TestDbVendor
+trait TestDbScope extends Scope with After {
+  val db = new TestDbVendor
+  db.initAndClean()
+
+  def after = {
+    db.close()
+  }
+}

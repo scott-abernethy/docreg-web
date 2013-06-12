@@ -21,7 +21,7 @@ class SubmitEngine(agent: ActorRef, target: String, clientHost: String, clientVe
 {
   var cachedRequest: Submit = null
 
-  protected def receive = {
+  def receive = {
         case msg @ Submit(document, projectName, localFile, userFileName, comment, user) =>
         {
           // todo check revision is latest?

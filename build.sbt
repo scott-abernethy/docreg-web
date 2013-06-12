@@ -25,28 +25,28 @@ libraryDependencies ++= {
     "net.liftweb"       %% "lift-record"        % liftVersion        % "compile",
     "net.liftweb"       %% "lift-ldap"        % liftVersion        % "compile",
     "net.liftmodules"       %% "widgets_2.5"        % "1.3"        % "compile",
-//    "net.liftmodules"   %% "lift-jquery-module_2.5" % "2.3",
     "org.eclipse.jetty" % "jetty-webapp"        % "8.1.7.v20120910"  % "container,test",
     "org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container,test" artifacts Artifact("javax.servlet", "jar", "jar"),
     "org.specs2"        %% "specs2"             % "1.14"            % "test",
     "org.squeryl" %% "squeryl" % "0.9.5-6" % "compile",
-    "com.h2database" % "h2" % "1.2.147",
+    "com.h2database" % "h2" % "1.3.172" % "test",
     "mysql" % "mysql-connector-java" % "5.1.21",
-    "org.mockito" % "mockito-all" % "1.8.5" % "test",
+    "org.mockito" % "mockito-all" % "1.9.5" % "test",
     "c3p0" % "c3p0" % "0.9.1.2",
     "org.jboss.netty" % "netty" % "3.2.3.Final",
-    "com.typesafe.akka" % "akka-actor" % "2.0.1",
-    "com.typesafe.akka" % "akka-slf4j" % "2.0.1",
-    "com.typesafe.akka" % "akka-testkit" % "2.0.1" % "test",
+    "com.typesafe.akka" %% "akka-actor" % "2.1.4",
+    "com.typesafe.akka" %% "akka-slf4j" % "2.1.4",
+    "com.typesafe.akka" %% "akka-testkit" % "2.1.4" % "test",
     "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.2",
-//    "net.databinder" %% "dispatch-http" % "0.8.8",
-//    "ch.ethz.ganymed" % "ganymed-ssh2" % "build210",
     "org.streum" %% "configrity-core" % "1.0.0",
     "org.apache.tika" % "tika-core" % "1.2",
-//    "org.apache.httpcomponents" % "httpclient" % "4.1.2"  // <- comes in via dispatch-http now.
     "org.slf4j" % "slf4j-log4j12" % "1.7.2"
   )
 }
+
+// fork in Test := true
+
+parallelExecution in Test := false
 
 // override def jettyPort = 9333
 

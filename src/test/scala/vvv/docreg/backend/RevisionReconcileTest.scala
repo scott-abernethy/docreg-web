@@ -5,9 +5,9 @@
 
 package vvv.docreg.backend
 
-import org.specs.Specification
-import org.specs.mock.Mockito
-import vvv.docreg.db.TestDbVendor
+import org.specs2.mutable._
+import org.specs2.mock._
+import vvv.docreg.db.{TestDbScope, TestDbVendor}
 import vvv.docreg.agent.RevisionInfo
 import java.util.Date
 import net.liftweb.common.Full
@@ -15,19 +15,20 @@ import org.mockito.Matchers
 import vvv.docreg.model._
 import java.sql.Timestamp
 import vvv.docreg.util.T
-import org.squeryl.PrimitiveTypeMode._
 
 class RevisionReconcileTest extends Specification with Mockito
 {
+  sequential
+
   "RevisionReconcile" should
   {
-    "Handle smite" >>
+    "Handle smite" >> new TestDbScope
     {
-      TestDbVendor.initAndClean()
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-      val (p1, _, _) = TestDbVendor.createProjects
-      val (u1, u2) = TestDbVendor.createUsers
-      val (d, r1, r2, r3) = TestDbVendor.createDocument(p1, u1)
+      val (p1, _, _) = db.createProjects
+      val (u1, u2) = db.createUsers
+      val (d, r1, r2, r3) = db.createDocument(p1, u1)
       val s = new Subscription
       s.documentId = (d.id)
       s.userId = (u2.id)
@@ -38,14 +39,14 @@ class RevisionReconcileTest extends Specification with Mockito
         val userLookup = lookup
       }
 
-      Document.forKey("234").toOption must beSomething
+      Document.forKey("234").toList must haveSize(1)
       Revision.forDocument(d) must haveSize(3)
       Subscription.forDocument(d) must haveSize(1)
 
       // Reconcile with same key, but the smite info
       val result = x.reconcileRevisions(d, RevisionInfo("0234-000-Free Document Number!", "DocReg", "B4 First version", "Everyone", "System", new Date(), "boromir",	"10.16.9.68",	"smite", "smite", "smite", "") :: Nil)
 
-      result must containAll(ReconcileDocumentRemoved :: Nil)
+      result must containAllOf(ReconcileDocumentRemoved :: Nil)
 
       Document.forKey("234").toOption must beNone
       Revision.forDocument(d) must beEmpty
@@ -53,13 +54,13 @@ class RevisionReconcileTest extends Specification with Mockito
       }
     }
 
-    "Remove missing revisions" >>
+    "Remove missing revisions" >> new TestDbScope
     {
-      TestDbVendor.initAndClean()
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-      val (p1, _, _) = TestDbVendor.createProjects
-      val (u1, u2) = TestDbVendor.createUsers
-      val (d, r1, r2, r3) = TestDbVendor.createDocument(p1, u1)
+      val (p1, _, _) = db.createProjects
+      val (u1, u2) = db.createUsers
+      val (d, r1, r2, r3) = db.createDocument(p1, u1)
       val s = new Subscription
       s.documentId = (d.id)
       s.userId = (u2.id)
@@ -72,7 +73,7 @@ class RevisionReconcileTest extends Specification with Mockito
 
       lookup.lookup(Matchers.eq(Some("aaa")), Matchers.eq(None), Matchers.eq(Some("foo")), Matchers.anyString()) returns(Full(u1))
 
-      Document.forKey("234").toOption must beSomething
+      Document.forKey("234").toList must haveSize(1)
       Revision.forDocument(d) must haveSize(3)
       Subscription.forDocument(d) must haveSize(1)
 
@@ -83,22 +84,22 @@ class RevisionReconcileTest extends Specification with Mockito
           Nil
       )
 
-      result must containAll(ReconcileRevisionPurged :: ReconcileRevisionUpdated :: Nil)
+      result must containAllOf(ReconcileRevisionPurged :: ReconcileRevisionUpdated :: Nil)
 
-      Document.forKey("234").toOption must beSomething
+      Document.forKey("234").toList must haveSize(1)
       Revision.forDocument(d) must haveSize(2)
       Revision.forDocument(d, 3) must beNone
       Subscription.forDocument(d) must haveSize(1)
       }
     }
 
-    "Remove missing revisions, unless there were no revisions found" >>
+    "Remove missing revisions, unless there were no revisions found" >> new TestDbScope
     {
-      TestDbVendor.initAndClean()
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-      val (p1, _, _) = TestDbVendor.createProjects
-      val (u1, u2) = TestDbVendor.createUsers
-      val (d, r1, r2, r3) = TestDbVendor.createDocument(p1, u1)
+      val (p1, _, _) = db.createProjects
+      val (u1, u2) = db.createUsers
+      val (d, r1, r2, r3) = db.createDocument(p1, u1)
       val s = new Subscription
       s.documentId = (d.id)
       s.userId = (u2.id)
@@ -111,27 +112,27 @@ class RevisionReconcileTest extends Specification with Mockito
 
       lookup.lookup(Matchers.eq(Some("aaa")), Matchers.eq(None), Matchers.eq(Some("foo")), Matchers.anyString()) returns(Full(u1))
 
-      Document.forKey("234").toOption must beSomething
+      Document.forKey("234").toList must haveSize(1)
       Revision.forDocument(d) must haveSize(3)
       Subscription.forDocument(d) must haveSize(1)
 
       val result = x.reconcileRevisions(d,Nil)
 
-      result must containAll(Nil)
+      result must containAllOf(Nil)
 
-      Document.forKey("234").toOption must beSomething
+      Document.forKey("234").toList must haveSize(1)
       Revision.forDocument(d) must haveSize(3)
-      Revision.forDocument(d, 3) must beSomething
+      Revision.forDocument(d, 3).toList must haveSize(1)
       Subscription.forDocument(d) must haveSize(1)
       }
     }
 
-    "Add first revision" >>
+    "Add first revision" >> new TestDbScope
     {
-      TestDbVendor.initAndClean()
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-      val (p1, p2, p3) = TestDbVendor.createProjects
-      val (u1, u2) = TestDbVendor.createUsers
+      val (p1, p2, p3) = db.createProjects
+      val (u1, u2) = db.createUsers
       var d = new Document
       d.number = ("336")
       d.projectId = (p2.id)
@@ -150,7 +151,7 @@ class RevisionReconcileTest extends Specification with Mockito
 
       val result = x.reconcileRevisions(d, RevisionInfo("0336-001-Foo bar.txt", "p2", "Initial version of foo bar baz doco.", "Everyone", "Johnty Roads", now, "boromir", "1.2.3.4", "pc983", "jroads", "v9", "1314324") :: Nil)
 
-      result must containAll(ReconcileRevisionAdded(1) :: Nil)
+      result must containAllOf(ReconcileRevisionAdded(1) :: Nil)
 
       Revision.forDocument(d) must haveSize(1)
       val r = Revision.forDocument(d, 1).getOrElse(null)
@@ -158,19 +159,19 @@ class RevisionReconcileTest extends Specification with Mockito
       r.version must be_==(1)
       r.filename must be_==("0336-001-Foo bar.txt")
       r.authorId must be_==(u1.id)
-      r.date must be_==(now)
+      r.date.getTime must be_==(now.getTime)
       r.comment must be_==("Initial version of foo bar baz doco.")
       r.rawAuthor must be_==("Johnty Roads")
       r.clientVersion must be_==("v9")
       }
     }
 
-    "Do nothing for existing revision that has not changed" >>
+    "Do nothing for existing revision that has not changed" >> new TestDbScope
     {
-      TestDbVendor.initAndClean()
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-      val (p1, p2, p3) = TestDbVendor.createProjects
-      val (u1, u2) = TestDbVendor.createUsers
+      val (p1, p2, p3) = db.createProjects
+      val (u1, u2) = db.createUsers
       var d = new Document
       d.number = ("336")
       d.projectId = (p2.id)
@@ -212,12 +213,12 @@ class RevisionReconcileTest extends Specification with Mockito
       }
     }
 
-    "Add and update if detected" >>
+    "Add and update if detected" >> new TestDbScope
     {
-      TestDbVendor.initAndClean()
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-      val (p1, p2, p3) = TestDbVendor.createProjects
-      val (u1, u2) = TestDbVendor.createUsers
+      val (p1, p2, p3) = db.createProjects
+      val (u1, u2) = db.createUsers
       var d = new Document
       d.number = ("336")
       d.projectId = (p2.id)
@@ -249,7 +250,7 @@ class RevisionReconcileTest extends Specification with Mockito
         RevisionInfo("0336-002-Foo bar baz.txt", "p2", "UPdated.", "Everyone", "Dr. Hawking", now, "boromir", "99.99.99.99", "pc111-ubu", "shawking", "v9.1", "989876") ::
           Nil)
 
-      result must containAll(ReconcileRevisionUpdated :: ReconcileRevisionAdded(2) :: Nil)
+      result must containAllOf(ReconcileRevisionUpdated :: ReconcileRevisionAdded(2) :: Nil)
 
       Revision.forDocument(d) must haveSize(2)
       Revision.forDocument(d, 1).map(_.comment) must beSome("Initial version.")
@@ -257,12 +258,12 @@ class RevisionReconcileTest extends Specification with Mockito
       }
     }
 
-    "When duplicate info found for a revision, ignore earlier ones" >>
+    "When duplicate info found for a revision, ignore earlier ones" >> new TestDbScope
     {
-      TestDbVendor.initAndClean()
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-      val (p1, p2, p3) = TestDbVendor.createProjects
-      val (u1, u2) = TestDbVendor.createUsers
+      val (p1, p2, p3) = db.createProjects
+      val (u1, u2) = db.createUsers
       var d = new Document
       d.number = ("336")
       d.projectId = (p2.id)
@@ -295,7 +296,7 @@ class RevisionReconcileTest extends Specification with Mockito
           RevisionInfo("0336-001-Foo bar.txt", "p2", "Initial version 2.", "Everyone", "Dr. Hawking", now, "boromir", "99.99.99.99", "pc111-ubu", "shawking", "v9.1", "989876") ::
           Nil)
 
-      result must containAll(ReconcileRevisionUpdated :: Nil)
+      result must containAllOf(ReconcileRevisionUpdated :: Nil)
 
       Revision.forDocument(d) must haveSize(1)
       Revision.forDocument(d, 1).map(_.comment) must beSome("Initial version 2.")

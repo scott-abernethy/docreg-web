@@ -8,7 +8,6 @@ package vvv.docreg.agent
 import akka.actor.Actor
 import scala.util.control.Exception._
 import scalax.file.NotFileException
-import akka.util.Duration
 import java.util.concurrent.TimeUnit
 import scalax.io.managed.SeekableByteChannelResource
 import java.text.SimpleDateFormat
@@ -16,9 +15,10 @@ import java.util.{TimeZone, Date}
 import util.matching.Regex
 import java.io.{File, FileInputStream, FileNotFoundException}
 import net.liftweb.common.Loggable
-import akka.dispatch.{Future, Await}
-import akka.util.duration._
 import scalax.io.{LongTraversable, Resource, SeekableByteChannel}
+import scala.concurrent.Future
+import scala.util.Success
+import scala.concurrent.duration._
 
 // docreg/docreg.txt
 // docreg/editlog.txt
@@ -41,12 +41,14 @@ case class ResponseFailure(request: AnyRef)
 
 class FileDatabase extends Actor
 {
+  import scala.concurrent.ExecutionContext.Implicits.global
+
   def receive =
   {
     case m @ GetRegister => {
       val to = sender
       FileDatabaseHelper.loadRegister().onComplete{
-        case Right(items) => to ! ResponseRegister(items)
+        case Success(items) => to ! ResponseRegister(items)
         case _ => to ! ResponseFailure(m)
       }
     }
@@ -54,7 +56,7 @@ class FileDatabase extends Actor
     case m @ GetLog(key, access) => {
       val to = sender
       FileDatabaseHelper.loadLog(key, access).onComplete{
-        case Right(items) => to ! ResponseLog(key, items)
+        case Success(items) => to ! ResponseLog(key, items)
         case _ => to ! ResponseFailure(m)
       }
     }
@@ -62,7 +64,7 @@ class FileDatabase extends Actor
     case m @ GetMail(key) => {
       val to = sender
       FileDatabaseHelper.loadMail(key).onComplete{
-        case Right(items) => to ! ResponseMail(key, items)
+        case Success(items) => to ! ResponseMail(key, items)
         case _ => to ! ResponseFailure(m)
       }
     }
@@ -70,7 +72,7 @@ class FileDatabase extends Actor
     case m @ GetApproval(key) => {
       val to = sender
       FileDatabaseHelper.loadApproval(key).onComplete{
-        case Right(items) => to ! ResponseApproval(key, items)
+        case Success(items) => to ! ResponseApproval(key, items)
         case _ => to ! ResponseFailure(m)
       }
     }
@@ -179,7 +181,7 @@ object FileDatabaseHelper {
     val processor = for {
       in <- items.processor
       _ <- in.repeatUntilEmpty()
-      next <- in.next.timeout(scala.concurrent.duration.Duration.apply(15, "seconds"))
+      next <- in.next.timeout(15.seconds)
     } yield encoder(next)
 
     processor.traversable[Option[X]].async.foldLeft(List.empty[X]) {

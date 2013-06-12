@@ -151,9 +151,9 @@ object DaemonProtocol
 {
   val protocolVersion: Int = 4
 
-  def main(args: Array[String])
-  {
-    println("disabled")
+//  def main(args: Array[String])
+//  {
+//    println("disabled")
 //    //getNextChange(Actor.self, "shelob", -1)
 //
 ////    val request = RegisterRequest(
@@ -183,5 +183,5 @@ object DaemonProtocol
 //    Actor.receiveWithin(5000) {
 //      case in => println("XX " + in)
 //    }
-  }
+//  }
 }

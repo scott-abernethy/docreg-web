@@ -34,7 +34,7 @@ class DaemonAgentImpl extends DaemonAgent with DaemonProtocol with Loggable
   }
 
 
-  protected def receive = {
+  def receive = {
         case RequestPackage(replyTo, target, request) =>
         {
           val encoding = request match {

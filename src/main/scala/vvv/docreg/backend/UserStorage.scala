@@ -6,19 +6,19 @@
 package vvv.docreg.backend
 
 import akka.actor.Actor
-import akka.util.Duration
 import vvv.docreg.util.Environment
 import net.liftweb.common.{Empty, Full}
 import vvv.docreg.model.{ProjectAuthorization, Project, User, UserLookup}
 import org.squeryl.PrimitiveTypeMode._
+import scala.concurrent.duration._
 
 class UserStorage extends Actor {
   override def preStart() {
-    context.system.scheduler.schedule(Duration("15 min"), Duration("24 hour"), self, 'Check)
+    context.system.scheduler.schedule(15.minutes, 24.hours, self, 'Check)(context.dispatcher)
     super.preStart()
   }
 
-  protected def receive = {
+  def receive = {
     case 'Check => {
       val directory = Environment.env.directory
 

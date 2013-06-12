@@ -5,29 +5,29 @@
 
 package vvv.docreg.backend
 
-import org.specs._
-import mock.Mockito
-import vvv.docreg.db.TestDbVendor
+import org.specs2.mutable._
+import org.specs2.mock._
+import vvv.docreg.db.{TestDbScope, TestDbVendor}
 import vvv.docreg.agent.ApprovalInfo
 import java.util.Date
 import net.liftweb.common.{Full, Empty}
 import org.mockito.Matchers
 import vvv.docreg.model.{ApprovalState, UserLookupProvider, Approval, Document}
 import java.sql.Timestamp
-import org.squeryl.PrimitiveTypeMode._
 
 class ApprovalReconcileTest extends Specification with Mockito
 {
+  sequential
+
   "ApprovalReconcile" should
   {
-    "Do nothing if no approvals and no agentapprovals" >>
+    "Do nothing if no approvals and no agentapprovals" >> new TestDbScope
     {
-      TestDbVendor.initAndClean()
-
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-      val (p1, _, _) = TestDbVendor.createProjects
-      val (u1, u2) = TestDbVendor.createUsers
-      val (d, r1, r2, r3) = TestDbVendor.createDocument(p1, u1)
+      val (p1, _, _) = db.createProjects
+      val (u1, u2) = db.createUsers
+      val (d, r1, r2, r3) = db.createDocument(p1, u1)
 
       val lookup = mock[UserLookupProvider]
       
@@ -43,14 +43,13 @@ class ApprovalReconcileTest extends Specification with Mockito
       }
     }
 
-    "Add new approvals" >>
+    "Add new approvals" >> new TestDbScope
     {
-      TestDbVendor.initAndClean()
-
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-      val (p1, _, _) = TestDbVendor.createProjects
-      val (u1, u2) = TestDbVendor.createUsers
-      val (d, r1, r2, r3) = TestDbVendor.createDocument(p1, u1)
+      val (p1, _, _) = db.createProjects
+      val (u1, u2) = db.createUsers
+      val (d, r1, r2, r3) = db.createDocument(p1, u1)
 
       val lookup = mock[UserLookupProvider]
       lookup.lookup(Matchers.eq(None), Matchers.eq(Some("aemail")), Matchers.eq(Some("aname")), Matchers.anyString()) returns(Full(u2))
@@ -69,8 +68,8 @@ class ApprovalReconcileTest extends Specification with Mockito
       x.reconcileApprovals(d, approvals)
 
       Approval.forDocument(d) must haveSize(2)
-      Approval.forRevision(r1).head.revisionId must be_==(Full(r1.id))
-      Approval.forRevision(r1).head.userId must be_==(Full(u2.id))
+      Approval.forRevision(r1).head.revisionId must be_==(r1.id)
+      Approval.forRevision(r1).head.userId must be_==(u2.id)
       Approval.forRevision(r1).head.comment must be_==("Just because")
       Approval.forRevision(r1).head.state must be_==(ApprovalState.approved)
       Approval.forRevision(r1).head.date must be_==(date1)
@@ -78,14 +77,13 @@ class ApprovalReconcileTest extends Specification with Mockito
       }
     }
 
-    "Do nothing for existing approvals" >>
+    "Do nothing for existing approvals" >> new TestDbScope
     {
-      TestDbVendor.initAndClean()
-
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-      val (p1, _, _) = TestDbVendor.createProjects
-      val (u1, u2) = TestDbVendor.createUsers
-      val (d, r1, r2, r3) = TestDbVendor.createDocument(p1, u1)
+      val (p1, _, _) = db.createProjects
+      val (u1, u2) = db.createUsers
+      val (d, r1, r2, r3) = db.createDocument(p1, u1)
 
       val lookup = mock[UserLookupProvider]
       lookup.lookup(Matchers.eq(None), Matchers.eq(Some("aemail")), Matchers.eq(Some("aname")), Matchers.anyString()) returns(Full(u2))
@@ -116,14 +114,13 @@ class ApprovalReconcileTest extends Specification with Mockito
       }
     }
 
-    "Purge non-existant approvals" >>
+    "Purge non-existant approvals" >> new TestDbScope
     {
-      TestDbVendor.initAndClean()
-
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-      val (p1, _, _) = TestDbVendor.createProjects
-      val (u1, u2) = TestDbVendor.createUsers
-      val (d, r1, r2, r3) = TestDbVendor.createDocument(p1, u1)
+      val (p1, _, _) = db.createProjects
+      val (u1, u2) = db.createUsers
+      val (d, r1, r2, r3) = db.createDocument(p1, u1)
 
       val lookup = mock[UserLookupProvider]
       lookup.lookup(Matchers.eq(None), Matchers.eq(Some("aemail")), Matchers.eq(Some("aname")), Matchers.anyString()) returns(None)
@@ -148,15 +145,14 @@ class ApprovalReconcileTest extends Specification with Mockito
       }
     }
 
-    "Correct updated approvals" >>
+    "Correct updated approvals" >> new TestDbScope
     {
       // Bug reported by Robert Brown 28.03.2012 where approval username changed from system to RB.
-      TestDbVendor.initAndClean()
-
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-      val (p1, _, _) = TestDbVendor.createProjects
-      val (u1, u2) = TestDbVendor.createUsers
-      val (d, r1, r2, r3) = TestDbVendor.createDocument(p1, u1)
+      val (p1, _, _) = db.createProjects
+      val (u1, u2) = db.createUsers
+      val (d, r1, r2, r3) = db.createDocument(p1, u1)
 
       val lookup = mock[UserLookupProvider]
       lookup.lookup(Matchers.eq(None), Matchers.eq(Some("aemail")), Matchers.eq(Some("aname")), Matchers.anyString()) returns(Full(u1))
@@ -178,8 +174,8 @@ class ApprovalReconcileTest extends Specification with Mockito
       ))
 
       Approval.forDocument(d) must haveSize(1)
-      Approval.forRevision(r3).head.userId must be_==(Full(u2.id))
-      Approval.forRevision(r3).head.rawUser must be_==(Full("bname"))
+      Approval.forRevision(r3).head.userId must be_==(u2.id)
+      Approval.forRevision(r3).head.rawUser must be_==("bname")
       }
     }
   }

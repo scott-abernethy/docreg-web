@@ -5,7 +5,7 @@
 
 package vvv.docreg.snippet
 
-import org.specs.Specification
+import org.specs2.mutable._
 import java.util.Calendar
 import vvv.docreg.model.Revision
 import java.sql.Timestamp

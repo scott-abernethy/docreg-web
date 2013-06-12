@@ -8,8 +8,7 @@ package vvv.docreg.agent
 import net.liftweb.util.Schedule
 import net.liftweb.common.Loggable
 import vvv.docreg.util.Millis
-import akka.util.duration._
-import akka.util.Duration
+import scala.concurrent.duration._
 import java.util.concurrent.{TimeUnit}
 import akka.actor.{Cancellable, PoisonPill, Actor, ActorRef}
 import net.liftweb.http.js.JsCmds._Noop
@@ -29,7 +28,7 @@ class ChangePoller(hostname: String, consumer: ActorRef, agent: ActorRef) extend
   var lastDocumentInfo: Option[DocumentInfo] = None
   var wakeCancellable: Option[Cancellable] = None
 
-  protected def receive = {
+  def receive = {
         case 'Reset =>
         {
           lastChangeNumber = -1
@@ -98,14 +97,14 @@ class ChangePoller(hostname: String, consumer: ActorRef, agent: ActorRef) extend
   {
     if (wakeCancellable.isEmpty)
     {
-      val cancellable = context.system.scheduler.scheduleOnce(Duration(wakeInterval, TimeUnit.MILLISECONDS), self, 'Wake)
+      val cancellable = context.system.scheduler.scheduleOnce(Duration(wakeInterval, TimeUnit.MILLISECONDS), self, 'Wake)(context.dispatcher)
       wakeCancellable = Some(cancellable)
     }
   }
 
   def schedulePoll
   {
-    context.system.scheduler.scheduleOnce(Duration(pollInterval, TimeUnit.MILLISECONDS), self, 'Poll)
+    context.system.scheduler.scheduleOnce(Duration(pollInterval, TimeUnit.MILLISECONDS), self, 'Poll)(context.dispatcher)
   }
 }
 

@@ -5,7 +5,7 @@
 
 package vvv.docreg.agent
 
-import org.specs.Specification
+import org.specs2.mutable._
 import akka.testkit.TestActorRef
 import akka.actor.ActorSystem
 

@@ -16,10 +16,10 @@ import com.mchange.v2.c3p0.ComboPooledDataSource
 import org.streum.configrity.Configuration
 import scala.Some
 
-class DbVendor(config: Configuration) extends Loggable {
+class DbVendor(config: Configuration, maxPoolSize: Int = 10) extends Loggable {
   lazy val driver = config.get[String]("db.driver") getOrElse "org.h2.Driver"
   lazy val adapter = config.get[String]("db.adapter") getOrElse "org.squeryl.adapters.H2Adapter"
-  lazy val url = config.get[String]("db.url") getOrElse "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1"
+  lazy val url = config.get[String]("db.url") getOrElse "jdbc:h2:mem:;MODE=MySQL"
   lazy val user = config.get[String]("db.user") getOrElse ""
   lazy val password = config.get[String]("db.password") getOrElse ""
 
@@ -30,9 +30,9 @@ class DbVendor(config: Configuration) extends Loggable {
     pool.setJdbcUrl(url)
     pool.setUser(user)
     pool.setPassword(password)
-    pool.setMinPoolSize(3)
+    pool.setMinPoolSize(1)
     pool.setAcquireIncrement(1)
-    pool.setMaxPoolSize(10)
+    pool.setMaxPoolSize(maxPoolSize)
 
     // Work around MySQL connection timeouts.
     pool.setMaxIdleTime(1 * 60 * 60) // 1 hour

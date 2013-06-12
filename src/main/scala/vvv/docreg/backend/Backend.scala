@@ -14,8 +14,7 @@ import vvv.docreg.agent._
 import org.squeryl.PrimitiveTypeMode._
 import vvv.docreg.model._
 import akka.actor._
-import akka.util.Duration
-import akka.util.duration._
+import scala.concurrent.duration._
 import vvv.docreg.db.DbSchema
 
 case class Reload(d: Document)
@@ -63,13 +62,13 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
       "java.vendor" -> System.getProperty("java.vendor"),
       "timezone" -> java.util.TimeZone.getDefault.getDisplayName)
     logger.info("System(" + system + ")")
-    context.system.scheduler.schedule(1 minutes, 24 hours, self, 'Resync)
+    context.system.scheduler.schedule(1.minutes, 24.hours, self, 'Resync)(context.dispatcher)
     clerk ! Filing(fileDatabase)
     priorityClerk ! Filing(fileDatabase)
     super.preStart()
   }
 
-  protected def receive = {
+  def receive = {
     case 'Resync => {
       logger.info("Backend resync against register, starting...")
       fileDatabase ! GetRegister
@@ -96,7 +95,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
         }
       }
       // Slow down the resync by delaying the remaining loads...
-      context.system.scheduler.scheduleOnce(100 milliseconds, self, Loaded(ds))
+      context.system.scheduler.scheduleOnce(100 milliseconds, self, Loaded(ds))(context.dispatcher)
     }
     case Loaded(Nil) => {
       logger.debug("Backend resync against register, complete.")

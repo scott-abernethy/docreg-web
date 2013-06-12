@@ -5,8 +5,7 @@
 
 package vvv.docreg.backend
 
-import org.specs.runner.{ConsoleRunner, JUnit4}
-import org.specs.Specification
+import org.specs2.mutable._
 import net.liftweb.common.{Full, Empty, Failure}
 
 class UserMigrationTestSpecs extends Specification {

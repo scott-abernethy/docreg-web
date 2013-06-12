@@ -10,9 +10,9 @@ import vvv.docreg.model.{FilteredRevision, Project, Revision, Document}
 import akka.event.Logging
 import net.liftweb.actor.LiftActor
 import java.sql.Timestamp
-import akka.util.duration._
 import vvv.docreg.util.T
 import org.squeryl.PrimitiveTypeMode._
+import scala.concurrent.duration._
 
 case class Subscribe(subscriber: LiftActor)
 case class Unsubscribe(subscriber: LiftActor)
@@ -38,7 +38,7 @@ class DocumentStream extends Actor {
 
   override def preStart() {
     stream = FilteredRevision.findRecent(-1)
-    context.system.scheduler.schedule(24 hours, 24 hours, self, 'SetStart)
+    context.system.scheduler.schedule(24.hours, 24.hours, self, 'SetStart)(context.dispatcher)
     super.preStart()
   }
 

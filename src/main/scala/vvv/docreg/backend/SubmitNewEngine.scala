@@ -13,7 +13,7 @@ class SubmitNewEngine(agent: ActorRef, target: String, clientHost: String, clien
 {
   var cachedRequest: Create = null
 
-  protected def receive = {
+  def receive = {
         case msg @ Create(projectName, localFile, userFileName, comment, user) =>
         {
           // todo check the fields, including comment which should default to "[no description]"? Check default for approval etc also.

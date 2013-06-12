@@ -5,16 +5,9 @@
 
 package vvv.docreg.backend
 
-import org.specs.mock.Mockito
-import org.specs.Specification
-import org.squeryl.PrimitiveTypeMode._
-import vvv.docreg.db.TestDbVendor
-import vvv.docreg.model.{UserLookupProvider, Subscription}
-import vvv.docreg.agent.SubscriberInfo
-import net.liftweb.common.Full
-import org.mockito.Matchers
+import org.specs2.mutable._
 
-class TagReconcileTest extends Specification with Mockito {
+class TagReconcileTest extends Specification {
   "TagReconcile" should {
     "clean up tag strings" >> {
       val x = new TagReconcile{}

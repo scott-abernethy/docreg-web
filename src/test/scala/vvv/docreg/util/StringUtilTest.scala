@@ -5,7 +5,7 @@
 
 package vvv.docreg.util
 
-import org.specs._
+import org.specs2.mutable._
 
 class StringUtilTest extends Specification {
   "StringUtil" should {

@@ -1,23 +1,23 @@
 /*
- * Copyright (c) 2013 Scott Abernethy.
- * This file is part of DocReg+Web. Please refer to the NOTICE.txt file for license details.
- */
+* Copyright (c) 2013 Scott Abernethy.
+* This file is part of DocReg+Web. Please refer to the NOTICE.txt file for license details.
+*/
 
 package vvv.docreg.model
 
-import org.specs._
-import java.util.Date
-import vvv.docreg.db.TestDbVendor
-import net.liftweb.http.js.JsCmds._Noop
+import org.specs2.mutable._
+import vvv.docreg.db.{TestDbScope}
 import vvv.docreg.util.T
-import org.squeryl.PrimitiveTypeMode._
 
 class DocumentTest extends Specification {
+
+  sequential
+
   "Document Model" should {
-    "next version is 1 if no revisions" >> {
-      TestDbVendor.initAndClean()
+    "next version is 1 if no revisions" in new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-      val (p,_,_) = TestDbVendor.createProjects
+      val (p,_,_) = db.createProjects
       val d = new Document
       d.number = ("336")
       d.projectId = (p.id)
@@ -27,13 +27,14 @@ class DocumentTest extends Specification {
 
       d.nextVersion must be_==(1)
       }
+      success
     }
 
-    "create next version file name" in {
-      TestDbVendor.initAndClean()
+    "create next version file name" in new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-      val (u1, u2) = TestDbVendor.createUsers
-      val (p,_,_) = TestDbVendor.createProjects
+      val (u1, u2) = db.createUsers
+      val (p,_,_) = db.createProjects
       val d = new Document
       d.number = ("234")
       d.projectId = (p.id)
@@ -52,13 +53,14 @@ class DocumentTest extends Specification {
 
       d.nextFileName("Rainbow Fish", "youyoui.odt") must be_==("0234-005-Rainbow Fish.odt")
       }
+      success
     }
 
-    "check no file extension" in {
-      TestDbVendor.initAndClean()
+    "check no file extension" in new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-      val (u1, u2) = TestDbVendor.createUsers
-      val (p,_,_) = TestDbVendor.createProjects
+      val (u1, u2) = db.createUsers
+      val (p,_,_) = db.createProjects
       val d = new Document
       d.number = ("234")
       d.projectId = (p.id)
@@ -77,9 +79,10 @@ class DocumentTest extends Specification {
 
       d.nextFileName("The Nameless City", "youyoui") must be_==("0234-005-The Nameless City")
       }
+      success
     }
 
-    "check valid identifiers" >> {
+    "check valid identifiers" in {
       Document.ValidIdentifier.findFirstIn("") must beNone
       Document.ValidIdentifier.findFirstIn("index") must beNone
       Document.ValidIdentifier.findFirstIn("d/987") must beNone
@@ -87,8 +90,9 @@ class DocumentTest extends Specification {
       Document.ValidIdentifier.findFirstIn("user/1234/profile") must beNone
 
       def checkValidId(in: String, expectedKey: String, expectedVersion: String) = {
+        import Document.ValidIdentifier
         in match {
-          case Document.ValidIdentifier(key, version) => {
+          case ValidIdentifier(key, version) => {
             key must be_==(expectedKey)
             if (expectedVersion == null) {
               version must beNull[String]
@@ -98,7 +102,7 @@ class DocumentTest extends Specification {
             }
           }
           case _ => {
-            fail()
+            failure
           }
         }
       }
@@ -112,14 +116,18 @@ class DocumentTest extends Specification {
 
       checkValidId("12-4", "12", "-4")
       checkValidId("9999-999", "9999", "-999")
+
+      success
     }
 
-    "check valid document filename" >>
+    "check valid document filename" in
     {
-      def checkValid(in: String, expectedKey: String, expectedVersion: String, expectedFileName: String)
+      import Document.ValidDocumentFileName
+
+      def checkValidFN(in: String, expectedKey: String, expectedVersion: String, expectedFileName: String)
       {
         in match {
-          case Document.ValidDocumentFileName(key, version, fileName) =>
+          case ValidDocumentFileName(key, version, fileName) =>
           {
             key must be_==(expectedKey)
             version must be_==(expectedVersion)
@@ -127,50 +135,55 @@ class DocumentTest extends Specification {
           }
           case _ =>
           {
-            fail()
+            failure
           }
         }
       }
 
-      Document.ValidDocumentFileName.findFirstIn("6146-001") must beNone
-      Document.ValidDocumentFileName.findFirstIn("6146-001-") must beNone
-      Document.ValidDocumentFileName.findFirstIn("6146-New Document Test.txt") must beNone
-      Document.ValidDocumentFileName.findFirstIn("New Document Test.txt") must beNone
+      ValidDocumentFileName.findFirstIn("6146-001") must beNone
+      ValidDocumentFileName.findFirstIn("6146-001-") must beNone
+      ValidDocumentFileName.findFirstIn("6146-New Document Test.txt") must beNone
+      ValidDocumentFileName.findFirstIn("New Document Test.txt") must beNone
 
-      checkValid("6146-001-New Document Test 3.txt", "6146", "001", "New Document Test 3.txt")
+      checkValidFN("6146-001-New Document Test 3.txt", "6146", "001", "New Document Test 3.txt")
+
+      success
     }
 
-    "check valid identifier and ext" >>
+    "check valid identifier and ext" in
     {
-      def checkValid(in: String, expectedKey: String)
+      import Document.IdentifierAndExtension
+
+      def checkValidIAE(in: String, expectedKey: String)
       {
         in match {
-          case Document.IdentifierAndExtension(key) =>
+          case IdentifierAndExtension(key) =>
           {
             key must be_==(expectedKey)
           }
           case _ =>
           {
-            fail()
+            failure
           }
         }
       }
-      Document.IdentifierAndExtension.findFirstIn("6146.") must beNone
-      Document.IdentifierAndExtension.findFirstIn(".txt") must beNone
-      Document.IdentifierAndExtension.findFirstIn("my doco") must beNone
-      Document.IdentifierAndExtension.findFirstIn("1234 txt") must beNone
+      IdentifierAndExtension.findFirstIn("6146.") must beNone
+      IdentifierAndExtension.findFirstIn(".txt") must beNone
+      IdentifierAndExtension.findFirstIn("my doco") must beNone
+      IdentifierAndExtension.findFirstIn("1234 txt") must beNone
 
-      checkValid("987.foo", "987")
-      checkValid("0987.foo", "0987")
-      checkValid("1234.doc", "1234")
+      checkValidIAE("987.foo", "987")
+      checkValidIAE("0987.foo", "0987")
+      checkValidIAE("1234.doc", "1234")
+
+      success
     }
 
-    "validate user access" >>
-    {
-      TestDbVendor.initAndClean()
+    "validate user access" in new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       inTransaction {
-        val (p1, p2, p3) = TestDbVendor.createProjects
-        val (u1, u2) = TestDbVendor.createUsers
+        val (p1, p2, p3) = db.createProjects
+        val (u1, u2) = db.createUsers
 
         val x = new Document
         x.projectId = p3.id
@@ -191,24 +204,25 @@ class DocumentTest extends Specification {
         ProjectAuthorization.revoke(u1, p3)
         x.allows(u1) must beFalse
       }
+      success
     }
   }
 
   "DocumentRef extractor" should {
     import Document.DocumentRef
 
-    "Fail to extract garbage" >> {
+    "Fail to extract garbage" in {
       DocumentRef.unapply("garbage") must beNone
     }
 
-    "Extract 1234 or 0066 like" >> {
+    "Extract 1234 or 0066 like" in {
       DocumentRef.unapply("1234") must beSome(("1234", Long.MaxValue))
       DocumentRef.unapply("546") must beSome(("546", Long.MaxValue))
       DocumentRef.unapply("9") must beSome(("9", Long.MaxValue))
       DocumentRef.unapply("0066") must beSome(("0066", Long.MaxValue))
     }
 
-    "Extract 2345-499 or 765-34 or 8-001 like" >> {
+    "Extract 2345-499 or 765-34 or 8-001 like" in {
       DocumentRef.unapply("2345-499") must beSome(("2345", 499l))
       DocumentRef.unapply("765-34") must beSome(("765", 34l))
       DocumentRef.unapply("8-001") must beSome(("8", 1l))
@@ -216,12 +230,12 @@ class DocumentTest extends Specification {
       DocumentRef.unapply("0066-002") must beSome(("0066", 2l))
     }
 
-    "Extract 1234.txt or 1234-876.txt like" >> {
+    "Extract 1234.txt or 1234-876.txt like" in {
       DocumentRef.unapply("1234.txt") must beSome(("1234", Long.MaxValue))
       DocumentRef.unapply("1234-876.txt") must beSome(("1234", 876l))
     }
 
-    "Extract 1234-My title.zip or 0666-666-Snap.jpg" >> {
+    "Extract 1234-My title.zip or 0666-666-Snap.jpg" in {
       DocumentRef.unapply("1234-My title.zip") must beSome(("1234", Long.MaxValue))
       DocumentRef.unapply("0666-666-Snap.jpg") must beSome(("0666", 666l))
     }
@@ -230,18 +244,18 @@ class DocumentTest extends Specification {
   "DocumentRevision extractor" should {
     import Document.DocumentRevision
 
-    "Not extract garbage input" >> {
+    "Not extract garbage input" in {
       DocumentRevision.unapply("garbage") must beNone
       DocumentRevision.unapply("123KKK-REV") must beNone
       DocumentRevision.unapply("X-Y") must beNone
       DocumentRevision.unapply("XXXX-YYY") must beNone
     }
 
-    "Load correct document" >> {
-      TestDbVendor.initAndClean()
+    "Load correct document" in new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       inTransaction{
-        val (p1, p2, p3) = TestDbVendor.createProjects
-        val (u1, u2) = TestDbVendor.createUsers
+        val (p1, p2, p3) = db.createProjects
+        val (u1, u2) = db.createUsers
 
         val d = new Document
         d.number = ("0234")
@@ -285,6 +299,7 @@ class DocumentTest extends Specification {
         DocumentRevision.unapply("0234-XYZ.jpg") must beSome(d, r4)
         DocumentRevision.unapply("0234-") must beNone
       }
+      success
     }
   }
 }

@@ -5,10 +5,9 @@
 
 package vvv.docreg.agent
 
-import org.specs.Specification
+import org.specs2.mutable._
 import akka.actor.{Props, ActorSystem}
 import akka.testkit.{TestProbe, TestKit}
-import akka.util.Duration
 import java.util.concurrent.TimeUnit
 
 class FileDatabaseTest extends Specification

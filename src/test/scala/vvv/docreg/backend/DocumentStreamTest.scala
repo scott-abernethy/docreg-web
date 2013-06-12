@@ -5,18 +5,19 @@
 
 package vvv.docreg.backend
 
-import org.specs._
+import org.specs2.mutable._
 import akka.testkit.{TestProbe, TestActorRef}
 import akka.actor.{ActorSystem, Props}
 import vvv.docreg.model.{Project, Revision, Document}
-import vvv.docreg.db.TestDbVendor
-import org.squeryl.PrimitiveTypeMode._
+import vvv.docreg.db.{TestDbScope, TestDbVendor}
 import java.sql.Timestamp
 
 class DocumentStreamTest extends Specification {
+
+  sequential
+
   "DocumentStream" should {
-    "check most recent" >> {
-      TestDbVendor.initAndClean()
+    "check most recent" >> new TestDbScope {
       implicit val system = ActorSystem()
       val ref = TestActorRef[DocumentStream]
       val x = ref.underlyingActor
@@ -26,17 +27,16 @@ class DocumentStreamTest extends Specification {
       system.shutdown
     }
 
-    "insert and put most recent at top" >> {
-      TestDbVendor.initAndClean()
-
+    "insert and put most recent at top" >> new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       implicit val system = ActorSystem()
       val ref = TestActorRef[DocumentStream]
       val x = ref.underlyingActor
 
       transaction {
-        val (u,_) = TestDbVendor.createUsers
-        val (p,_,_) = TestDbVendor.createProjects
-        val (d, r1, r2, r3) = TestDbVendor.createDocument(p, u)
+        val (u,_) = db.createUsers
+        val (p,_,_) = db.createProjects
+        val (d, r1, r2, r3) = db.createDocument(p, u)
 
         val now = System.currentTimeMillis
         r1.date = new Timestamp(now - 50000)
@@ -53,17 +53,16 @@ class DocumentStreamTest extends Specification {
       system.shutdown
     }
 
-    "insert and if not most recent, send insert" >> {
-      TestDbVendor.initAndClean()
-
+    "insert and if not most recent, send insert" >> new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       implicit val system = ActorSystem()
       val ref = TestActorRef[DocumentStream]
       val x = ref.underlyingActor
 
       transaction {
-        val (u,_) = TestDbVendor.createUsers
-        val (p,_,_) = TestDbVendor.createProjects
-        val (d, r1, r2, r3) = TestDbVendor.createDocument(p, u)
+        val (u,_) = db.createUsers
+        val (p,_,_) = db.createProjects
+        val (d, r1, r2, r3) = db.createDocument(p, u)
 
         val now = System.currentTimeMillis
         r1.date = new Timestamp(now - 50000)
@@ -79,9 +78,8 @@ class DocumentStreamTest extends Specification {
       system.shutdown
     }
 
-    "insert and ignore those outside of scope" >> {
-      TestDbVendor.initAndClean()
-
+    "insert and ignore those outside of scope" >> new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       implicit val system = ActorSystem()
       val ref = TestActorRef[DocumentStream]
       val x = ref.underlyingActor
@@ -90,9 +88,9 @@ class DocumentStreamTest extends Specification {
       x.start = new Timestamp(now - 40000)
 
       transaction {
-        val (u,_) = TestDbVendor.createUsers
-        val (p,_,_) = TestDbVendor.createProjects
-        val (d, r1, r2, r3) = TestDbVendor.createDocument(p, u)
+        val (u,_) = db.createUsers
+        val (p,_,_) = db.createProjects
+        val (d, r1, r2, r3) = db.createDocument(p, u)
 
         r1.date = new Timestamp(now - 50000)
         r2.date = new Timestamp(now - 30000)

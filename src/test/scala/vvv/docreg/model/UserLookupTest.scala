@@ -1,17 +1,15 @@
 /*
- * Copyright (c) 2013 Scott Abernethy.
- * This file is part of DocReg+Web. Please refer to the NOTICE.txt file for license details.
- */
+* Copyright (c) 2013 Scott Abernethy.
+* This file is part of DocReg+Web. Please refer to the NOTICE.txt file for license details.
+*/
 
 package vvv.docreg.model
 
-import org.specs.runner.{ConsoleRunner, JUnit4}
-import org.specs.Specification
-import vvv.docreg.db.TestDbVendor
-import org.specs.mock.Mockito
+import org.specs2.mutable._
+import vvv.docreg.db.{TestDbScope}
+import org.specs2.mock._
 import vvv.docreg.backend.{UserAttributes, Directory}
-import net.liftweb.common.{Full, Failure, Empty}
-import org.squeryl.PrimitiveTypeMode._
+import net.liftweb.common.{Full, Failure}
 
 class FakeUserAttributes(username: String, mail: String, display: String) extends NothingUserAttributes {
   override def userName() = Some(username)
@@ -40,42 +38,46 @@ class NothingUserAttributes extends UserAttributes {
 }
 
 class UserLookupTest extends Specification with Mockito {
+
+  sequential
+
   "UserLookup" should {
-    "Reject empty lookup" >> {
-      TestDbVendor.initAndClean()
+    "Reject empty lookup" in new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       val directory = mock[Directory]
       transaction{
         UserLookup.lookup(None, None, None, directory, "") must be_==(Failure("Invalid input"))
       }
     }
 
-    "Recognise system user" >> {
-      TestDbVendor.initAndClean()
+    "Recognise system user" in new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-      UserLookup.installDefaults()
-      UserLookup.installDefaults()
-      val directory = mock[Directory]
-      UserLookup.lookup(Some("smite"), None, Some("System"), directory, "") match {
-        case Full(x) =>
-          x.username must be_==("system.docreg")
-        case _ =>
-          fail()
+        UserLookup.installDefaults()
+        UserLookup.installDefaults()
+        val directory = mock[Directory]
+        UserLookup.lookup(Some("smite"), None, Some("System"), directory, "") match {
+          case Full(x) =>
+            x.username must be_==("system.docreg")
+          case _ =>
+            failure
+        }
       }
-      }
+      success
     }
-    "Check db first" >> {
-      TestDbVendor.initAndClean()
+    "Check db first" in new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       val directory = mock[Directory]
       transaction{
       var a = new User
       a.name = ("a")
       a.email = ("a@no.com")
-      a.username = ("aaa")
+      a.username = ("gggg")
       a = User.dbTable.insert(a)
       var b = new User
       b.name = ("b")
       b.email = ("b@no.com")
-      b.username = ("bbb")
+      b.username = ("hhhh")
       b = User.dbTable.insert(b)
       val ul = new UserLookup
       ul.username = Some("uUu")
@@ -86,19 +88,19 @@ class UserLookupTest extends Specification with Mockito {
       UserLookup.lookup(Some("uUu"), None, None, directory, "") must be_==(Full(a))
       }
     }
-    "First look up directory for username" >> {
-      TestDbVendor.initAndClean()
+    "First look up directory for username" in new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       val directory = mock[Directory]
       transaction{
       val a = new User
       a.name = ("a")
       a.email = ("a@no.com")
-      a.username = ("aaa")
+      a.username = ("gggg")
       User.dbTable.insert(a)
       val b = new User
       b.name = ("b")
       b.email = ("b@no.com")
-      b.username = ("bbb")
+      b.username = ("hhhh")
       User.dbTable.insert(b)
 
       directory.findFromUserName("uUu") returns(Full(new FakeUserAttributes("uUu", "u@hoo.org", "u u u")))
@@ -109,16 +111,17 @@ class UserLookupTest extends Specification with Mockito {
           user.email must be_==("u@hoo.org")
           user.name must be_==("u u u")
           user.username must be_==("uUu")
-        case _ => 
-          fail()
+        case _ =>
+          failure
       }
 //      there was no(directory).findFromMail(any[String])
 //      there was no(directory).findFromPartialName(any[String])
       }
+      success
     }
 
-    "Second look up directory for email" >> {
-      TestDbVendor.initAndClean()
+    "Second look up directory for email" in new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       val directory = mock[Directory]
       transaction{
       val a = new User
@@ -138,17 +141,18 @@ class UserLookupTest extends Specification with Mockito {
           user.email must be_==("l@la.la")
           user.name must be_==("la la la lah")
           user.username must be_==("lala")
-        case _ => 
-          fail()
+        case _ =>
+          failure
       }
       }
+      success
     }
 
-    "Remove authorizations if none provided via LDAP" >> {
-      TestDbVendor.initAndClean()
+    "Remove authorizations if none provided via LDAP" in new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       inTransaction{
-        val (p1, p2, p3) = TestDbVendor.createProjects
-        val (u1, u2) = TestDbVendor.createUsers
+        val (p1, p2, p3) = db.createProjects
+        val (u1, u2) = db.createUsers
         ProjectAuthorization.grant(u1, p3)
         ProjectAuthorization.grant(u2, p3)
         ProjectAuthorization.authorizedFor_?(u1, p1) must beFalse
@@ -164,11 +168,11 @@ class UserLookupTest extends Specification with Mockito {
       }
     }
 
-    "Add authorizations provided via LDAP" >> {
-      TestDbVendor.initAndClean()
+    "Add authorizations provided via LDAP" in new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       inTransaction{
-        val (p1, p2, p3) = TestDbVendor.createProjects
-        val (u1, u2) = TestDbVendor.createUsers
+        val (p1, p2, p3) = db.createProjects
+        val (u1, u2) = db.createUsers
         ProjectAuthorization.authorizedFor_?(u1, p2) must beFalse
         ProjectAuthorization.authorizedFor_?(u2, p2) must beFalse
 
@@ -181,11 +185,11 @@ class UserLookupTest extends Specification with Mockito {
       }
     }
 
-    "Merge authorizations provided via LDAP" >> {
-      TestDbVendor.initAndClean()
+    "Merge authorizations provided via LDAP" in new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       inTransaction{
-        val (p1, p2, p3) = TestDbVendor.createProjects
-        val (u1, u2) = TestDbVendor.createUsers
+        val (p1, p2, p3) = db.createProjects
+        val (u1, u2) = db.createUsers
         ProjectAuthorization.grant(u1, p2)
         ProjectAuthorization.grant(u1, p3)
 
@@ -199,7 +203,7 @@ class UserLookupTest extends Specification with Mockito {
       }
     }
 
-    "Parse user access via LDAP" >> {
+    "Parse user access via LDAP" in {
       UserLookup.parseUserAccess(new NothingUserAttributes()) must beFalse
 
       val nope = new NothingUserAttributes{

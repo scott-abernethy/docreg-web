@@ -5,23 +5,25 @@
 
 package vvv.docreg.backend
 
-import org.specs.mock.Mockito
-import org.specs.Specification
-import org.squeryl.PrimitiveTypeMode._
-import vvv.docreg.db.TestDbVendor
+import org.specs2.mutable._
+import org.specs2.mock._
+import vvv.docreg.db.{TestDbScope, TestDbVendor}
 import vvv.docreg.model.{UserLookupProvider, Subscription}
 import vvv.docreg.agent.SubscriberInfo
 import net.liftweb.common.Full
 import org.mockito.Matchers
 
 class SubscriptionReconcileTest extends Specification with Mockito {
+
+  sequential
+
   "SubscritionReconcile" should {
-    "Do nothing for no subscriptions" >> {
-      TestDbVendor.initAndClean()
+    "Do nothing for no subscriptions" >> new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-        val (p1, _, _) = TestDbVendor.createProjects
-        val (u1, u2) = TestDbVendor.createUsers
-        val (d, _, _, _) = TestDbVendor.createDocument(p1, u1)
+        val (p1, _, _) = db.createProjects
+        val (u1, u2) = db.createUsers
+        val (d, _, _, _) = db.createDocument(p1, u1)
 
         val lookup = mock[UserLookupProvider]
         val x = new SubscriptionReconcile {
@@ -34,12 +36,12 @@ class SubscriptionReconcileTest extends Specification with Mockito {
       }
     }
 
-    "Parse options to either notification or bookmark" >> {
-      TestDbVendor.initAndClean()
+    "Parse options to either notification or bookmark" >> new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-        val (p1, _, _) = TestDbVendor.createProjects
-        val (u1, u2) = TestDbVendor.createUsers
-        val (d, _, _, _) = TestDbVendor.createDocument(p1, u1)
+        val (p1, _, _) = db.createProjects
+        val (u1, u2) = db.createUsers
+        val (d, _, _, _) = db.createDocument(p1, u1)
 
         val lookup = mock[UserLookupProvider]
         lookup.lookup(Matchers.eq(Some("jroads")), Matchers.eq(Some("j@f.com")), Matchers.eq(None), Matchers.anyString()) returns(Full(u1))
@@ -125,12 +127,12 @@ class SubscriptionReconcileTest extends Specification with Mockito {
       }
     }
 
-    "add multiple subscriptions, ignoring duplicates" >> {
-      TestDbVendor.initAndClean()
+    "add multiple subscriptions, ignoring duplicates" >> new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-        val (p1, _, _) = TestDbVendor.createProjects
-        val (u1, u2) = TestDbVendor.createUsers
-        val (d, _, _, _) = TestDbVendor.createDocument(p1, u1)
+        val (p1, _, _) = db.createProjects
+        val (u1, u2) = db.createUsers
+        val (d, _, _, _) = db.createDocument(p1, u1)
 
         val lookup = mock[UserLookupProvider]
         lookup.lookup(Matchers.eq(Some("Asutherl")), Matchers.eq(Some("alan.sutherland@hstx.com")), Matchers.eq(None), Matchers.anyString()) returns(Full(u2))
@@ -160,12 +162,12 @@ class SubscriptionReconcileTest extends Specification with Mockito {
       }
     }
 
-    "No change" >> {
-      TestDbVendor.initAndClean()
+    "No change" >> new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-        val (p1, _, _) = TestDbVendor.createProjects
-        val (u1, u2) = TestDbVendor.createUsers
-        val (d, _, _, _) = TestDbVendor.createDocument(p1, u1)
+        val (p1, _, _) = db.createProjects
+        val (u1, u2) = db.createUsers
+        val (d, _, _, _) = db.createDocument(p1, u1)
 
         val lookup = mock[UserLookupProvider]
         lookup.lookup(Matchers.eq(Some("fg")), Matchers.eq(Some("fg@google.com")), Matchers.eq(None), Matchers.anyString()) returns(Full(u2))
@@ -199,12 +201,12 @@ class SubscriptionReconcileTest extends Specification with Mockito {
       }
     }
 
-    "Remove subscriptions if no longer there" >> {
-      TestDbVendor.initAndClean()
+    "Remove subscriptions if no longer there" >> new TestDbScope {
+      import org.squeryl.PrimitiveTypeMode._
       transaction{
-        val (p1, _, _) = TestDbVendor.createProjects
-        val (u1, u2) = TestDbVendor.createUsers
-        val (d, _, _, _) = TestDbVendor.createDocument(p1, u1)
+        val (p1, _, _) = db.createProjects
+        val (u1, u2) = db.createUsers
+        val (d, _, _, _) = db.createDocument(p1, u1)
 
         val lookup = mock[UserLookupProvider]
         lookup.lookup(Matchers.eq(Some("jroads")), Matchers.eq(Some("j@f.com")), Matchers.eq(None), Matchers.anyString()) returns(Full(u1))

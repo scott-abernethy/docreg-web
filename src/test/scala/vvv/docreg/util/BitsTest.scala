@@ -5,7 +5,7 @@
 
 package vvv.docreg.util
 
-import org.specs.Specification
+import org.specs2.mutable._
 import xml.{PrettyPrinter, NodeSeq}
 
 class BitsTest extends Specification {
