@@ -175,6 +175,9 @@ class Boot
       }
     }
 
+    // val withAuthentication: PartialFunction[Req, Unit] = { case _ if User.loggedIn_? => }
+    // LiftRules.dispatch.append(withAuthentication guard Api)
+
     // ... then dispatch ... (S is valid here)
     LiftRules.dispatch.append(DownloadService)
     LiftRules.dispatch.append(ProjectFeed)

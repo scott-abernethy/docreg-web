@@ -30,6 +30,7 @@ class ProjectSnippet extends Loggable {
         val authorized: List[User] = p.authorized()
         val contributors: List[User] = p.contributors().filter(_.knownOption.isDefined)
         val t = ".p-name" #> p.name &
+          ".p-feed [href]" #> (p.url + "/feed") &
           ".d-count *" #> (open.size) &
           listOrNone[Document](".d-items", open, d => <span>{ d.accessIcon() } { d.info() }</span>) &
           ".d-restricted" #> restricted.headOption.map{ x =>
