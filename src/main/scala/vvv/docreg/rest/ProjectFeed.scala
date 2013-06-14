@@ -10,7 +10,6 @@ import net.liftweb.http.{RedirectResponse, S, XmlResponse}
 import vvv.docreg.model._
 import vvv.docreg.util.DatePresentation.formatDateTimeAsRfc822
 import net.liftweb.common.Full
-import net.liftweb.common.Full
 
 object ProjectFeed extends RestHelper {
 

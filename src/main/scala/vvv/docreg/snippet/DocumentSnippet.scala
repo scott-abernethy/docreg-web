@@ -24,6 +24,8 @@ import vvv.docreg.util.{Environment, StringUtil, TemplateParse}
 import vvv.docreg.model._
 import java.sql.Timestamp
 import org.apache.tika.Tika
+import vvv.docreg.agent.SubscriberInfo
+import vvv.docreg.rest.SubscriptionApi
 
 trait DocumentRequest
 {
@@ -270,18 +272,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
   }
 
   private def processWatch(d: Document, u: vvv.docreg.model.User, checked: Boolean) = {
-    if (checked) {
-      Subscription.addNotification(d, u)
-    }
-    else {
-      Subscription.removeNotification(d, u)
-    }
-    // Could return faster
-    val msg = Subscription.optionsFor(d, u) match {
-      case Some(options) => SubscribeRequested(d, u, options)
-      case None => UnsubscribeRequested(d, u)
-    }
-    backend ! msg
+    SubscriptionApi.watch(d, u, checked)
     S.redirectTo(d.infoLink)
   }
 
