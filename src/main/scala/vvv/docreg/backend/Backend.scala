@@ -95,6 +95,10 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
         }
       }
       // Slow down the resync by delaying the remaining loads...
+      // With 10K documents, one per ~100 msec, resync takes ~16 mins
+      // With 1.8M douments, one per ~100 msec, resync takes ~50 hours
+      // With 10K documents, one per 1 sec, resync takes ~3 hours
+      // With 1.8M documents, one per 1 sec, resync takes ~20 days
       context.system.scheduler.scheduleOnce(100 milliseconds, self, Loaded(ds))(context.dispatcher)
     }
     case Loaded(Nil) => {

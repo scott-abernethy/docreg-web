@@ -20,21 +20,30 @@ import vvv.docreg.model._
 import vvv.docreg.util._
 
 trait ProjectSelection extends Loggable {
-  def mode = {
-    import StreamMode._
-    val currentMode = UserSession.mode.is
-    "#mode-all [onclick]" #> SHtml.ajaxInvoke(() => showMode(all)) &
-    "#mode-all [class+]" #> activeClassIfActive(all) &
-    "#mode-select [onclick]" #> SHtml.ajaxInvoke(() => showMode(selected)) &
-    "#mode-select [class+]" #> activeClassIfActive(selected) &
-    "#mode-watch [onclick]" #> SHtml.ajaxInvoke(() => showMode(watching)) &
-    "#mode-watch [class+]" #> activeClassIfActive(watching) &
-    "#mode-me [onclick]" #> SHtml.ajaxInvoke(() => showMode(me)) &
-    "#mode-me [class+]" #> activeClassIfActive(me)
+
+  def viewCurrentMode: StreamMode.Value = {
+     UserSession.mode.is
   }
 
-  def activeClassIfActive(mode: StreamMode.Value): Option[String] = {
-    if (UserSession.mode.is == mode) Some("active") else None
+  def viewChangeMode(to: StreamMode.Value) {
+     UserSession.changeMode(to)
+  }
+
+  def mode = {
+    import StreamMode._
+    val current = viewCurrentMode
+    "#mode-all [onclick]" #> SHtml.ajaxInvoke(() => showMode(all)) &
+    "#mode-all [class+]" #> activeClassIfActive(current, all) &
+    "#mode-select [onclick]" #> SHtml.ajaxInvoke(() => showMode(selected)) &
+    "#mode-select [class+]" #> activeClassIfActive(current, selected) &
+    "#mode-watch [onclick]" #> SHtml.ajaxInvoke(() => showMode(watching)) &
+    "#mode-watch [class+]" #> activeClassIfActive(current, watching) &
+    "#mode-me [onclick]" #> SHtml.ajaxInvoke(() => showMode(me)) &
+    "#mode-me [class+]" #> activeClassIfActive(current, me)
+  }
+
+  def activeClassIfActive(current: StreamMode.Value, set: StreamMode.Value): Option[String] = {
+    if (current == set) Some("active") else None
   }
 
   def favouriteProjects(in: NodeSeq): NodeSeq = {
@@ -102,7 +111,7 @@ trait ProjectSelection extends Loggable {
   }
 
   def showMode(mode: StreamMode.Value): JsCmd = {
-    UserSession.changeMode(mode)
+    viewChangeMode(mode)
     modeSelectionUpdate
   }
 }

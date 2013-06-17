@@ -25,7 +25,15 @@ import vvv.docreg.util.Bits
 
 class Search extends Loggable with ProjectSelection {
 
-  val searchInput = S.param("q") openOr ""
+   object searchMode extends RequestVar[StreamMode.Value](StreamMode.all)
+
+   override def viewCurrentMode = searchMode.is
+
+   override def viewChangeMode(to: StreamMode.Value) {
+      searchMode(to)
+   }
+
+   val searchInput = S.param("q") openOr ""
 
   def input = {
     if (User.loggedIn_?) {
@@ -40,7 +48,7 @@ class Search extends Loggable with ProjectSelection {
   }
 
   def bindResults(in: NodeSeq): NodeSeq = {
-    val f = UserSession.inStreamFilter()
+    val f = UserSession.inStreamFilter(viewCurrentMode)
     val list: List[(Document, Project, Revision, User)] = FilteredDocument.search(searchInput.trim)
     results(in, list.filter(x => f(x._1, x._3, x._2)), list.size >= FilteredDocument.searchLimit)
   }
