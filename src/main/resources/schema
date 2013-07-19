@@ -63,6 +63,7 @@ create table Document (
     projectId bigint not null,
     id bigint not null primary key auto_increment,
     title varchar(128) not null,
+    reconciled timestamp not null,
     access varchar(128) not null
   );
 -- indexes on Document
@@ -112,6 +113,14 @@ create table Subscription (
 -- indexes on Subscription
 create index idx6fe5093f on Subscription (documentId);
 create index idx4d4b079f on Subscription (userId);
+create table Tag (
+    name varchar(128) not null,
+    id bigint not null primary key auto_increment,
+    documentId bigint not null
+  );
+-- indexes on Tag
+create index idxcb402eb on Tag (name);
+create index idx27010556 on Tag (documentId);
 -- foreign key constraints :
 alter table Document add constraint DocumentFK1 foreign key (projectId) references Project(id);
 alter table ProjectAuthorization add constraint ProjectAuthorizationFK2 foreign key (projectId) references Project(id);
