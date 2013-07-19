@@ -18,6 +18,7 @@ docreg-web.log*
 .classpath
 .project
 .manager
+.cache
 
 # building
 target
