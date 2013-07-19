@@ -36,6 +36,9 @@ class UserSnippet extends Loggable {
 
   def processLogin() {
     username.is.trim.toLowerCase match {
+      case "" => {
+        loginFailed("Invalid Username", "Please enter your GNET account username.")
+      }
       case DomainUsername("gnet", name) => {
         tryLogin(name, password.is.trim)
       }
@@ -51,9 +54,6 @@ class UserSnippet extends Loggable {
       case ValidEmail(name, domain) => {
         loginFailed("Invalid Domain", "'" + domain + "' is not a recognised domain. Please use your GNET domain username.")
       }
-      case input if (input == signInHint) => {
-        loginFailed("Invalid Username", "Please enter your GNET account username.")
-      }
       case input => {
         tryLogin(input, password.is.trim)
       }
@@ -65,8 +65,11 @@ class UserSnippet extends Loggable {
       case Left(user) => {
         doSignIn(user)
       }
-      case Right(SignInFailure(why, description)) => {
-        loginFailed(why, description)
+      case Right(IncorrectUsernameOrPassword) => {
+        loginFailed("Incorrect Username or Password", "Failed to login as user '" + username + "', incorrect username or password provided.")
+      }
+      case Right(NotAuthorized(user)) => {
+        S.redirectTo("/user/not-authorized?u=" + user.shortUsername)
       }
     }
   }

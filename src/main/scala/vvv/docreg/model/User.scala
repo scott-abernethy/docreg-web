@@ -68,10 +68,10 @@ class User extends DbObject[User] {
 
   def profileLink(text: String): NodeSeq = profileLink(Text(text))
 
-  def profile(): String = "/user/" + username.split("@")(0)
+  def profile(): String = "/user/" + shortUsername()
 
   def preferences(): String = {
-    "/user/" + username.split("@")(0) + "/preferences"
+    "/user/" + shortUsername() + "/preferences"
   }
 
   def profileLink(content: NodeSeq): NodeSeq = <a href={ profile() }>{ content }</a>
@@ -145,7 +145,9 @@ class User extends DbObject[User] {
   }
 }
 
-case class SignInFailure(why: String, description: String)
+sealed abstract class SignInFailure
+case object IncorrectUsernameOrPassword extends SignInFailure
+case class NotAuthorized(user: User) extends SignInFailure
 
 object User extends User with Loggable {
   val docRegUserCookie = "DocRegWebUser"
@@ -158,14 +160,12 @@ object User extends User with Loggable {
     val directory = Environment.env.directory
     // This gives us an up to date user, i.e. LDAP attributes are reloaded
     UserLookup.lookupUser(username, directory) match {
-      case Full(user) if (!user.canLogin_?()) => {
-        Right(SignInFailure("Not Authorized", "The user account '"+username+"' is not authorized to access this service. If you think this is in error, or if you would like to be granted access, please check the Help for support contact details."))
-      }
       case Full(user) if (directory.login(user.dn, password)) => {
-        Left(user)
+        if (user.canLogin_?) Left(user)
+        else Right(NotAuthorized(user))
       }
       case _ => {
-        Right(SignInFailure("Incorrect Username or Password", "Failed to login as user '" + username + "', incorrect username or password provided."))
+        Right(IncorrectUsernameOrPassword)
       }
     }
   }

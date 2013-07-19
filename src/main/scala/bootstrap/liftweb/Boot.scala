@@ -60,6 +60,7 @@ class Boot
       Menu.i("Search") / "search" >> loggedIn,
       Menu.i("Login") / "user" / "signin",
       Menu.i("Logout") / "user" / "signout" >> loggedIn,
+      Menu.i("Not Authorized") / "user" / "not-authorized",
       Menu.i("History") / "doc" / "history" >> loggedIn,
       Menu.i("Profile") / "user" / "profile" >> loggedIn,
       Menu.i("Preferences") / "user" / "preferences" >> loggedIn,
@@ -161,7 +162,7 @@ class Boot
       case RewriteRequest(ParsePath(Document.ValidIdentifier(key, version) :: action :: Nil, _, _, _), _, _) if (action != "download" && action != "log") => {
         RewriteResponse("doc" :: action :: Nil, docIdParams(key, version))
       }
-      case RewriteRequest(ParsePath("user" :: x :: Nil, suffix, absolute, endSlash), _, _) if (x != "signin" && x != "signout" && x != "profile") => {
+      case RewriteRequest(ParsePath("user" :: x :: Nil, suffix, absolute, endSlash), _, _) if (x != "signin" && x != "signout" && x != "profile" && x != "not-authorized") => {
         RewriteResponse(ParsePath("user" :: "profile" :: Nil, suffix, absolute, endSlash), Map("user" -> x), true)
       }
       case RewriteRequest(ParsePath("user" :: user :: action :: Nil, suffix, absolute, endSlash), _, _) => {
