@@ -74,7 +74,8 @@ object DbSchema extends org.squeryl.Schema {
   on(documents)(d => declare(
     d.key is(indexed, unique, dbType("varchar(10)")),
     d.title is(dbType("varchar(128)")),
-    d.access is(dbType("varchar(128)"))
+    d.access is(dbType("varchar(128)")),
+    d.reconciled is(dbType("datetime"))
   ))
 
   on(revisions)(r => declare(
@@ -83,7 +84,8 @@ object DbSchema extends org.squeryl.Schema {
     r.filename is(dbType("varchar(128)")),
     r.comment is(dbType("varchar(512)")),
     r.clientVersion is(dbType("varchar(16)")),
-    r.rawAuthor is(dbType("varchar(64)"))
+    r.rawAuthor is(dbType("varchar(64)")),
+    r.date is(dbType("datetime"))
   ))
 
   on(pendings)(p => declare(

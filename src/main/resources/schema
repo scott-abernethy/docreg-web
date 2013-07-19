@@ -6,7 +6,7 @@ create table User (
     email varchar(64) not null,
     username varchar(64) not null,
     description varchar(256) not null,
-    lastSession timestamp not null,
+    lastSession datetime not null,
     host varchar(64) not null,
     sessionCount bigint not null,
     dn varchar(128) not null,
@@ -39,9 +39,9 @@ create table Project (
 -- indexes on Project
 create unique index idx1e5204a6 on Project (name);
 create table ProjectAuthorization (
-    revoked timestamp,
+    revoked datetime,
     projectId bigint not null,
-    granted timestamp not null,
+    granted datetime not null,
     id bigint not null primary key auto_increment,
     userId bigint not null
   );
@@ -63,7 +63,7 @@ create table Document (
     projectId bigint not null,
     id bigint not null primary key auto_increment,
     title varchar(128) not null,
-    reconciled timestamp not null,
+    reconciled datetime not null,
     access varchar(128) not null
   );
 -- indexes on Document
@@ -72,7 +72,7 @@ create table Revision (
     rawAuthor varchar(64) not null,
     version bigint not null,
     id bigint not null primary key auto_increment,
-    date timestamp not null,
+    date datetime not null,
     authorId bigint not null,
     filename varchar(128) not null,
     comment varchar(512) not null,
@@ -83,7 +83,7 @@ create table Revision (
 create index idx4b890789 on Revision (documentId);
 create table Pending (
     id bigint not null primary key auto_increment,
-    date timestamp not null,
+    date datetime not null,
     documentId bigint not null,
     userId bigint not null,
     action int not null
@@ -96,7 +96,7 @@ create table Approval (
     rawUser varchar(64) not null,
     revisionId bigint not null,
     id bigint not null primary key auto_increment,
-    date timestamp not null,
+    date datetime not null,
     comment varchar(128) not null,
     userId bigint not null
   );
