@@ -118,8 +118,10 @@ class UserSnippet extends Loggable {
         profileTransform(u).apply(in)
       }
       case _ => {
-        S.warning(<div class="alert-message error"><p>No such user found</p></div>)
-        S.redirectTo("/")
+        <div class="alert alert-error span8 offset2">
+          <h3 class="alert-heading">Invalid User</h3>
+          <p>The user {" '" + S.param("user").getOrElse("???") + "'"} is invalid.</p>
+        </div>
       }
     }
   }

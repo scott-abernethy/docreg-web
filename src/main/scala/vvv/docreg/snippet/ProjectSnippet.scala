@@ -44,7 +44,10 @@ class ProjectSnippet extends Loggable {
         t(in)
       }
       case _ => {
-        <div class="alert-message error"><p><strong>Invalid</strong>{" project '" + key + "'"}</p></div>
+        <div class="alert alert-error span8 offset2">
+          <h3 class="alert-heading">Invalid Project</h3>
+          <p>The project {" '" + key + "'"} is invalid.</p>
+        </div>  
       }
     }
   }
