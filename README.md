@@ -8,19 +8,19 @@ The following setup has been tested on Ubuntu 12.04 LTS.
 
 ### Install dependencies
 1. Install git, sshfs, mysql-server
-```bash
+```Shell
 sudo add-apt-repository ppa:webupd8team/java
 sudo apt-get install oracle-java6-installer
 sudo apt-get install git sshfs mysql-server
 ```
 2. Install Oracle Java 6 (there are many ways to do this, my preference is below)
-```bash
+```Shell
 sudo add-apt-repository ppa:webupd8team/java
 sudo apt-get install oracle-java6-installer
 sudo apt-get install git sshfs mysql-server
 ```
 3. Get the project source
-```bash
+```Shell
 PROJECTROOT=~/docreg-web
 git clone https://github.com/scott-abernethy/docreg-web.git $PROJECTROOT
 ```
@@ -30,7 +30,7 @@ cd $PROJECTROOT
 mysql -u root -p < ./src/main/resources/schema
 ```
 5. Mirror a DocReg server home directory (because the app requires local filesystem access)
-```bash
+```Shell
 YOURUSERNAME=sabernethy
 sudo mkdir -p /home/docreg
 sudo chown $YOURUSERNAME /home/docreg
@@ -38,7 +38,7 @@ sudo gpasswd -a $YOURUSERNAME fuse
 sshfs -o idmap=user,nonempty docreg@shelob: /home/docreg
 ```
 6. Configure the app
-```bash
+```Shell
 sudo cat >>/etc/docreg-web.conf <<EOF
 db {
    driver = com.mysql.jdbc.Driver
@@ -58,7 +58,7 @@ ldap {
 EOF
 ```
 7. Start the app
-```bash
+```Shell
 cd $PROJECTROOT
 ./sbt
 > container:start
