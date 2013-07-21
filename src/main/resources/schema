@@ -1,3 +1,7 @@
+-- create database :
+create database docregweb;
+use docregweb;
+
 -- table declarations :
 create table User (
     name varchar(64) not null,
