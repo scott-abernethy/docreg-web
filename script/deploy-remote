@@ -1,5 +1,6 @@
 #!/bin/bash
 SBT=./sbt
+unset JREBEL_HOME
 
 set -o nounset
 

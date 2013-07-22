@@ -1,0 +1,13 @@
+-- add reconciled to Document
+alter table Document add column reconciled datetime not null;
+
+-- create Tag
+create table Tag (
+  name varchar(128) not null,
+  id bigint not null primary key auto_increment,
+  documentId bigint not null
+);
+
+-- indexes on Tag
+create index idxcb402eb on Tag (name);
+create index idx27010556 on Tag (documentId);
