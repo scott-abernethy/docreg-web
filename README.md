@@ -10,7 +10,7 @@ Created by Scott Abernethy (github @scott-abernethy).
 ### Dev setup on Ubuntu
 The following setup has been tested on Ubuntu 12.04.2 LTS desktop.
 
-*NOTE* this setup results in a live version of DocReg: any document submissions etc will be replicated on production DocReg systems.
+**NOTE** this setup results in a live version of DocReg: any document submissions etc will be replicated on production DocReg systems.
 
 ```bash
 # 0. Setup
@@ -69,7 +69,7 @@ cd $PROJECTROOT
 
 ### About 
 
-This project is predominately a [http://liftweb.net](Lift) Web app written in [http://www.scala-lang.org](Scala). Both [http://liftweb.net](Lift) and [http://www.scala-lang.org](Scala) have good online documentation and strong community mailing lists for support.
+This project is predominately a [Lift](http://liftweb.net) Web app written in [Scala](http://www.scala-lang.org). Both [Lift](http://liftweb.net) and [Scala](http://www.scala-lang.org) have good online documentation and strong community mailing lists for support.
 
 ## License
 
