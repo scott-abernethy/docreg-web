@@ -85,7 +85,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
     {
       case (Full(d), Full(r)) =>
       {
-        if (editor != Nil) S.notice("edit-message", <div class="alert alert-warning"><strong>Under edit!</strong> This document is currently being edited.</div>)
+        if (editing_?()) S.notice("edit-message", <div class="alert alert-warning"><strong>Under edit!</strong> This document is currently being edited.</div>)
         if (!d.latest_?(r.version)) S.warning("out-of-date-message", <div class="alert alert-info"><strong>Out of date!</strong> The link you followed refers to a version that is not the most recent version of the document. The Download, Approve, and Request Approval options will take action on that out-of-date version. You may want to <a href={d.infoHref()}>see the most recent version</a> instead.</div>)
         ".doc-title" #> <a href={d.infoLink}>{d.fullTitle}</a> &
         ".doc-access" #> d.accessIcon() &
@@ -221,7 +221,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
         SHtml.a(() => { processUnedit(d, u) }, <span>Cancel Edit</span>, "class" -> "btn")
       }
       case Full(u) => {
-        SHtml.a(() => { processEdit(d, u) }, <i class="icon-edit icon-white"></i><span> Edit</span>, "class" -> (if (editing_?()) "btn btn-danger" else "btn btn-warning"))
+        SHtml.a(() => { confirmEditIfCurrentlyEditing(d, u, editing_?()) }, <i class="icon-edit icon-white"></i><span> Edit</span>, "class" -> (if (editing_?()) "btn btn-danger" else "btn btn-warning"))
       }
       case _ => {
         NodeSeq.Empty
@@ -237,6 +237,20 @@ class DocumentSnippet extends DocumentRequest with Loggable {
       case _ => {
         NodeSeq.Empty
       }
+    }
+  }
+
+  private def confirmEditIfCurrentlyEditing(d: Document, u: vvv.docreg.model.User, confirm: Boolean): JsCmd = {
+    if (confirm) {
+      JsCmds.Confirm(
+          "WARNING: this document is currently being edited by another user. If you edit this document now then either your changes or their changes are likely to be lost. Are you sure?",
+          SHtml.ajaxInvoke(() => {
+            processEdit(d, u)
+          })
+      )
+    }
+    else {
+      processEdit(d, u)
     }
   }
 
