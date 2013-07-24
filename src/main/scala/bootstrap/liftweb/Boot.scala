@@ -72,6 +72,7 @@ class Boot
       Menu.i("Submit Document") / "doc" / "submit" >> loggedIn,
       Menu.i("Restricted Document") / "doc" / "restricted" >> loggedIn,
       Menu.i("Invalid Document") / "doc" / "invalid" >> loggedIn,
+      Menu.i("File Not Found") / "doc" / "file-not-found" >> loggedIn,
       Menu.i("Tag List") / "tag" >> loggedIn,
       Menu.i("Tag Information") / "tag" / "info" >> loggedIn,
       Menu.i("Project List") / "project" >> loggedIn,

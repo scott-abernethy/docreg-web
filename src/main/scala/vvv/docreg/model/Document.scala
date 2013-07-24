@@ -73,7 +73,7 @@ class Document extends DbObject[Document] {
     r != null && r.version == version
   }
 
-  def infoLink: String = "/" + number
+  def infoLink: String = infoHref
 
   def nextVersion: Long = latest.version.toLong + 1L
 
@@ -107,6 +107,10 @@ class Document extends DbObject[Document] {
   def infoHref(version: Long): String = {
     "/" + keyAndVersion(version)
   }
+  
+  def info(): NodeSeq = <a href={ infoHref() }>{ fullTitle }</a>
+  
+  def info(version: Long): NodeSeq = <a href={ infoHref(version) }>{ fullTitle }</a>
 
   def downloadHref(): String = {
     infoHref() + "/download"
@@ -138,8 +142,6 @@ class Document extends DbObject[Document] {
   }
 
   def fullTitle: String = number + ": " + title
-
-  def info(): NodeSeq = <a href={ infoLink }>{ fullTitle }</a>
 
   def contributors(): List[User] = {
     inTransaction{
