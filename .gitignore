@@ -19,6 +19,7 @@ docreg-web.log*
 .project
 .manager
 .cache
+.externalToolBuilders
 
 # building
 target
