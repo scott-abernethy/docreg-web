@@ -27,7 +27,7 @@ echo Need to add user to fuse group
 sudo gpasswd -a $FUSER fuse
 
 echo Mounting
-sshfs -o idmap=user docreg@$SERVER: $LOCAL_DIR
+sshfs -o idmap=user,nonempty docreg@$SERVER: $LOCAL_DIR
 
 ## TO UNMOUNT
 #fusermount -u $LOCAL_DIR 
