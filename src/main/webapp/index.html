@@ -17,28 +17,17 @@
          <div class="boxr">
             <div class="boxr-head">
             <h2>Stream <small>30 days</small></h2>
-            <div class="lift:snippet?type=Dashboard.mode btn-toolbar" id="stream-actions">
+            <div data-lift="Dashboard.mode" class="btn-toolbar" id="stream-actions">
                <div class="btn-group" data-toggle="buttons-radio">
                   <a href="#" class="btn" id="mode-all">All</a>
                   <a href="#" class="btn" id="mode-select">Favourites</a>
                   <a href="#" class="btn" id="mode-watch">Watching</a>
                   <a href="#" class="btn" id="mode-me">Me</a>
                </div>
-               <!--<div class="btn-group">-->
-                  <!--<a href="#" class="btn dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>-->
-                  <!--<ul class="dropdown-menu">-->
-                     <!--<li><a href="#">Select Projects</a></li>-->
-                  <!--</ul>-->
-               <!--</div>-->
             </div>
-            <!--<div class="lift:snippet?type=History.mini">-->
-               <!--<a href="/doc/history" title="30 day revision history (click for more)">-->
-                  <!--<div id="g0" class="graph" style="width:200px;height:60px;"></div>-->
-               <!--</a>-->
-            <!--</div>-->
             </div>
 
-            <div class="lift:snippet?type=Dashboard.log">
+            <div data-lift="Dashboard.log">
                <div class="lift:comet?type=Log">
                   <ol id="log">
                      <li class="log-item border-top boxr-pad" id="">
@@ -52,7 +41,7 @@
       </div>
 
       <div class="span5">
-         <div class="lift:snippet?type=UserSnippet.editing boxr boxr-dark boxr-body">
+         <div data-lift="UserSnippet.editing" class="boxr boxr-dark boxr-body">
             <h3>Editing... <i class="icon-edit"></i></h3>
             <ul class="unstyled">
                <li class="editing-item">La</li>
@@ -64,14 +53,14 @@
                <h3>Favourites <i class="icon-star"></i></h3>
             </div>
 
-            <div class="lift:snippet?type=Dashboard.favouriteProjects boxr-body border-bottom">
+            <div data-lift="Dashboard.favouriteProjects" class="boxr-body border-bottom">
                <h4>Projects <a href="#" id="fav-more" class="btn btn btn-small pull-right">Choose More</a></h4>
                <ul id="favs" class="unstyled">
                   <li class="item"><span class="f-check"></span> <span class="f-name"></span> <a href="#" class="f-clr"><i class="icon-remove icon-white"></i></a></li>
                </ul>
             </div>
 
-            <div class="lift:snippet?type=UserSnippet.favouriteDocuments boxr-body">
+            <div data-lift="UserSnippet.favouriteDocuments" class="boxr-body">
                <h4>Documents</h4>
                <ul id="bookmarks" class="unstyled">
                   <li class="item"></li>
@@ -79,7 +68,7 @@
             </div>
          </div>
 
-         <div class="lift:snippet?type=UserSnippet.subscriptions boxr boxr-dark boxr-body">
+         <div data-lift="UserSnippet.subscriptions" class="boxr boxr-dark boxr-body">
             <h3>Watching <i class="icon-eye-open"></i></h3>
             <ul class="unstyled">
                <li class="subscription:item"><a href=""><span class="item:title">001-Foo</span></a></li>
