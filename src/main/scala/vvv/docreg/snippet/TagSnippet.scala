@@ -14,8 +14,7 @@ import net.liftweb.util.{ClearNodes, PassThru, CssSel}
 import org.squeryl.PrimitiveTypeMode._
 import vvv.docreg.util.Bits
 
-class TagSnippet extends Loggable {
-  val tag = "#" + S.param("key").openOr("")
+class TagSnippet(tag: String) extends Loggable {
   val documents: List[Document] = Tag.documentsWithTag(tag)
 
   def info() = {

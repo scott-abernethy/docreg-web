@@ -13,12 +13,10 @@ import http.RewriteRequest
 import http.RewriteResponse._
 import net.liftweb.util._
 import Helpers._
-
 import common._
 import http._
 import sitemap._
 import Loc._
-
 import _root_.vvv.docreg.model._
 import _root_.vvv.docreg.util._
 import sitemap.Loc.If
@@ -31,6 +29,9 @@ import scala._
 import vvv.docreg.model.Document.{DocumentRef, DocumentRevision}
 import scala.Some
 import vvv.docreg.rest._
+import vvv.docreg.snippet.TagListSnippet
+import scala.xml.NodeSeq
+import scala.xml.Text
 
 /**
  * A class that's instantiated early and run.  It allows the application
@@ -73,8 +74,8 @@ class Boot
       Menu.i("Restricted Document") / "doc" / "restricted" >> loggedIn,
       Menu.i("Invalid Document") / "doc" / "invalid" >> loggedIn,
       Menu.i("File Not Found") / "doc" / "file-not-found" >> loggedIn,
-      Menu.i("Tag List") / "tag" >> loggedIn,
-      Menu.i("Tag Information") / "tag" / "info" >> loggedIn,
+      Menu.i("Tags") / "tag" >> loggedIn,
+      Menu.param[String]("TagInfo", "Tag", str => Full("#" + str), tag => tag.substring(1)) / "tag" / * >> Loc.Title(tag => Text("Tag " + tag)) >> loggedIn,
       Menu.i("Project List") / "project" >> loggedIn,
       Menu.i("Project Information") / "project" / "info" >> loggedIn,
       Menu.i("User Lookup Admin") / "admin" / "user-lookup" >> loggedIn,
@@ -91,25 +92,26 @@ class Boot
 
     // What is the function to test if a user is logged in?
     LiftRules.loggedInTest = Full(() => User.loggedIn_?)
+    
+    // Initialize plugins
     Flot.init
 
     // Use HTML5 for rendering
     LiftRules.htmlProperties.default.set((r: Req) =>
       new Html5Properties(r.userAgent))
 
-    // Make a transaction span the whole HTTP request
-    //S.addAround(DB.buildLoanWrapper)
+    // Make a transaction span the whole HTTP request (TODO not required? Most DB work is explicit in use of transactions).
     S.addAround(new LoanWrapper{
       override def apply[T](f: => T): T = {
         inTransaction(f)
       }
     })
 
+    // Show and hide the #loading element on ajax calls.
     LiftRules.ajaxStart = Full( () => LiftRules.jsArtifacts.show("loading").cmd )
     LiftRules.ajaxEnd = Full( () => LiftRules.jsArtifacts.hide("loading").cmd )
 
     def uploadViaDisk(fieldName: String, contentType: String, fileName: String, stream: java.io.InputStream): FileParamHolder = OnDiskFileParamHolder(fieldName, contentType, fileName, stream)
-
     val maxSize = 500 * 1024 * 1024
     LiftRules.maxMimeSize = maxSize
     LiftRules.maxMimeFileSize = maxSize
@@ -129,7 +131,9 @@ class Boot
       case RewriteRequest(ParsePath("docreg" :: something :: document :: remainder, suffix, _, _), _, _) =>
         RewriteResponse(document :: remainder)
     }
+    
     // Rewrite ... (stateful, so S is valid here)
+    // TODO rewrite this mess!!!
     LiftRules.statefulRewrite.append {
       case RewriteRequest(ParsePath((ref @ Document.DocumentRef(number, version)) :: action, s, a, es), _, _) => {
         inTransaction {
@@ -172,9 +176,6 @@ class Boot
       case RewriteRequest(ParsePath("project" :: key :: Nil, suffix, absolute, endSlash), _, _) => {
         RewriteResponse(ParsePath("project" :: "info" :: Nil, suffix, absolute, endSlash), Map("key" -> key), true)
       }
-      case RewriteRequest(ParsePath("tag" :: key :: Nil, suffix, absolute, endSlash), _, _) => {
-        RewriteResponse(ParsePath("tag" :: "info" :: Nil, suffix, absolute, endSlash), Map("key" -> key), true)
-      }
     }
 
     // val withAuthentication: PartialFunction[Req, Unit] = { case _ if User.loggedIn_? => }
@@ -185,6 +186,7 @@ class Boot
     LiftRules.dispatch.append(ProjectFeed)
     LiftRules.dispatch.append(SubscriptionApi)
 
+    // Fade out session notices.
     LiftRules.noticesAutoFadeOut.default.set( (notices: NoticeType.Value) => {
             notices match {
               case NoticeType.Notice => Full((10 seconds, 2 seconds))
@@ -193,9 +195,12 @@ class Boot
          }
         )
 
+    // Start app
     val env = new EnvironmentImpl{}
     env.start()
     Environment.env = env
+    
+    // On unload, stop app and db
     LiftRules.unloadHooks.append(() => {
       env.exit()
       db.close()
