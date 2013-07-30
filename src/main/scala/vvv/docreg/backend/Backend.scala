@@ -43,7 +43,9 @@ trait BackendComponent {
   val backend: ActorRef
 }
 
-class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: ActorRef) extends Actor with Loggable with RevisionReconcile with ApprovalReconcile with SubscriptionReconcile with TagReconcile {
+class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: ActorRef, fileDatabase: ActorRef) 
+  extends Actor with Loggable with RevisionReconcile with ApprovalReconcile with SubscriptionReconcile with TagReconcile {
+  
   val product = ProjectProps.get("project.name") openOr "drw"
   val version = ProjectProps.get("project.version") openOr "0.0"
   val clientVersion = "dr+w " + version
@@ -53,8 +55,6 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
   val userLookup = new UserLookupProvider {
     def lookup(usernameOption: Option[String], emailOption: Option[String], nameOption: Option[String], why: String) = UserLookup.lookup(usernameOption, emailOption, nameOption, directory, why)
   }
-
-  val fileDatabase = context.actorOf(Props[FileDatabase], name = "FileDatabase")
 
   override def preStart() {
     logger.info("Backend up for " + product + " v" + version + " connected to " + target)
