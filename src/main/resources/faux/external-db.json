@@ -1,0 +1,237 @@
+{
+  "users": [
+    {
+      "dn": "allen",
+      "name": "Allen Allard",
+      "username": "allen@gnet.global.vpn",
+      "email": "allen.allard@aviatnet.com",
+      "groups": [
+        "CN=DocRegUser,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn"
+      ]
+    },
+    {
+      "dn": "bruce",
+      "name": "Bruce Bedford",
+      "username": "bruce@gnet.global.vpn",
+      "email": "bruce.bedford@aviatnet.com",
+      "groups": [
+        "CN=DocRegUser,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn",
+        "CN=DocRegProjectDaphne,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn"
+      ]
+    },
+    {
+      "dn": "fred",
+      "name": "Fred Fiat",
+      "username": "fred@gnet.global.vpn",
+      "email": "fred.fiat@aviatnet.com",
+      "groups": [
+        "CN=DocRegUser,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn"
+      ]
+    },
+    {
+      "dn": "jane",
+      "name": "Jane Jensen",
+      "username": "jane@gnet.global.vpn",
+      "email": "jane.jensen@aviatnet.com",
+      "groups": [
+        "CN=DocRegUser,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn"
+      ]
+    },
+    {
+      "dn": "millie",
+      "name": "Millie Morris",
+      "username": "millie@gnet.global.vpn",
+      "email": "millie.morris@aviatnet.com",
+      "groups": [
+        "CN=DocRegUser,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn"
+      ]
+    },
+    {
+      "dn": "peter",
+      "name": "Peter Packard",
+      "username": "peter@gnet.global.vpn",
+      "email": "fred.ford@aviatnet.com",
+      "groups": [
+        "CN=DocRegUser,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn"
+      ]
+    },
+    {
+      "dn": "roger",
+      "name": "Roger Renault",
+      "username": "roger@gnet.global.vpn",
+      "email": "roger.renault@aviatnet.com",
+      "groups": [
+        "CN=DocRegUser,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn"
+      ]
+    },
+    {
+      "dn": "sue",
+      "name": "Sue Suzuki",
+      "username": "sue@gnet.global.vpn",
+      "email": "sue.suzuki@aviatnet.com",
+      "groups": [
+        "CN=DocRegUser,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn",
+        "CN=DocRegProjectDaphne,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn"
+      ]
+    },
+    {
+      "dn": "vicky",
+      "name": "Vicky Vauxhall",
+      "username": "vicky@gnet.global.vpn",
+      "email": "vicky.vauxhall@aviatnet.com",
+      "groups": [
+        "CN=DocRegUser,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn"
+      ]
+    }
+  ]
+  "documents": [
+    {
+      "number": "0001",
+      "version": 4,
+      "filename": "0001-004-Instructions.xls",
+      "project": "Apple",
+      "title": "Instructions",
+      "comment": "Update section 3",
+      "server": "shelob",
+      "access": "Public",
+      "author-name": "Roger Renault",
+      "author-ip": "1.1.1.1",
+      "date": "2013-05-04 16:16:13 Z",
+      "revisions": [
+        {
+          "filename": "0001-001-Steps.xls",
+          "comment": "First submit.",
+          "date": "2003-01-01 16:16:13 Z",
+          "author-name": "Sue Suzuki",
+          "author-ip": "12.12.12.1",
+          "author-host": "s",
+          "author-username": "sue",
+          "author-version": "3",
+          "crc": "qwerty"
+        },
+        {
+          "filename": "0001-002-Instructions.xls",
+          "comment": "My 2c.",
+          "date": "2003-01-02 16:16:13 Z",
+          "author-name": "Allen Allard",
+          "author-ip": "192.168.0.4",
+          "author-host": "a",
+          "author-username": "allen",
+          "author-version": "3",
+          "crc": "qwerty"
+        },
+        {
+          "filename": "0001-003-Instructions.xls",
+          "comment": "Actually 3c...",
+          "date": "2003-01-04 16:16:13 Z",
+          "author-name": "Allen Allard",
+          "author-ip": "192.168.0.4",
+          "author-host": "a",
+          "author-username": "allen",
+          "author-version": "3",
+          "crc": "qwerty"
+        },
+        {
+          "filename": "0001-004-Instructions.xls",
+          "comment": "Update section 3 with #goodstuff",
+          "date": "2013-05-04 16:16:13 Z",
+          "author-name": "Roger Renault",
+          "author-ip": "192.168.0.5",
+          "author-host": "r",
+          "author-username": "roger",
+          "author-version": "3",
+          "crc": "qwerty"
+        }
+      ],
+      "approvals": [
+        {
+          "filename": "0001-004-Instructions.xls",
+          "author-username": "jane",
+          "author-email": "jane.jensen@aviatnet.com",
+          "author-ip": "192.168.0.9",
+          "author-host": "j",
+          "client-username": "jane",
+          "status": "Approved",
+          "comment": "Finally some good stuff!",
+          "date": "2013-05-07 16:16:13 Z"
+        }
+      ]
+    },
+    {
+      "number": "0123",
+      "version": 1,
+      "filename": "0123-001-War Plans.doc",
+      "project": "Daphne",
+      "title": "War Plans",
+      "comment": "Shhhh! Secret squirrel.",
+      "server": "shelob",
+      "access": "Secure",
+      "author-name": "Sue Suzuki",
+      "author-ip": "12.12.12.1",
+      "date": "2013-06-01 16:16:13 Z",
+      "revisions": [
+        {
+          "filename": "0123-001-War Plans.doc",
+          "comment": "Shhhh! Secret squirrel.",
+          "date": "2013-06-01 16:16:13 Z",
+          "author-name": "Sue Suzuki",
+          "author-ip": "12.12.12.1",
+          "author-host": "s",
+          "author-username": "sue",
+          "author-version": "3",
+          "crc": "qwerty"
+        }
+      ],
+      "approvals": [
+        {
+          "filename": "0123-001-War Plans.doc",
+          "author-username": "bruce",
+          "author-email": "bruce.bedford@aviatnet.com",
+          "author-ip": "192.1.0.1",
+          "author-host": "b",
+          "client-username": "bruce",
+          "status": "Not Approved",
+          "comment": "Let's not do that, OK.",
+          "date": "2013-06-02 16:16:13 Z"
+        }
+      ]
+    },
+    {
+      "number": "9999",
+      "version": 2,
+      "filename": "9999-002-List of things.txt",
+      "project": "Orange",
+      "title": "List of things",
+      "comment": "Bigger list",
+      "server": "shelob",
+      "access": "Public",
+      "author-name": "Vicky Vauxhall",
+      "author-ip": "1.2.3.4",
+      "date": "2013-07-28 16:16:13 Z",
+      "revisions": [
+        {
+          "filename": "9999-001-List of things.txt",
+          "comment": "Short list",
+          "date": "2013-07-24 16:16:13 Z",
+          "author-name": "Vicky Vauxhall",
+          "author-ip": "1.2.3.4",
+          "author-host": "v",
+          "author-username": "vicky",
+          "author-version": "3",
+          "crc": "qwerty"
+        },
+        {
+          "filename": "9999-002-List of things.txt",
+          "comment": "Bigger list. Now #useful",
+          "date": "2013-07-28 16:16:13 Z",
+          "author-name": "Vicky Vauxhall",
+          "author-ip": "1.2.3.4",
+          "author-host": "v",
+          "author-username": "vicky",
+          "author-version": "3",
+          "crc": "qwerty"
+        }
+      ]
+    }
+  ]
+}
