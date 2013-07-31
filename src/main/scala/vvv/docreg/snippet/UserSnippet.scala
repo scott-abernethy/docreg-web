@@ -110,7 +110,7 @@ class UserSnippet extends Loggable {
 
   def profile(in: NodeSeq): NodeSeq = {
     val user = S.param("user") match {
-      case Full(uname) => User.forUsername(uname + "@%")
+      case Full(uname) => User.forUsername(uname + "@%") // Assumption here on username format, bad.
       case _ => User.loggedInUser.is.toOption
     }
     user match {

@@ -9,6 +9,7 @@ import net.liftweb.common.Loggable
 import akka.pattern.{ask,pipe}
 import akka.util.Timeout
 import vvv.docreg.agent._
+import vvv.docreg.agent.FileDatabaseApi._
 import akka.actor.{Actor, ActorRef}
 import scala.concurrent.duration._
 import scala.concurrent.Await

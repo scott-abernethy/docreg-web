@@ -56,7 +56,7 @@ class User extends DbObject[User] {
   {
     username match {
       case ValidEmail(name, domain) => name
-      case other => other
+      case other => other.takeWhile(_ != '@')
     }
   }
 

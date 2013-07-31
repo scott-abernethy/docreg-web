@@ -11,6 +11,7 @@ import vvv.docreg.util._
 import _root_.net.liftweb.common._
 import java.util.Date
 import vvv.docreg.agent._
+import vvv.docreg.agent.FileDatabaseApi._
 import org.squeryl.PrimitiveTypeMode._
 import vvv.docreg.model._
 import akka.actor._
@@ -45,6 +46,7 @@ trait BackendComponent {
 
 class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: ActorRef, fileDatabase: ActorRef) 
   extends Actor with Loggable with RevisionReconcile with ApprovalReconcile with SubscriptionReconcile with TagReconcile {
+
   
   val product = ProjectProps.get("project.name") openOr "drw"
   val version = ProjectProps.get("project.version") openOr "0.0"
@@ -62,7 +64,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
       "java.vendor" -> System.getProperty("java.vendor"),
       "timezone" -> java.util.TimeZone.getDefault.getDisplayName)
     logger.info("System(" + system + ")")
-    context.system.scheduler.schedule(1.minutes, 24.hours, self, 'Resync)(context.dispatcher)
+    context.system.scheduler.schedule(10.seconds, 24.hours, self, 'Resync)(context.dispatcher)
     clerk ! Filing(fileDatabase)
     priorityClerk ! Filing(fileDatabase)
     super.preStart()

@@ -27,21 +27,24 @@ import scala.concurrent.duration._
 // docreg/mail/XXXX.mail
 // docreg/approval/XXXX.approval
 
-case object GetRegister
-case object GetEditLog
-case class GetLog(key: String, access: String)
-case class GetMail(key: String)
-case class GetApproval(key: String)
-
-case class ResponseRegister(items: List[DocumentInfo])
-case class ResponseLog(key: String, items: List[RevisionInfo])
-case class ResponseMail(key: String, items: List[SubscriberInfo])
-case class ResponseApproval(key: String, items: List[ApprovalInfo])
-case class ResponseFailure(request: AnyRef)
+object FileDatabaseApi {
+  case object GetRegister
+  case object GetEditLog
+  case class GetLog(key: String, access: String)
+  case class GetMail(key: String)
+  case class GetApproval(key: String)
+  
+  case class ResponseRegister(items: List[DocumentInfo])
+  case class ResponseLog(key: String, items: List[RevisionInfo])
+  case class ResponseMail(key: String, items: List[SubscriberInfo])
+  case class ResponseApproval(key: String, items: List[ApprovalInfo])
+  case class ResponseFailure(request: AnyRef)
+}
 
 class FileDatabase extends Actor
 {
   import scala.concurrent.ExecutionContext.Implicits.global
+  import FileDatabaseApi._
 
   def receive =
   {
