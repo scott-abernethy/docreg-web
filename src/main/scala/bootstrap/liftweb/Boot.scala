@@ -196,9 +196,12 @@ class Boot
         )
 
     // Start app
-    val env = new EnvironmentImpl{}
-    env.start()
+    val env = Props.mode match {
+      case Props.RunModes.Production => new EnvironmentImpl
+      case _ => new FauxEnvironmentImpl                                     
+    }
     Environment.env = env
+    env.start()
     
     // On unload, stop app and db
     LiftRules.unloadHooks.append(() => {
