@@ -47,5 +47,6 @@ libraryDependencies ++= {
 
 parallelExecution in Test := false
 
-// override def jettyPort = 9333
+// By default, it listens on port 8080; use the following to override
+port in container.Configuration := 9090
 

@@ -56,7 +56,7 @@ The following setup has been tested on Ubuntu 12.04.2 LTS desktop.
     > ~;container:start; container:reload /
     ```
 
-7. Open a browser on http://localhost:8080/ to view the running app.
+7. Open a browser on http://localhost:9090/ to view the running app.
 
     In development mode, login with username *bruce* or *peter* or *sue*, with no password.
 
