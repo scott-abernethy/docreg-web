@@ -66,7 +66,7 @@ The following setup has been tested on Ubuntu 12.04.2 LTS desktop.
     # either ...
     > eclipse with-source=true
     # ... or ...
-    > idea with-source=true
+    > gen-idea with-source=true
     ```
 
 ### About 
