@@ -7,65 +7,67 @@ Created by Scott Abernethy (github @scott-abernethy).
 
 ## Development
 
-### Dev setup on Ubuntu
+### Dev setup
 The following setup has been tested on Ubuntu 12.04.2 LTS desktop.
 
-**NOTE** this setup results in a live version of DocReg: any document submissions etc will be replicated on production DocReg systems.
+1. Install git, mysql-server-5+, java6+
 
-```bash
-# 0. Setup
-PROJECTROOT=~/docreg-web
-YOURUSERNAME=sabernethy
-YOURPASSWORD=...
+    ```bash
+    # On Ubuntu, using webupd8 team PPA for java
+    sudo add-apt-repository ppa:webupd8team/java
+    sudo apt-get update
+    sudo apt-get install git mysql-server oracle-java6-installer
+    ```
 
-# 1. Install git, sshfs, mysql-server
-sudo apt-get install git sshfs mysql-server
+2. Fork the project source from https://github.com/ververve/docreg-web.git
+3. Clone your fork to a local project directory
 
-# 2. Install Oracle Java 6 (there are many ways to do this, my preference is below)
-sudo add-apt-repository ppa:webupd8team/java
-sudo apt-get update
-sudo apt-get install oracle-java6-installer
+    ```bash
+    git clone https://github.com/YOURGITHUBACCOUNT/docreg-web.git
+    ```
 
-# 3. Get the project source
-git clone https://github.com/scott-abernethy/docreg-web.git $PROJECTROOT
+4. Create a new database 'docregweb', using the project schema
 
-# 4. Create the database
-cd $PROJECTROOT
-mysql -u root -p < ./src/main/resources/schema
+    ```bash
+    mysql -u root -p < src/main/resources/schema
+    ```
 
-# 5. Mirror a DocReg server home directory (because the app requires local filesystem access)
-sudo mkdir -p /home/docreg
-sudo chown $YOURUSERNAME /home/docreg
-sudo gpasswd -a $YOURUSERNAME fuse
-sshfs -o idmap=user,nonempty docreg@shelob: /home/docreg
+5. Start SBT console
 
-# 6. Configure the app
-cat >>/tmp/docreg-web.conf <<EOF
-db {
-   driver = com.mysql.jdbc.Driver
-   url = jdbc:mysql://localhost/docregweb
-   user = root
-}
-agent {
-   server = shelob
-   home = /home/docreg
-   secure = true
-}
-ldap {
-   url = "ldap://dcgnetnz1.gnet.global.vpn:3268"
-   user = "gnet\\$YOURUSERNAME"
-   password = "$YOURPASSWORD"
-}
-EOF
-sudo mv /{tmp,etc}/docreg-web.conf
+    ```bash
+    # On Ubuntu
+    ./sbt
+    ```
 
-# 7. Start the app (note this will take a _long_ time as SBT downloads all the project dependencies)
-cd $PROJECTROOT
-./sbt
-> container:start
+    ```bash
+    # On Windows
+    sbt.bat
+    ```
 
-# 8. Open a browser on http://localhost:8080/ to view the running app. Note that the app will take some time to parse and cache the DocReg database on first run.
-```
+6. (In SBT) Start the app (note this will take a _long_ time as SBT downloads all the project dependencies)
+
+    ```bash
+    > container:start
+    ```
+
+    Note that during development, to automatically reload the app after making a file change, use this command instead
+
+    ```bash
+    > ~;container:start; container:reload /
+    ```
+
+7. Open a browser on http://localhost:8080/ to view the running app.
+
+    In development mode, login with username *bruce* or *peter* or *sue*, with no password.
+
+8. (In SBT) Setup Eclipse or IntelliJ IDEA project
+
+    ```bash
+    # either ...
+    > eclipse with-source=true
+    # ... or ...
+    > idea with-source=true
+    ```
 
 ### About 
 
@@ -74,3 +76,4 @@ This project is predominately a [Lift](http://liftweb.net) Web app written in [S
 ## License
 
 DocReg+Web is distributed under the [GNU General Public License v3](http://www.gnu.org/licenses/gpl-3.0.html).
+

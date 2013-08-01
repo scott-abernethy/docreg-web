@@ -5,10 +5,10 @@
 
 package vvv.docreg.agent
 
-import vvv.docreg.util.Config
+import net.liftweb.util.Props
 
 object AgentVendor {
-  lazy val server: String = Config.is.get[String]("agent.server") getOrElse "10.16.9.179" // shelob.gnet.global.vpn
-  lazy val home: String =  Config.is.get[String]("agent.home") getOrElse "/srv/docreg-fs"
-  lazy val secure: Boolean = Config.is.get[Boolean]("agent.secure") getOrElse false
+  lazy val server: String = Props.get("agent.server").openOr("10.16.9.179") // shelob.gnet.global.vpn
+  lazy val home: String =  Props.get("agent.home").openOr("/srv/docreg-fs")
+  lazy val secure: Boolean = Props.getBool("agent.secure").openOr(false)
 }

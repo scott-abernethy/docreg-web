@@ -41,7 +41,7 @@ class Boot
 {
   def boot
   {
-    val db = new DbVendor(Config.is)
+    val db = new DbVendor()
     db.init()
     //db.describe()
 
@@ -196,10 +196,8 @@ class Boot
         )
 
     // Start app
-    val env = Props.mode match {
-      case Props.RunModes.Production => new EnvironmentImpl
-      case _ => new FauxEnvironmentImpl                                     
-    }
+    val env = if (Props.productionMode) new EnvironmentImpl 
+              else new FauxEnvironmentImpl                                     
     Environment.env = env
     env.start()
     

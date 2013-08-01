@@ -13,15 +13,15 @@ import org.squeryl._
 import internals.DatabaseAdapter
 import org.squeryl.PrimitiveTypeMode._
 import com.mchange.v2.c3p0.ComboPooledDataSource
-import org.streum.configrity.Configuration
 import scala.Some
+import net.liftweb.util.Props
 
-class DbVendor(config: Configuration, maxPoolSize: Int = 10) extends Loggable {
-  lazy val driver = config.get[String]("db.driver") getOrElse "org.h2.Driver"
-  lazy val adapter = config.get[String]("db.adapter") getOrElse "org.squeryl.adapters.H2Adapter"
-  lazy val url = config.get[String]("db.url") getOrElse "jdbc:h2:mem:;MODE=MySQL"
-  lazy val user = config.get[String]("db.user") getOrElse ""
-  lazy val password = config.get[String]("db.password") getOrElse ""
+class DbVendor(maxPoolSize: Int = 10) extends Loggable {
+  lazy val driver = Props.get("db.driver").openOr("org.h2.Driver")
+  lazy val adapter = Props.get("db.adapter").openOr("org.squeryl.adapters.H2Adapter")
+  lazy val url = Props.get("db.url").openOr("jdbc:h2:mem:;MODE=MySQL")
+  lazy val user = Props.get("db.user").openOr("")
+  lazy val password = Props.get("db.password").openOr("")
 
   lazy val pool = {
     // Connection pooling with c3p0

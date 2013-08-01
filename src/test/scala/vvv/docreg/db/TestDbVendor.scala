@@ -8,11 +8,10 @@ package vvv.docreg.db
 import vvv.docreg.model._
 import java.util.Date
 import java.sql.Timestamp
-import org.streum.configrity.Configuration
 import org.specs2.mutable.After
 import org.specs2.specification.Scope
 
-class TestDbVendor extends DbVendor(Configuration(), 1) {
+class TestDbVendor extends DbVendor(1) {
   def initAndClean() {
     init()
     clear()

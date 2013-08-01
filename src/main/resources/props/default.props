@@ -1,2 +1,21 @@
-# Using Configrity for properties
-conf=/etc/docreg-web.conf
+# Default properties used in development. 
+# NOTE: Don't commit to the repository anything sensitive here, such as domain passwords.
+
+# Database settings:
+db.driver = com.mysql.jdbc.Driver
+db.adapter = org.squeryl.adapters.MySQLInnoDBAdapter
+db.url = jdbc:mysql://localhost/docregweb
+db.user = root
+#db.password = blank
+
+# Agent for docregd settings:
+# (Production only - not normally used in development mode as all external systems are mocked)
+agent.server = shelob
+agent.home = /home/docreg
+agent.secure = true
+
+# LDAP settings:
+# (Production only - not normally used in development mode as all external systems are mocked)
+ldap.url = "ldap://dcgnetnz1.gnet.global.vpn:3268"
+ldap.user = "gnet\\$YOURUSERNAME"
+ldap.password = "$YOURPASSWORD"

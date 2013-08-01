@@ -38,7 +38,6 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-slf4j" % "2.1.4",
     "com.typesafe.akka" %% "akka-testkit" % "2.1.4" % "test",
     "com.github.scala-incubator.io" %% "scala-io-file" % "0.4.2",
-    "org.streum" %% "configrity-core" % "1.0.0",
     "org.apache.tika" % "tika-core" % "1.2",
     "org.slf4j" % "slf4j-log4j12" % "1.7.2"
   )
