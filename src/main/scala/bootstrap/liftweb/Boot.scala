@@ -28,7 +28,7 @@ import org.squeryl.PrimitiveTypeMode._
 import scala._
 import vvv.docreg.model.Document.{DocumentRef, DocumentRevision}
 import scala.Some
-import vvv.docreg.rest._
+import vvv.docreg.rest.{ReconcileApi, SubscriptionApi, ProjectFeed}
 import vvv.docreg.snippet.TagListSnippet
 import scala.xml.NodeSeq
 import scala.xml.Text
@@ -185,6 +185,7 @@ class Boot
     LiftRules.dispatch.append(DownloadService)
     LiftRules.dispatch.append(ProjectFeed)
     LiftRules.dispatch.append(SubscriptionApi)
+    LiftRules.dispatch.append(ReconcileApi)
 
     // Fade out session notices.
     LiftRules.noticesAutoFadeOut.default.set( (notices: NoticeType.Value) => {
