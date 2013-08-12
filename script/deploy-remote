@@ -44,6 +44,7 @@ fi
 war=$(find target -iname '*.war')
 remote_war="$war_name$tag.war"
 echo "Backup copy to ./backup/$remote_war"
+mkdir ./backup
 cp $war ./backup/$remote_war
 echo "Deploying $war as $remote_war to $server_host"
 scp $war $server_host:$remote_war ; abort_check $?
