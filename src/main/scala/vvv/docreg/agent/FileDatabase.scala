@@ -83,25 +83,6 @@ class FileDatabase extends Actor
 }
 
 object FileDatabaseHelper {
-//  private static final Pattern FILENAME_FORMAT = Pattern.compile("^([a-zA-Z0-9]+)-([0-9]+)-(.*)");
-
-  def parseDate(dateString: String): Date = {
-    if ("".equals(dateString)) {
-      return null
-    }
-    try {
-      // Date formats are not synchronized, so create this every time.
-      val x = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss 'Z'");
-      x.setTimeZone(TimeZone.getTimeZone("UTC"))
-      x.parse(dateString);
-    }
-    catch {
-      case x: Exception => {
-        println("Failed to parse '" + dateString + "' - " + x);
-        null;
-      }
-    }
-  }
 
   def loadRegister(): Future[List[DocumentInfo]] = {
     val register = if (AgentVendor.secure) "secure/docreg-secure.txt" else "docreg/docreg.txt"
@@ -113,10 +94,10 @@ object FileDatabaseHelper {
   def createDocumentInfo(data: Array[String]): Option[DocumentInfo] = {
     data.toList match {
       case List(ValidNumber(key), ValidNumber(version), fileName, projectName, title, description, access, author, date, server, client, editor, editorStart) => {
-        Some(DocumentInfo(key.toInt, version.toInt, fileName, projectName, title, description, access, author, parseDate(date), server, client, editor, parseDate(editorStart)))
+        Some(DocumentInfo(key.toInt, version.toInt, fileName, projectName, title, description, access, author, parseAgentDate(date), server, client, editor, parseAgentDate(editorStart)))
       }
       case List(ValidNumber(key), ValidNumber(version), fileName, projectName, title, description, access, author, date, server, client) => {
-        Some(DocumentInfo(key.toInt, version.toInt, fileName, projectName, title, description, access, author, parseDate(date), server, client, "", null))
+        Some(DocumentInfo(key.toInt, version.toInt, fileName, projectName, title, description, access, author, parseAgentDate(date), server, client, "", null))
       }
       case _ => {
         None
@@ -150,7 +131,7 @@ object FileDatabaseHelper {
   def createRevisionInfo(data: Array[String]): Option[RevisionInfo] = {
     data.toList match {
       case List(fileName, project, comment, access, author, date, server, clientIp, clientHost, clientUserName, clientVersion, crc) => {
-        Some(RevisionInfo(fileName, project, comment, access, author, parseDate(date), server, clientIp, clientHost, clientUserName, clientVersion, crc))
+        Some(RevisionInfo(fileName, project, comment, access, author, parseAgentDate(date), server, clientIp, clientHost, clientUserName, clientVersion, crc))
       }
       case _ => {
         None
@@ -165,7 +146,7 @@ object FileDatabaseHelper {
   def createApprovalInfo(data: Array[String]): Option[ApprovalInfo] = {
     data.toList match {
       case List(fileName, approverName, approverEmail, status, comment, date, _, clientIp, clientHost, clientUserName) => {
-        Some(ApprovalInfo(fileName, approverName, approverEmail, status, comment, parseDate(date), clientIp, clientHost, clientUserName))
+        Some(ApprovalInfo(fileName, approverName, approverEmail, status, comment, parseAgentDate(date), clientIp, clientHost, clientUserName))
       }
       case x => {
         println(x)

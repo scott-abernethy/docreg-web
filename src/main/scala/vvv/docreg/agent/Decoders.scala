@@ -57,11 +57,11 @@ object NextChangeReplyDecoder extends ReplyDecoder
         description,
         access,
         author,
-        FileDatabaseHelper.parseDate(date),
+        parseAgentDate(date),
         server,
         client,
         editor,
-        FileDatabaseHelper.parseDate(editorStart))
+        parseAgentDate(editorStart))
     )
   }
 }

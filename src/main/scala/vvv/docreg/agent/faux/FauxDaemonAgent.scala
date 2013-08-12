@@ -3,37 +3,37 @@ package vvv.docreg.agent.faux
 import akka.actor._
 import vvv.docreg.agent._
 
-case class AddDocument(info: DocumentInfo, username: String, notifyTo: ActorRef)
-case class AddDocumentChange(info: DocumentInfo)
-
 class FauxDaemonAgent(db: ActorRef) extends Actor {
 
   var submits: Map[String, RegisterRequest] = Map.empty
   var change: (Int, DocumentInfo) = (-1, null)
 
   def receive = {
-    case RequestPackage(replyTo, target, NextChangeRequest(id)) => {
-      // Sending back the same id means no change.
+    case RequestPackage(replyTo, _, NextChangeRequest(id)) => {
+      // Reply with the latest stored change.
       replyTo ! NextChangeReply(change._1, change._2)
     }
-    case RequestPackage(replyTo, target, request @ RegisterRequest(fileName, project, comment, access, author, userName, clientHost, clientVersion)) => {
-      submits = submits + (fileName -> request) 
+    case RequestPackage(replyTo, _, r @ RegisterRequest(fileName, _, _, _, _, _, _, _)) => {
+      submits = submits + (fileName -> r) 
       replyTo ! RegisterReply("Accepted", fileName)
     }
-    case RequestPackage(replyTo, target, SubmitRequest(fileName, crc)) => {
-      replyTo ! SubmitReply("Done", fileName)
-      (submits get fileName) match {
-        case Some(request) => {
+    case RequestPackage(replyTo, _, SubmitRequest(filename, crc)) => {
+      replyTo ! SubmitReply("Done", filename)
+      submits.get(filename) match {
+        case Some(r) => {
           // Update the file datebase -- it will respond with an AddDocumentChange msg
-          db ! AddDocument(DocumentInfo(-1, 0, request.fileName, request.project, request.fileName, request.comment, request.access, request.author, new java.util.Date(), "shelob", request.clientHost, null, null), request.userName, self)
+          db ! AddDocument(DocumentInfo(-1, 0, r.fileName, r.project, r.fileName, r.comment, r.access, r.author, new java.util.Date(), "shelob", r.clientHost, null, null), r.userName, self)
 
           // Remove stored submit
-          submits = submits - fileName
+          submits = submits - filename
         }
         case _ => {
           // Not found
         }
       }
+    }
+    case RequestPackage(replyTo, _, EditRequest(_, username)) => {
+      replyTo ! EditReply(username)
     }
     case AddDocumentChange(info) => {
       // Update change notification for next poll (note: dev mode  only supports single change at a time)

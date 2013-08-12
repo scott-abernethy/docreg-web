@@ -201,7 +201,7 @@ class DocumentSnippet extends DocumentRequest with Loggable {
       ".edit-back [href]" #> (d.infoHref())
     ).apply(in)
       }
-      case _ => NodeSeq.Empty
+      case _ => <b>Error</b>
     }
   }
 

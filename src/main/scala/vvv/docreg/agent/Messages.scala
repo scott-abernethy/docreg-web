@@ -30,16 +30,12 @@ object MessageType extends Enumeration
   val approvalReply = Value(36)
 }
 
-object Standards {
-  val documentNumberFormat = new DecimalFormat("0000")
-}
-
 case class Header(version: Int, message: MessageType.Type, transactionId: Int, sequence: Int)
 
 // TODO key and version should be String
 case class DocumentInfo(number: Int, version: Int, fileName: String, projectName: String, title: String, description: String, access: String, author: String, date: Date, server: String, client: String, editor: String, editorStart: Date) {
   def getKey(): String = {
-    Standards.documentNumberFormat.format(number)
+    documentNumberFormat.format(number)
   }
 }
 
