@@ -8,7 +8,7 @@ Created by Scott Abernethy (github @scott-abernethy).
 ## Development
 
 ### Dev setup
-The following setup has been tested on Ubuntu 12.04.2 LTS desktop.
+The following setup has been tested on Ubuntu 12.04.2 LTS desktop and Windows 7 desktop.
 
 1. Install git, mysql-server-5+, java6+
 
@@ -69,7 +69,7 @@ The following setup has been tested on Ubuntu 12.04.2 LTS desktop.
     > gen-idea
     ```
 
-### About 
+## About 
 
 This project is predominately a [Lift](http://liftweb.net) Web app written in [Scala](http://www.scala-lang.org). Both [Lift](http://liftweb.net) and [Scala](http://www.scala-lang.org) have good online documentation and strong community mailing lists for support.
 

@@ -1,16 +1,20 @@
 package vvv.docreg.agent.faux
 
+import scala.util.Random
 import vvv.docreg.agent.FileDatabaseApi._
 import akka.actor.Actor
 import vvv.docreg.agent.DocumentInfo
 import java.util.Date
 import vvv.docreg.agent.RevisionInfo
 import vvv.docreg.util.T
+import vvv.docreg.util.StringUtil.prePadTo
 import net.liftweb.json._
 import net.liftweb.util.ControlHelpers._
 import net.liftweb.common.Box
 import vvv.docreg.agent.FileDatabaseHelper
 import vvv.docreg.agent.ApprovalInfo
+import net.liftweb.json._
+import net.liftweb.json.JsonDSL._
 
 trait FauxData {
   def loadData(): Box[JValue] = tryo {
@@ -22,7 +26,7 @@ trait FauxData {
 
 class FauxFileDatabase extends Actor with FauxData {
   
-  lazy val db = loadData().openOr(JNothing)
+  var db = loadData().openOr(JNothing)
   
   def receive = {
     case GetRegister => {
@@ -37,6 +41,44 @@ class FauxFileDatabase extends Actor with FauxData {
     }
     case GetApproval(key) => {
       sender ! ResponseApproval(key, approvalParser(db, key))
+    }
+    case AddDocument(info, username, notifyTo) => {
+      val num = findFreeNumber()
+      val x = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss 'Z'");
+      x.setTimeZone(java.util.TimeZone.getTimeZone("UTC"))
+      val numStr = prePadTo(num.toString, 4, '0')
+      val filename = "%s-001-%s".format(numStr, info.fileName)
+      val dateStr = x.format(info.date)
+      val info2 = info.copy(number = num, version = 1, fileName = filename)
+
+      val json: JValue = ("documents" -> List(
+          ("number" -> numStr) ~
+          ("version" -> info2.version) ~
+          ("filename" -> filename) ~
+          ("project" -> info2.projectName) ~
+          ("title" -> info2.fileName) ~
+          ("comment" -> info2.description) ~
+          ("server" -> info2.server) ~
+          ("access" -> info2.access) ~
+          ("author-name" -> info2.author) ~
+          ("author-ip" -> info2.client) ~
+          ("date" -> dateStr) ~
+          ("revisions" -> List(
+            ("filename" -> filename) ~
+            ("comment" -> info2.description) ~
+            ("date" -> dateStr) ~
+            ("author-name" -> info2.author) ~
+            ("author-ip" -> info2.client) ~
+            ("author-host" -> info2.client) ~
+            ("author-username" -> username) ~
+            ("author-version" -> "3") ~
+            ("crc" -> "asdf")
+            ))
+        ))
+      db = db.merge(json)
+      println(pretty(render(json)))
+
+      notifyTo ! AddDocumentChange(info2)
     }
     case other => {
       unhandled(other)
@@ -104,5 +146,16 @@ class FauxFileDatabase extends Actor with FauxData {
     }
     yield ApprovalInfo(filename, username, email, status, comment, 
         FileDatabaseHelper.parseDate(date), ip, host, actioner)
+  }
+
+  def findFreeNumber(): Int = {
+    val usedNumbers = (
+      for {
+        JString(number) <- db \ "documents" \ "number"
+      } 
+      yield number
+    ).toSet
+    
+    Stream.from(Random.nextInt(9999)).map(_ % 9999).filterNot(x => usedNumbers.contains(prePadTo(x.toString, 4, '0'))).head
   }
 }
