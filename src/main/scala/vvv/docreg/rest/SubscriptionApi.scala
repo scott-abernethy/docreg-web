@@ -9,8 +9,8 @@ import net.liftweb.common.{Full, Box, Empty, Loggable}
 import net.liftweb.http.rest.RestHelper
 import net.liftweb.http.{BadResponse, PlainTextResponse, RedirectResponse, LiftResponse}
 import vvv.docreg.model.{Subscription, Document, User}
-import vvv.docreg.backend.{UnsubscribeRequested, SubscribeRequested}
 import vvv.docreg.util.Environment
+import vvv.docreg.backend.BackendApi._
 
 object SubscriptionApi extends RestHelper with Loggable {
 

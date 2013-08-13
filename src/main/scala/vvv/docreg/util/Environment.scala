@@ -13,15 +13,15 @@ import com.typesafe.config.{ConfigFactory}
 import vvv.docreg.directory.faux.FauxDirectoryComponentImpl
 import net.liftweb.common.Loggable
 
-trait Environment extends BackendComponent with DocumentStreamComponent with DirectoryComponent with DaemonAgentComponent
-{
+trait Environment extends BackendComponent with DocumentStreamComponent with DirectoryComponent with DaemonAgentComponent {
+
   def start()
 
   def exit()
 }
 
-class EnvironmentImpl extends Environment with BackendComponent with DirectoryComponentImpl with DaemonAgentComponent with Loggable
-{
+class EnvironmentImpl extends Environment with BackendComponent with DirectoryComponentImpl with DaemonAgentComponent with Loggable {
+
   val akkaConfig = ConfigFactory.load("akka.conf")
   val system = ActorSystem("DocRegWebSystem", akkaConfig.getConfig("docreg-web").withFallback(akkaConfig))
   import system._
@@ -32,14 +32,12 @@ class EnvironmentImpl extends Environment with BackendComponent with DirectoryCo
   val poller = actorOf(Props(new ChangePoller(AgentVendor.server, backend, daemonAgent)))
   val userStorage = actorOf(Props[UserStorage], "UserStorage")
 
-  def start()
-  {
+  def start() {
     poller ! 'Reset
     logger.info("Environment started - ***PRODUCTION MODE*** - Connecting to production docregd servers")
   }
 
-  def exit()
-  {
+  def exit() {
     backend ! 'Die
     poller ! 'Die
     daemonAgent ! 'Die
@@ -47,8 +45,8 @@ class EnvironmentImpl extends Environment with BackendComponent with DirectoryCo
   }
 }
 
-class FauxEnvironmentImpl extends Environment with BackendComponent with FauxDirectoryComponentImpl with DaemonAgentComponent with Loggable
-{
+class FauxEnvironmentImpl extends Environment with BackendComponent with FauxDirectoryComponentImpl with DaemonAgentComponent with Loggable {
+
   val akkaConfig = ConfigFactory.load("akka.conf")
   val system = ActorSystem("DocRegWebSystem", akkaConfig.getConfig("docreg-web").withFallback(akkaConfig))
   import system._
@@ -59,14 +57,12 @@ class FauxEnvironmentImpl extends Environment with BackendComponent with FauxDir
   val poller = actorOf(Props(new ChangePoller(AgentVendor.server, backend, daemonAgent)))
   val userStorage = actorOf(Props[UserStorage], "UserStorage")
 
-  def start()
-  {
+  def start() {
     poller ! 'Reset
     logger.info("Environment started - Developer Mode - Using faked data for external systems (LDAP, docregd)")
   }
 
-  def exit()
-  {
+  def exit() {
     backend ! 'Die
     poller ! 'Die
     daemonAgent ! 'Die
@@ -74,7 +70,6 @@ class FauxEnvironmentImpl extends Environment with BackendComponent with FauxDir
   }
 }
 
-object Environment
-{
+object Environment {
   var env: Environment = _
 }

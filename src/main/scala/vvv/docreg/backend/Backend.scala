@@ -7,8 +7,7 @@ package vvv.docreg.backend
 
 import vvv.docreg.model.ApprovalState._
 import vvv.docreg.util._
-
-import _root_.net.liftweb.common._
+import net.liftweb.common._
 import java.util.Date
 import vvv.docreg.agent._
 import vvv.docreg.agent.FileDatabaseApi._
@@ -18,27 +17,29 @@ import akka.actor._
 import scala.concurrent.duration._
 import vvv.docreg.db.DbSchema
 
-case class Reload(d: Document)
+object BackendApi {
+  case class Reload(d: Document)
 
-case class Loaded(ds: List[DocumentInfo])
+  case class Loaded(ds: List[DocumentInfo])
 
-case class Reconcile(document: DocumentInfo, revisions: List[RevisionInfo], approvals: List[ApprovalInfo], subscriptions: List[SubscriberInfo])
+  case class Reconcile(document: DocumentInfo, revisions: List[RevisionInfo], approvals: List[ApprovalInfo], subscriptions: List[SubscriberInfo])
 
-case class ApprovalApproved(document: Document, revision: Revision, user: User, state: ApprovalState, comment: String, actionedBy: User)
+  case class ApprovalApproved(document: Document, revision: Revision, user: User, state: ApprovalState, comment: String, actionedBy: User)
 
-case class ApprovalRequested(document: Document, revision: Revision, users: Iterable[User], actionedBy: User)
+  case class ApprovalRequested(document: Document, revision: Revision, users: Iterable[User], actionedBy: User)
 
-case class SubscribeRequested(document: Document, user: User, options: String)
+  case class SubscribeRequested(document: Document, user: User, options: String)
 
-case class UnsubscribeRequested(document: Document, user: User)
+  case class UnsubscribeRequested(document: Document, user: User)
 
-case class Edit(document: Document, user: User)
+  case class Edit(document: Document, user: User)
 
-case class Unedit(document: Document, user: User)
+  case class Unedit(document: Document, user: User)
 
-case class Submit(document: Document, projectName: String, localFile: () => java.io.File, userFileName: String, comment: String, user: User)
+  case class Submit(document: Document, projectName: String, localFile: () => java.io.File, userFileName: String, comment: String, user: User)
 
-case class Create(projectName: String, localFile: () => java.io.File, fileName: String, comment: String, user: User)
+  case class Create(projectName: String, localFile: () => java.io.File, fileName: String, comment: String, user: User)
+}
 
 trait BackendComponent {
   val backend: ActorRef
@@ -47,7 +48,8 @@ trait BackendComponent {
 class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: ActorRef, fileDatabase: ActorRef) 
   extends Actor with Loggable with RevisionReconcile with ApprovalReconcile with SubscriptionReconcile with TagReconcile {
 
-  
+  import BackendApi._
+
   val product = ProjectProps.get("project.name") openOr "drw"
   val version = ProjectProps.get("project.version") openOr "0.0"
   val clientVersion = "dr+w " + version
@@ -59,12 +61,13 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
   }
 
   override def preStart() {
-    logger.info("Backend up for " + product + " v" + version + " connected to " + target)
-    val system = Map("java.version" -> System.getProperty("java.version"),
+    val system = Map(
+      "java.version" -> System.getProperty("java.version"),
       "java.vendor" -> System.getProperty("java.vendor"),
       "timezone" -> java.util.TimeZone.getDefault.getDisplayName)
-    logger.info("System(" + system + ")")
-    context.system.scheduler.schedule(10.seconds, 24.hours, self, 'Resync)(context.dispatcher)
+    logger.info("System is " + system)
+    logger.info("Backend up for " + product + " v" + version + " connected to " + target)
+    context.system.scheduler.scheduleOnce(10.seconds, self, 'Resync)(context.dispatcher)
     clerk ! Filing(fileDatabase)
     priorityClerk ! Filing(fileDatabase)
     super.preStart()
@@ -80,106 +83,94 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
       self ! Loaded(ds)
     }
     case ResponseFailure(GetRegister) => {
-      logger.warn("Failed to load register");
+      logger.warn("Failed to load register! Will try again in 6 hours.");
+      context.system.scheduler.scheduleOnce(6.hours, self, 'Resync)(context.dispatcher)
     }
     case Loaded(d :: ds) => {
       Document.forKey(d.getKey) match {
-        case Full(document) => {
-          val weekAgo = T.daysAgo(7)
-          val recentEditor = d.editor != null && d.editorStart != null && d.editorStart.after(weekAgo)
-          val reconcileOutOfDate = document.reconciled == null || document.reconciled.before(weekAgo)
-          if (!document.latest_?(d.version) || recentEditor || !document.access.equalsIgnoreCase(d.access) || reconcileOutOfDate) {
-            clerk ! Prepare(d)
-          }
-        }
-        case _ => {
-          clerk ! Prepare(d)
-        }
+        case Full(document) if (documentUpToDate(document, d)) => // No need to update
+        case _ => clerk ! Prepare(d)
       }
       // Slow down the resync by delaying the remaining loads...
       // With 10K documents, one per ~100 msec, resync takes ~16 mins
       // With 1.8M douments, one per ~100 msec, resync takes ~50 hours
-      // With 10K documents, one per 1 sec, resync takes ~3 hours
-      // With 1.8M documents, one per 1 sec, resync takes ~20 days
-      context.system.scheduler.scheduleOnce(100 milliseconds, self, Loaded(ds))(context.dispatcher)
+      context.system.scheduler.scheduleOnce(100.milliseconds, self, Loaded(ds))(context.dispatcher)
     }
     case Loaded(Nil) => {
-      logger.debug("Backend resync against register, complete.")
+      logger.debug("Backend resync against register, complete. Next in 24 hours")
+      context.system.scheduler.scheduleOnce(24.hours, self, 'Resync)(context.dispatcher)
     }
-        case Changed(d) => {
-          // Todo: Apply what we know of the change now, then reconcile. Though the reconcile typically takes <1 second.
-          logger.debug("Change received, sending to clerk " + d.getKey)
-          priorityClerk ! Prepare(d)
-        }
-        case Some(msg @ Reconcile(d, revisions, approvals, subscriptions)) => {
-          logger.debug("Reconcile " + d.getKey() + " : " + (revisions.size, approvals.size, subscriptions.size))
-          Document.forKey(d.getKey) match {
-            case Full(document) => updateDocument(document, msg)
-            case _ => createDocument(msg)
-          }
-        }
-        case ApprovalApproved(d, r, user, state, comment, actionedBy) => {
-          daemonAgent ! RequestPackage(self, target,
-            ApprovalRequest(
-              r.filename,
-              user.shortUsername(),
-              user.email,
-              state match {
-                case ApprovalState.approved => "Approved"
-                case ApprovalState.notApproved => "Not Approved"
-                case _ => "Pending"
-              },
-              comment,
-              product, // todo is this consistent?
-              actionedBy.shortUsername()
-            ))
-        }
-        case ApprovalRequested(d, r, users, actionedBy) => {
-          users foreach (self ! ApprovalApproved(d, r, _, ApprovalState.pending, "", actionedBy))
-        }
-        case ApprovalReply(response) => {
-          logger.info("Approval reply, " + response)
-        }
-        case SubscribeRequested(d, user, options) => {
-          logger.info("Subscribe request, " + List(d.latest.filename, user.shortUsername(), user.email, options))
-          daemonAgent ! RequestPackage(self, target, SubscribeRequest(d.latest.filename, user.shortUsername(), user.email, options))
-        }
-        case SubscribeReply(response, fileName, userName) => {
-          logger.info("Subscribe reply, " + List(response, fileName, userName))
-        }
-        case UnsubscribeRequested(d, user) => {
-          daemonAgent ! RequestPackage(self, target, UnsubscribeRequest(d.latest.filename, user.shortUsername(), user.email))
-        }
-        case UnsubscribeReply(response, fileName, userName) => {
-          logger.info("Unsubscribe reply, " + List(response, fileName, userName))
-        }
-        case Edit(d, user) => {
-          logger.info("Edit request, " + List(d.latest.filename, user.shortUsername()))
-          daemonAgent ! RequestPackage(self, target, EditRequest(d.latest.filename, user.shortUsername()))
-        }
-        case EditReply(user) => {
-          logger.info("Edit reply, editor is " + user)
-        }
-        case Unedit(d, user) => {
-          logger.info("Unedit request, " + List(d.latest.filename, user.shortUsername()))
-          daemonAgent ! RequestPackage(self, target, UneditRequest(d.latest.filename, user.shortUsername()))
-        }
-        case msg @ Submit(d, projectName, localFile, userFileName, comment, user) => {
-          // todo check revision is latest?
-          val engine = context.actorOf(Props(new SubmitEngine(daemonAgent, target, user.host, clientVersion)))
-          engine ! msg
-        }
-        case msg @ Create(projectName, localFile, userFileName, comment, user) => {
-          val engine = context.actorOf(Props(new SubmitNewEngine(daemonAgent, target, user.host, clientVersion)))
-          engine ! msg
-        }
-        case 'Die => {
-          logger.info("Backend killed")
-          self ! PoisonPill
-        }
-        case other => {
-          unhandled(other)
-        }
+    case Changed(d) => {
+      // Todo: Apply what we know of the change now, then reconcile. Though the reconcile typically takes <1 second.
+      logger.debug("Change received, sending to clerk " + d.getKey)
+      priorityClerk ! Prepare(d)
+    }
+    case Some(msg @ Reconcile(d, revisions, approvals, subscriptions)) => {
+      logger.debug("Reconcile " + d.getKey() + " : " + (revisions.size, approvals.size, subscriptions.size))
+      Document.forKey(d.getKey) match {
+        case Full(document) => updateDocument(document, msg)
+        case _ => createDocument(msg)
+      }
+    }
+    case ApprovalApproved(d, r, user, state, comment, actionedBy) => {
+      daemonAgent ! RequestPackage(self, target,
+        ApprovalRequest(
+          r.filename,
+          user.shortUsername(),
+          user.email,
+          state match {
+            case ApprovalState.approved => "Approved"
+            case ApprovalState.notApproved => "Not Approved"
+            case _ => "Pending"
+          },
+          comment,
+          product, // todo is this consistent?
+          actionedBy.shortUsername()
+        ))
+    }
+    case ApprovalRequested(d, r, users, actionedBy) => {
+      users.foreach(self ! ApprovalApproved(d, r, _, ApprovalState.pending, "", actionedBy))
+    }
+    case ApprovalReply(response) => {
+      logger.info("Approval reply, " + response)
+    }
+    case SubscribeRequested(d, user, options) => {
+      logger.info("Subscribe request, " + List(d.latest.filename, user.shortUsername(), user.email, options))
+      daemonAgent ! RequestPackage(self, target, SubscribeRequest(d.latest.filename, user.shortUsername(), user.email, options))
+    }
+    case SubscribeReply(response, fileName, userName) => {
+      logger.info("Subscribe reply, " + List(response, fileName, userName))
+    }
+    case UnsubscribeRequested(d, user) => {
+      daemonAgent ! RequestPackage(self, target, UnsubscribeRequest(d.latest.filename, user.shortUsername(), user.email))
+    }
+    case UnsubscribeReply(response, fileName, userName) => {
+      logger.info("Unsubscribe reply, " + List(response, fileName, userName))
+    }
+    case Edit(d, user) => {
+      logger.info("Edit request, " + List(d.latest.filename, user.shortUsername()))
+      daemonAgent ! RequestPackage(self, target, EditRequest(d.latest.filename, user.shortUsername()))
+    }
+    case EditReply(user) => {
+      logger.info("Edit reply, editor is " + user)
+    }
+    case Unedit(d, user) => {
+      logger.info("Unedit request, " + List(d.latest.filename, user.shortUsername()))
+      daemonAgent ! RequestPackage(self, target, UneditRequest(d.latest.filename, user.shortUsername()))
+    }
+    case msg @ Submit(d, projectName, localFile, userFileName, comment, user) => {
+      // todo check revision is latest?
+      val engine = context.actorOf(Props(new SubmitEngine(daemonAgent, target, user.host, clientVersion)))
+      engine ! msg
+    }
+    case msg @ Create(projectName, localFile, userFileName, comment, user) => {
+      val engine = context.actorOf(Props(new SubmitNewEngine(daemonAgent, target, user.host, clientVersion)))
+      engine ! msg
+    }
+    case 'Die => {
+      logger.info("Backend killed")
+      context.stop(self)
+    }
   }
 
   private def projectWithName(name: String): Project = {
@@ -296,5 +287,12 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
     else {
       Pending.unassignEditor(document)
     }
+  }
+
+  def documentUpToDate(document: Document, d: DocumentInfo): Boolean = {
+    val weekAgo = T.daysAgo(7)
+    val recentEditor = d.editor != null && d.editorStart != null && d.editorStart.after(weekAgo)
+    val reconcileOutOfDate = document.reconciled == null || document.reconciled.before(weekAgo)
+    document.latest_?(d.version) && !recentEditor && document.access.equalsIgnoreCase(d.access) && !reconcileOutOfDate
   }
 }

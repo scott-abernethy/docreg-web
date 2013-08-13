@@ -8,7 +8,7 @@ package vvv.docreg.snippet
 import xml.{Text, NodeSeq}
 import vvv.docreg.model.{User, Project}
 import net.liftweb.util.Helpers._
-import vvv.docreg.backend.Create
+import vvv.docreg.backend.BackendApi._
 import vvv.docreg.util.{StringUtil, Environment}
 import net.liftweb.http._
 import net.liftweb.common.{Loggable, Full}

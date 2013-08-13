@@ -46,13 +46,11 @@ trait DaemonProtocol extends Loggable
 
   val channel: DatagramChannel = bootstrap.bind(new InetSocketAddress(0)).asInstanceOf[DatagramChannel]
   
-  def transmit(hostname: String, message: DownstreamMessage)
-  {
+  def transmit(hostname: String, message: DownstreamMessage) {
     channel.write(message, new InetSocketAddress(hostname, 5436))
   }
 
-  def close()
-  {
+  def close() {
     channel.close.awaitUninterruptibly(5000)
     factory.releaseExternalResources()
   }
@@ -60,13 +58,9 @@ trait DaemonProtocol extends Loggable
 
 class DaemonProtocolEncoder extends OneToOneEncoder with Loggable
 {
-  def encode(ctx: ChannelHandlerContext, channel: Channel, msg: AnyRef) =
-  {
+  def encode(ctx: ChannelHandlerContext, channel: Channel, msg: AnyRef) = {
     msg match {
-      case DownstreamMessage(header, body) =>
-      {
-        //println("Protocol downstream " + header)
-
+      case DownstreamMessage(header, body) => {
         val buffer = ChannelBuffers.dynamicBuffer();
 
         // header
@@ -80,8 +74,7 @@ class DaemonProtocolEncoder extends OneToOneEncoder with Loggable
 
         buffer
       }
-      case _ =>
-      {
+      case _ => {
         // Can't encode this, ignore
         msg
       }
@@ -89,14 +82,11 @@ class DaemonProtocolEncoder extends OneToOneEncoder with Loggable
   }
 }
 
-class DaemonProtocolDecoder(decoders: Map[MessageType.Type, ReplyDecoder]) extends OneToOneDecoder with Loggable
-{
-  def decode(ctx: ChannelHandlerContext, channel: Channel, msg: AnyRef): AnyRef =
-  {
-    msg match
-    {
-      case buffer: ChannelBuffer =>
-      {
+class DaemonProtocolDecoder(decoders: Map[MessageType.Type, ReplyDecoder]) extends OneToOneDecoder with Loggable {
+
+  def decode(ctx: ChannelHandlerContext, channel: Channel, msg: AnyRef): AnyRef = {
+    msg match {
+      case buffer: ChannelBuffer => {
         // header
         val version = buffer.readInt()
         val messageId = buffer.readInt()
@@ -108,24 +98,19 @@ class DaemonProtocolDecoder(decoders: Map[MessageType.Type, ReplyDecoder]) exten
         //println("Upstream message received " + header + " and decoded as " + message)
         message
       }
-      case _ =>
-      {
+      case _ => {
         // Can't decode this, ignore
         msg
       }
     }
   }
 
-  def decodeMessage(header: Header, buffer: ChannelBuffer): AnyRef =
-  {
-    header match
-    {
-      case Header(v, messageType, transaction, sequence) if (DaemonProtocol.protocolVersion == v && decoders.contains(messageType)) =>
-      {
+  def decodeMessage(header: Header, buffer: ChannelBuffer): AnyRef = {
+    header match {
+      case Header(v, messageType, transaction, sequence) if (DaemonProtocol.protocolVersion == v && decoders.contains(messageType)) => {
         ReplyPackage(header, decoders(messageType).decode(header, buffer))
       }
-      case _ =>
-      {
+      case _ => {
         null
       }
     }
@@ -134,21 +119,19 @@ class DaemonProtocolDecoder(decoders: Map[MessageType.Type, ReplyDecoder]) exten
 
 class DaemonProtocolHandler(consume: (Any) => Unit) extends SimpleChannelUpstreamHandler with Loggable
 {
-  override def messageReceived(ctx: ChannelHandlerContext, e: MessageEvent)
-  {
+  override def messageReceived(ctx: ChannelHandlerContext, e: MessageEvent) {
     consume(e.getMessage)
   }
 
-  override def exceptionCaught(ctx: ChannelHandlerContext, e: ExceptionEvent)
-  {
+  override def exceptionCaught(ctx: ChannelHandlerContext, e: ExceptionEvent) {
     logger.warn("Protocol exception " + e.getCause, e.getCause)
   }
 }
 
 case class DownstreamMessage(header: Header, body: (ChannelBuffer) => Unit)
 
-object DaemonProtocol
-{
+object DaemonProtocol {
+
   val protocolVersion: Int = 4
 
 //  def main(args: Array[String])

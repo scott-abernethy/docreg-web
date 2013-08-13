@@ -13,6 +13,7 @@ import vvv.docreg.agent.FileDatabaseApi._
 import akka.actor.{Actor, ActorRef}
 import scala.concurrent.duration._
 import scala.concurrent.Await
+import vvv.docreg.backend.BackendApi._
 
 case class Filing(db: ActorRef)
 case class Prepare(d: DocumentInfo)

@@ -3,11 +3,11 @@
  * This file is part of DocReg+Web. Please refer to the NOTICE.txt file for license details.
  */
 
-package vvv.docreg.util
+package vvv.docreg.rest
 
-import _root_.net.liftweb.common._
-import _root_.net.liftweb.http._
-import _root_.net.liftweb.util._
+import net.liftweb.common._
+import net.liftweb.http._
+import net.liftweb.util._
 import rest.RestHelper
 import vvv.docreg.backend.Backend
 import net.liftweb.util.ControlHelpers._

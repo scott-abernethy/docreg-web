@@ -26,6 +26,7 @@ import java.sql.Timestamp
 import org.apache.tika.Tika
 import vvv.docreg.agent.SubscriberInfo
 import vvv.docreg.rest.SubscriptionApi
+import vvv.docreg.backend.BackendApi._
 
 trait DocumentRequest
 {

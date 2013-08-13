@@ -5,42 +5,33 @@
 
 package bootstrap.liftweb
 
-import net.liftweb._
-import common.Full
-import http.Html5Properties
-import http.ParsePath
-import http.RewriteRequest
-import http.RewriteResponse._
+import org.squeryl.PrimitiveTypeMode._
+import net.liftmodules.widgets.flot._
+import net.liftweb.common._
+import net.liftweb.http._
+import net.liftweb.http.RewriteResponse._
+import net.liftweb.sitemap._
+import net.liftweb.sitemap.Loc._
+import net.liftweb.sitemap.Loc.If
 import net.liftweb.util._
-import Helpers._
-import common._
-import http._
-import sitemap._
-import Loc._
-import _root_.vvv.docreg.model._
-import _root_.vvv.docreg.util._
-import sitemap.Loc.If
+import net.liftweb.util.Helpers._
+import vvv.docreg.model._
+import vvv.docreg.util._
 import vvv.docreg.backend._
 import vvv.docreg.db.DbVendor
-import net.liftmodules.widgets.flot._
-import scala.actors.Actor
-import org.squeryl.PrimitiveTypeMode._
-import scala._
 import vvv.docreg.model.Document.{DocumentRef, DocumentRevision}
-import scala.Some
-import vvv.docreg.rest.{ReconcileApi, SubscriptionApi, ProjectFeed}
+import vvv.docreg.rest._
 import vvv.docreg.snippet.TagListSnippet
-import scala.xml.NodeSeq
-import scala.xml.Text
+import scala.{Some,None,Option}
+import scala.xml.{NodeSeq,Text}
 
 /**
  * A class that's instantiated early and run.  It allows the application
  * to modify lift's environment
  */
-class Boot
-{
-  def boot
-  {
+class Boot {
+
+  def boot {
     val db = new DbVendor()
     db.init()
     //db.describe()
@@ -111,6 +102,7 @@ class Boot
     LiftRules.ajaxStart = Full( () => LiftRules.jsArtifacts.show("loading").cmd )
     LiftRules.ajaxEnd = Full( () => LiftRules.jsArtifacts.hide("loading").cmd )
 
+    // Configure file upload rules.
     def uploadViaDisk(fieldName: String, contentType: String, fileName: String, stream: java.io.InputStream): FileParamHolder = OnDiskFileParamHolder(fieldName, contentType, fileName, stream)
     val maxSize = 500 * 1024 * 1024
     LiftRules.maxMimeSize = maxSize

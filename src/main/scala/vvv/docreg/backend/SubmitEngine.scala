@@ -16,6 +16,7 @@ import vvv.docreg.agent.RegisterRequest
 import vvv.docreg.agent.SubmitReply
 import vvv.docreg.agent.RegisterReply
 import vvv.docreg.agent.RequestPackage
+import vvv.docreg.backend.BackendApi._
 
 class SubmitEngine(agent: ActorRef, target: String, clientHost: String, clientVersion: String) extends Actor with Loggable
 {

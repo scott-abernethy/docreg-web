@@ -8,6 +8,7 @@ package vvv.docreg.backend
 import vvv.docreg.agent._
 import net.liftweb.common.Loggable
 import akka.actor.{PoisonPill, Actor, ActorRef}
+import vvv.docreg.backend.BackendApi._
 
 class SubmitNewEngine(agent: ActorRef, target: String, clientHost: String, clientVersion: String) extends Actor with Loggable
 {

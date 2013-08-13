@@ -10,7 +10,7 @@ import net.liftweb.mapper._
 import vvv.docreg.model._
 import net.liftweb.common._
 import org.squeryl._
-import internals.DatabaseAdapter
+import org.squeryl.internals.DatabaseAdapter
 import org.squeryl.PrimitiveTypeMode._
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import scala.Some

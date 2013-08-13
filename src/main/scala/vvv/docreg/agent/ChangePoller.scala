@@ -15,8 +15,8 @@ import net.liftweb.http.js.JsCmds._Noop
 
 case class Changed(documentInfo: DocumentInfo)
 
-class ChangePoller(hostname: String, consumer: ActorRef, agent: ActorRef) extends Actor with Loggable
-{
+class ChangePoller(hostname: String, consumer: ActorRef, agent: ActorRef) extends Actor with Loggable {
+
   // todo use akka watchdog
   val pollInterval = 5000L
   val wakeInterval: Long = pollInterval * 5
@@ -29,89 +29,75 @@ class ChangePoller(hostname: String, consumer: ActorRef, agent: ActorRef) extend
   var wakeCancellable: Option[Cancellable] = None
 
   def receive = {
-        case 'Reset =>
+
+    case 'Reset => {
+      lastChangeNumber = -1
+      lastPoll.zero()
+      lastReply.zero()
+      lastDocumentInfo = None
+      self ! 'Poll
+    }
+
+    case 'Poll if lastPoll.elapsed_?(0.9 * pollInterval toLong) => {
+      //logger.debug("Poll, next change request {" + lastChangeNumber + "}")
+      lastPoll.mark()
+      agent ! RequestPackage(self, hostname, NextChangeRequest(lastChangeNumber))
+      schedulePoll
+      scheduleWake
+    }
+
+    case 'Wake => {
+      wakeCancellable = None
+      if (lastReply.elapsed_?(pollReplyTimeout)) {
+        logger.warn("Change reply not received in a timely fashion")
+        self ! 'Reset
+        // todo warn consumer to resync
+      }
+      else {
+        schedulePoll
+      }
+      scheduleWake
+    }
+
+    case NextChangeReply(changeNumber, documentInfo) => {
+      lastReply.mark()
+      if (changeNumber != lastChangeNumber) {
+        lastChangeNumber = changeNumber
+        lastPoll.zero()
+        self ! 'Poll
+
+        // Daemon can repeat last changed document message, so ignore repeats
+        if (!lastDocumentInfo.exists(_ == documentInfo))
         {
-          lastChangeNumber = -1
-          lastPoll.zero()
-          lastReply.zero()
-          lastDocumentInfo = None
-          self ! 'Poll
+          logger.debug("Change detected in " + documentInfo)
+          lastDocumentInfo = Some(documentInfo)
+          consumer ! Changed(documentInfo)
         }
+      }
+    }
 
-        case 'Poll if lastPoll.elapsed_?(0.9 * pollInterval toLong) =>
-        {
-          //logger.debug("Poll, next change request {" + lastChangeNumber + "}")
-          lastPoll.mark()
-          agent ! RequestPackage(self, hostname, NextChangeRequest(lastChangeNumber))
-          schedulePoll
-          scheduleWake
-        }
+    case 'Ping => sender ! 'Pong
 
-        case 'Wake =>
-        {
-          wakeCancellable = None
-          if (lastReply.elapsed_?(pollReplyTimeout))
-          {
-            logger.warn("Change reply not received in a timely fashion")
-            self ! 'Reset
-            // todo warn consumer to resync
-          }
-          else
-          {
-            schedulePoll
-          }
-          scheduleWake
-        }
-
-        case NextChangeReply(changeNumber, documentInfo) =>
-        {
-          lastReply.mark()
-          if (changeNumber != lastChangeNumber)
-          {
-            lastChangeNumber = changeNumber
-            lastPoll.zero()
-            self ! 'Poll
-
-            // Daemon can repeat last changed document message, so ignore repeats
-            if (!lastDocumentInfo.exists(_ == documentInfo))
-            {
-              logger.debug("Change detected in " + documentInfo)
-              lastDocumentInfo = Some(documentInfo)
-              consumer ! Changed(documentInfo)
-            }
-          }
-        }
-
-        case 'Ping => sender ! 'Pong
-
-        case 'Die =>
-        {
-          logger.info("ChangePoller killed")
-          self ! PoisonPill
-        }
-
-        case other =>
+    case 'Die => {
+      logger.info("ChangePoller killed")
+      self ! PoisonPill
+    }
   }
   
-  def scheduleWake
-  {
-    if (wakeCancellable.isEmpty)
-    {
+  def scheduleWake {
+    if (wakeCancellable.isEmpty) {
       val cancellable = context.system.scheduler.scheduleOnce(Duration(wakeInterval, TimeUnit.MILLISECONDS), self, 'Wake)(context.dispatcher)
       wakeCancellable = Some(cancellable)
     }
   }
 
-  def schedulePoll
-  {
+  def schedulePoll {
     context.system.scheduler.scheduleOnce(Duration(pollInterval, TimeUnit.MILLISECONDS), self, 'Poll)(context.dispatcher)
   }
 }
 
-object ChangePoller
-{
-  def main(args: Array[String])
-  {
+object ChangePoller {
+  def main(args: Array[String]) {
 //    import Actor._
 //    val foo = Actor.actor
 //    {
