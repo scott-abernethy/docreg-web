@@ -76,6 +76,11 @@ object StringUtil {
     }
   }
 
+  def filenameWithoutExt(filename: String): String = filename match {
+    case FileNameAndExt(name, ext) => name
+    case x => x
+  }
+
   def pluralise(count: Long, description: String): String = pluralise(count, description, "s")
 
   def pluralise(count: Long, description: String, pluraliser: String): String =

@@ -14,70 +14,12 @@ import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 
 trait FauxData {
+
   def loadData(): Box[JValue] = tryo {
+    // Load db from JSON file
     val is = getClass().getClassLoader().getResourceAsStream("faux/external-db.json")
     val str = scala.io.Source.fromInputStream(is).mkString  
     parse(str)
-  }
-}
-
-class FauxFileDatabase extends Actor with FauxData {
-  
-  var db = loadData().openOr(JNothing)
-  
-  def receive = {
-    case GetRegister => {
-      val register: List[DocumentInfo] = documentParser(db)
-      sender ! ResponseRegister(register)
-    }
-    case m @ GetLog(key, access) => {
-      sender ! ResponseLog(key, revisionParser(db, key))
-    }
-    case GetMail(key) => {
-      sender ! ResponseMail(key, Nil)
-    }
-    case GetApproval(key) => {
-      sender ! ResponseApproval(key, approvalParser(db, key))
-    }
-    case AddDocument(info, username, notifyTo) => {
-      val num = findFreeNumber()
-      val numStr = documentNumberFormat.format(num)
-      val filename = "%s-001-%s".format(numStr, info.fileName)
-      val dateStr = formatAgentDate(info.date)
-
-      val info2 = info.copy(number = num, version = 1, fileName = filename)
-
-      val json: JValue = ("documents" -> List(
-          ("number" -> numStr) ~
-          ("version" -> info2.version) ~
-          ("filename" -> filename) ~
-          ("project" -> info2.projectName) ~
-          ("title" -> info2.fileName) ~
-          ("comment" -> info2.description) ~
-          ("server" -> info2.server) ~
-          ("access" -> info2.access) ~
-          ("author-name" -> info2.author) ~
-          ("author-ip" -> info2.client) ~
-          ("date" -> dateStr) ~
-          ("revisions" -> List(
-            ("filename" -> filename) ~
-            ("comment" -> info2.description) ~
-            ("date" -> dateStr) ~
-            ("author-name" -> info2.author) ~
-            ("author-ip" -> info2.client) ~
-            ("author-host" -> info2.client) ~
-            ("author-username" -> username) ~
-            ("author-version" -> "3") ~
-            ("crc" -> "asdf")
-            ))
-        ))
-      db = db.merge(json)
-
-      notifyTo ! AddDocumentChange(info2)
-    }
-    case other => {
-      unhandled(other)
-    }
   }
   
   def documentParser(json: JValue): List[DocumentInfo] = {
@@ -143,16 +85,140 @@ class FauxFileDatabase extends Actor with FauxData {
         parseAgentDate(date), ip, host, actioner)
   }
 
-  def findFreeNumber(): Int = {
-    // Get a set of used 'numbers'
-    val usedNumbers = (
+  def usedNumbers(json: JValue): Set[String] = {
+    (
       for {
-        JString(number) <- db \ "documents" \ "number"
+        JString(number) <- json \ "documents" \ "number"
       } 
       yield number
     ).toSet
-    
+  }
+
+  def findFreeNumber(json: JValue): Int = {
     // Pick a random starting 'number' then find the first unused after that...
-    Stream.from(Random.nextInt(9999)).map(_ % 9999).filterNot(x => usedNumbers.contains(prePadTo(x.toString, 4, '0'))).head
+    Stream.from(Random.nextInt(9999)).map(_ % 9999).filterNot(x => usedNumbers(json).contains(prePadTo(x.toString, 4, '0'))).head
+  }
+
+  def addDocumentChange(info: DocumentInfo, username: String, json: JValue): (DocumentInfo, JValue) = {
+    val num = findFreeNumber(json)
+    val numStr = documentNumberFormat.format(num)
+    val filename = "%s-001-%s".format(numStr, info.fileName)
+    val dateStr = formatAgentDate(info.date)
+
+    // Update DocumentInfo with new num etc
+    val info2 = info.copy(number = num, version = 1, fileName = filename)
+
+    val toAdd: JValue = ("documents" -> List(
+        ("number" -> numStr) ~
+        ("version" -> info2.version) ~
+        ("filename" -> info2.fileName) ~
+        ("project" -> info2.projectName) ~
+        ("title" -> info2.title) ~
+        ("comment" -> info2.description) ~
+        ("server" -> info2.server) ~
+        ("access" -> info2.access) ~
+        ("author-name" -> info2.author) ~
+        ("author-ip" -> info2.client) ~
+        ("date" -> dateStr) ~
+        ("revisions" -> List(
+          ("filename" -> info2.fileName) ~
+          ("comment" -> info2.description) ~
+          ("date" -> dateStr) ~
+          ("author-name" -> info2.author) ~
+          ("author-ip" -> info2.client) ~
+          ("author-host" -> info2.client) ~
+          ("author-username" -> username) ~
+          ("author-version" -> "3") ~
+          ("crc" -> "asdf")
+          ))
+      ))
+
+    (info2, json.merge(toAdd))
+  }
+  
+  def updateDocumentChange(info: DocumentInfo, username: String, json: JValue): (DocumentInfo, JValue) = {
+    val dateStr = formatAgentDate(info.date)
+
+    // This JSON merge is more tricky / messy. Below is a transformer...
+    def mergeDb(): JValue = {
+      def mergeRevs(revs: JValue): JValue = {
+        val latest =
+          ("filename" -> info.fileName) ~
+          ("comment" -> info.description) ~
+          ("date" -> dateStr) ~
+          ("author-name" -> info.author) ~
+          ("author-ip" -> info.client) ~
+          ("author-host" -> info.client) ~
+          ("author-username" -> username) ~
+          ("author-version" -> "3") ~
+          ("crc" -> "asdf")
+        revs match {
+          case JArray(rs) => JArray(latest :: rs)
+          case _ => JArray(latest :: Nil)
+        }
+      }
+
+      def mergeDoc(doc: JObject): JValue = {
+        ("number" -> info.getKey) ~
+        ("version" -> info.version) ~
+        ("filename" -> info.fileName) ~
+        ("project" -> info.projectName) ~
+        ("title" -> info.title) ~
+        ("comment" -> info.description) ~
+        ("server" -> info.server) ~
+        ("access" -> info.access) ~
+        ("author-name" -> info.author) ~
+        ("author-ip" -> info.client) ~
+        ("date" -> dateStr) ~
+        ("revisions" -> mergeRevs(doc \ "revisions"))
+      }
+
+      def mergeDocs(docs: JValue): JValue = {
+        docs.transform { 
+          case doc @ JObject(JField("number", JString(num)) :: fs) if (num == info.getKey) => {
+            mergeDoc(doc)
+          }
+        }
+      }
+
+      // Now apply the transforms and return the result...
+      json.transform { 
+        case JField("documents", docs) => JField("documents", mergeDocs(docs))
+      }
+    }
+
+    (info, mergeDb())
+  }
+}
+
+class FauxFileDatabase extends Actor with FauxData {
+  
+  var db = loadData().openOr(JNothing)
+  
+  def receive = {
+    case GetRegister => {
+      val register: List[DocumentInfo] = documentParser(db)
+      sender ! ResponseRegister(register)
+    }
+    case m @ GetLog(key, access) => {
+      sender ! ResponseLog(key, revisionParser(db, key))
+    }
+    case GetMail(key) => {
+      sender ! ResponseMail(key, Nil)
+    }
+    case GetApproval(key) => {
+      sender ! ResponseApproval(key, approvalParser(db, key))
+    }
+    case AddDocument(info, username, notifyTo) => {
+      println("add doc, existing = " + usedNumbers(db) + ", this = " + info.getKey())
+      val (change, db2) = 
+        if (usedNumbers(db).contains(info.getKey())) updateDocumentChange(info, username, db)
+        else addDocumentChange(info, username, db)
+      db = db2
+      notifyTo ! AddDocumentChange(change)
+    }
+    case other => {
+      unhandled(other)
+    }
   }
 }
