@@ -151,11 +151,46 @@
           "author-ip": "192.168.0.9",
           "author-host": "j",
           "client-username": "jane",
-          "status": "Approved",
+          "status": "Pending",
           "comment": "Finally some good stuff!",
           "date": "2013-05-07 16:16:13 Z"
+        },
+        {
+          "filename": "0001-003-Instructions.xls",
+          "author-username": "peter",
+          "author-email": "peter@aviatnet.com",
+          "author-ip": "192.168.0.6",
+          "author-host": "p",
+          "client-username": "peter",
+          "status": "Approved",
+          "comment": "Some changes need to approved",
+          "date": "2013-08-13 16:16:13 Z"
+        },
+        {
+          "filename": "0001-002-Instructions.xls",
+          "author-username": "roger",
+          "author-email": "roger.renault@aviatnet.com",
+          "author-ip": "192.168.0.7",
+          "author-host": "r",
+          "client-username": "roger",
+          "status": "Not Approved",
+          "comment": "Funny changes which can't accepted :(",
+          "date": "2013-08-12 16:16:13 Z"
+        }
+      ],
+      "subscriptions": [
+        {
+          "username": "peter",
+          "email": "peter@aviatnet.com",
+          "options": "bookmark"
+        },
+        {
+          "username": "jane",
+          "email": "jane.jensen@aviatnet.com",
+          "options": "always"
         }
       ]
+
     },
     {
       "number": "0123",
@@ -193,6 +228,18 @@
           "status": "Not Approved",
           "comment": "Let's not do that, OK.",
           "date": "2013-06-02 16:16:13 Z"
+        }
+      ],
+      "subscriptions": [
+        {
+            "username": "vicky",
+            "email": "vicky.vauxhall@aviatnet.com",
+            "options": "always"
+        },
+        {
+            "username": "sue",
+            "email": "sue.suzuki@aviatnet.com",
+            "options": "always bookmark"
         }
       ]
     },
