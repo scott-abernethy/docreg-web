@@ -87,7 +87,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
       context.system.scheduler.scheduleOnce(6.hours, self, 'Resync)(context.dispatcher)
     }
     case Loaded(d :: ds) => {
-      Document.forKey(d.getKey) match {
+      Document.forKey(d.number) match {
         case Full(document) if (documentUpToDate(document, d)) => // No need to update
         case _ => clerk ! Prepare(d)
       }
@@ -102,12 +102,12 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
     }
     case Changed(d) => {
       // Todo: Apply what we know of the change now, then reconcile. Though the reconcile typically takes <1 second.
-      logger.debug("Change received, sending to clerk " + d.getKey)
+      logger.debug("Change received, sending to clerk " + d.number)
       priorityClerk ! Prepare(d)
     }
     case Some(msg @ Reconcile(d, revisions, approvals, subscriptions)) => {
-      logger.debug("Reconcile " + d.getKey() + " : " + (revisions.size, approvals.size, subscriptions.size))
-      Document.forKey(d.getKey) match {
+      logger.debug("Reconcile " + d.number + " : " + (revisions.size, approvals.size, subscriptions.size))
+      Document.forKey(d.number) match {
         case Full(document) => updateDocument(document, msg)
         case _ => createDocument(msg)
       }
@@ -207,7 +207,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
       }
       msgs.foreach(m => documentStream ! m)
     } catch {
-      case e: java.lang.NullPointerException => logger.error("Exception " + e + " with " + reconcile.document.getKey()); e.printStackTrace
+      case e: java.lang.NullPointerException => logger.error("Exception " + e + " with " + reconcile.document.number); e.printStackTrace
     }
   }
 
@@ -249,7 +249,7 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
 
   private def assignDocument(document: Document, d: DocumentInfo): Boolean = {
     var dirty = false
-    val number = d.getKey
+    val number = d.number
     val projectId = projectWithName(d.projectName).id
     val title = d.title
     val access = d.access

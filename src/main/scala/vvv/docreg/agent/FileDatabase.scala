@@ -19,6 +19,7 @@ import scalax.io.{LongTraversable, Resource, SeekableByteChannel}
 import scala.concurrent.Future
 import scala.util.Success
 import scala.concurrent.duration._
+import vvv.docreg.model.Document.ValidNumber
 
 // docreg/docreg.txt
 // docreg/editlog.txt
@@ -84,20 +85,20 @@ class FileDatabase extends Actor
 
 object FileDatabaseHelper {
 
+  val ValidInt: Regex = """^([0-9]+)$""".r
+
   def loadRegister(): Future[List[DocumentInfo]] = {
     val register = if (AgentVendor.secure) "secure/docreg-secure.txt" else "docreg/docreg.txt"
     loadAsync(register, createDocumentInfo _)
   }
 
-  val ValidNumber: Regex = """^([0-9]+)$""".r
-
   def createDocumentInfo(data: Array[String]): Option[DocumentInfo] = {
     data.toList match {
-      case List(ValidNumber(key), ValidNumber(version), fileName, projectName, title, description, access, author, date, server, client, editor, editorStart) => {
-        Some(DocumentInfo(key.toInt, version.toInt, fileName, projectName, title, description, access, author, parseAgentDate(date), server, client, editor, parseAgentDate(editorStart)))
+      case List(ValidNumber(key), ValidInt(version), fileName, projectName, title, description, access, author, date, server, client, editor, editorStart) => {
+        Some(DocumentInfo(key, version.toInt, fileName, projectName, title, description, access, author, parseAgentDate(date), server, client, editor, parseAgentDate(editorStart)))
       }
-      case List(ValidNumber(key), ValidNumber(version), fileName, projectName, title, description, access, author, date, server, client) => {
-        Some(DocumentInfo(key.toInt, version.toInt, fileName, projectName, title, description, access, author, parseAgentDate(date), server, client, "", null))
+      case List(ValidNumber(key), ValidInt(version), fileName, projectName, title, description, access, author, date, server, client) => {
+        Some(DocumentInfo(key, version.toInt, fileName, projectName, title, description, access, author, parseAgentDate(date), server, client, "", null))
       }
       case _ => {
         None

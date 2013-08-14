@@ -23,12 +23,12 @@ class ChangePollerTest extends Specification
       val probe = new TestProbe(system)
       val x = system.actorOf(Props(new ChangePoller("1.2.3.4", probe.ref, system.deadLetters)))
 
-      val a: DocumentInfo = DocumentInfo(2, 1, "", "", "", "", "", "", new Date, "", "", "", new Date)
+      val a: DocumentInfo = DocumentInfo("0002", 1, "", "", "", "", "", "", new Date, "", "", "", new Date)
       x ! NextChangeReply(1, a)
 
       probe.expectMsg(timeout, Changed(a))
 
-      val b: DocumentInfo = DocumentInfo(456, 2, "sd", "", "", "", "", "", new Date, "", "", "", new Date)
+      val b: DocumentInfo = DocumentInfo("0456", 2, "sd", "", "", "", "", "", new Date, "", "", "", new Date)
       x ! NextChangeReply(1, b)
       probe.expectNoMsg(timeout)
 
@@ -46,8 +46,8 @@ class ChangePollerTest extends Specification
 
       val d = new Date
 
-      val a: DocumentInfo = DocumentInfo(5174,193,"5174-193-Performance Review Process Check List.xlsx","Eclipse","Performance Review Process Check List","updated for SC SP group","Everyone","RVann",d,"boromir","10.15.153.122","",null)
-      val a2: DocumentInfo = DocumentInfo(5174,193,"5174-193-Performance Review Process Check List.xlsx","Eclipse","Performance Review Process Check List","updated for SC SP group","Everyone","RVann",d,"boromir","10.15.153.122","",null)
+      val a: DocumentInfo = DocumentInfo("5174",193,"5174-193-Performance Review Process Check List.xlsx","Eclipse","Performance Review Process Check List","updated for SC SP group","Everyone","RVann",d,"boromir","10.15.153.122","",null)
+      val a2: DocumentInfo = DocumentInfo("5174",193,"5174-193-Performance Review Process Check List.xlsx","Eclipse","Performance Review Process Check List","updated for SC SP group","Everyone","RVann",d,"boromir","10.15.153.122","",null)
 
       x ! NextChangeReply(1, a)
       probe.expectMsg(timeout, Changed(a))

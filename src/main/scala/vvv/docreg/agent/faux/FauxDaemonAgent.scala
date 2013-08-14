@@ -32,8 +32,8 @@ class FauxDaemonAgent(db: ActorRef) extends Actor with Loggable {
         case Some(r) => {
           // Parse document details from filename
           val (num, ver, title) = r.fileName match {
-            case ValidDocumentFileName(num, ver, fn) => (num.toInt, ver.toInt, filenameWithoutExt(fn))
-            case _ => (-1, 1, filenameWithoutExt(filename))
+            case ValidDocumentFileName(num, ver, fn) => (num, ver.toInt, filenameWithoutExt(fn))
+            case _ => ("XXXX", 1, filenameWithoutExt(filename))
           }
 
           // Update the file datebase -- it will respond with an AddDocumentChange msg

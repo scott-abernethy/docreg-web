@@ -43,7 +43,7 @@ trait FauxData {
       JField("author-name", JString(name)) <- document
       JField("author-ip", JString(ip)) <- document
     } 
-    yield DocumentInfo(number.toInt, version.toInt, filename, project, title, comment, access, name, parseAgentDate(date), server, ip, null, null)  
+    yield DocumentInfo(number, version.toInt, filename, project, title, comment, access, name, parseAgentDate(date), server, ip, null, null)  
   }
   
   def revisionParser(json: JValue, key: String): List[RevisionInfo] = {
@@ -118,9 +118,10 @@ trait FauxData {
     ).toSet
   }
 
-  def findFreeNumber(json: JValue): Int = {
+  def findFreeNumber(json: JValue): String = {
     // Pick a random starting 'number' then find the first unused after that...
-    Stream.from(Random.nextInt(9999)).map(_ % 9999).filterNot(x => usedNumbers(json).contains(prePadTo(x.toString, 4, '0'))).head
+    val int = Stream.from(Random.nextInt(9999)).map(_ % 9999).filterNot(x => usedNumbers(json).contains(prePadTo(x.toString, 4, '0'))).head
+    documentNumberFormat.format(int)
   }
 
   def addDocumentChange(info: DocumentInfo, username: String, json: JValue): (DocumentInfo, JValue) = {
@@ -183,7 +184,7 @@ trait FauxData {
       }
 
       def mergeDoc(doc: JObject): JValue = {
-        ("number" -> info.getKey) ~
+        ("number" -> info.number) ~
         ("version" -> info.version) ~
         ("filename" -> info.fileName) ~
         ("project" -> info.projectName) ~
@@ -199,7 +200,7 @@ trait FauxData {
 
       def mergeDocs(docs: JValue): JValue = {
         docs.transform { 
-          case doc @ JObject(JField("number", JString(num)) :: fs) if (num == info.getKey) => {
+          case doc @ JObject(JField("number", JString(num)) :: fs) if (num == info.number) => {
             mergeDoc(doc)
           }
         }
@@ -235,9 +236,9 @@ class FauxFileDatabase extends Actor with FauxData {
       sender ! ResponseApproval(key, approvalParser(db, key))
     }
     case AddDocument(info, username, notifyTo) => {
-      println("add doc, existing = " + usedNumbers(db) + ", this = " + info.getKey())
+      println("add doc, existing = " + usedNumbers(db) + ", this = " + info.number)
       val (change, db2) = 
-        if (usedNumbers(db).contains(info.getKey())) updateDocumentChange(info, username, db)
+        if (usedNumbers(db).contains(info.number)) updateDocumentChange(info, username, db)
         else addDocumentChange(info, username, db)
       db = db2
       notifyTo ! AddDocumentChange(change)

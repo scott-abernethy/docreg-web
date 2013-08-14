@@ -83,7 +83,7 @@
         "CN=DocRegUser,OU=DocReg,OU=New Zealand,OU=Groups,OU=APAC,DC=GNET,DC=global,DC=vpn"
       ]
     }
-  ]
+  ],
   "documents": [
     {
       "number": "0001",
@@ -188,6 +188,69 @@
           "username": "jane",
           "email": "jane.jensen@aviatnet.com",
           "options": "always"
+        }
+      ]
+
+    },
+    {
+      "number": "F505",
+      "version": 2,
+      "filename": "F505-002-Look and find.pdf",
+      "project": "Pear",
+      "title": "Look and find",
+      "comment": "This document is a test of the new document 'number' system.",
+      "server": "shelob",
+      "access": "Public",
+      "author-name": "Allen Allard",
+      "author-ip": "129.168.0.4",
+      "date": "2013-08-14 06:16:13 Z",
+      "revisions": [
+        {
+          "filename": "F505-001-Look and find.pdf",
+          "comment": "Firsty.",
+          "date": "2013-08-01 16:16:13 Z",
+          "author-name": "Sue Suzuki",
+          "author-ip": "12.12.12.1",
+          "author-host": "s",
+          "author-username": "sue",
+          "author-version": "3",
+          "crc": "qwerty"
+        },
+        {
+          "filename": "F505-002-Look and find.pdf",
+          "comment": "This document is a test of the new document 'number' system.",
+          "date": "2013-08-14 06:16:13 Z",
+          "author-name": "Allen Allard",
+          "author-ip": "192.168.0.4",
+          "author-host": "a",
+          "author-username": "allen",
+          "author-version": "3",
+          "crc": "qwerty"
+        }
+      ],
+      "approvals": [
+        {
+          "filename": "F505-002-Look and find.pdf",
+          "author-username": "roger",
+          "author-email": "roger.renault@aviatnet.com",
+          "author-ip": "192.168.0.7",
+          "author-host": "r",
+          "client-username": "roger",
+          "status": "Approved",
+          "comment": "F!",
+          "date": "2013-08-14 07:16:13 Z"
+        }
+      ],
+      "subscriptions": [
+        {
+          "username": "peter",
+          "email": "peter@aviatnet.com",
+          "options": "always"
+        },
+        {
+          "username": "jane",
+          "email": "jane.jensen@aviatnet.com",
+          "options": "bookmark"
         }
       ]
 

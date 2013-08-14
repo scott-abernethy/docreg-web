@@ -161,6 +161,7 @@ object Document extends Document {
   }
 
   // todo make these private and use unapply-ers that also toUpperCase
+  val ValidNumber: Regex = """^([0-9]{1,4}|[a-zA-Z][0-9]{3})$""".r
   val ValidIdentifier: Regex = """^([0-9]{1,4}|[a-zA-Z][0-9]{3})(-[0-9]+)?$""".r
   val ValidDocumentFileName: Regex = """^([0-9]{1,4}|[a-zA-Z][0-9]{3})-([0-9]+)-(.+)$""".r
   val IdentifierAndExtension: Regex = """^([0-9]{1,4}|[a-zA-Z][0-9]{3})\..+$""".r

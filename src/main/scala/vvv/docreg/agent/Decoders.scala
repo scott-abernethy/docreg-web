@@ -46,10 +46,12 @@ object NextChangeReplyDecoder extends ReplyDecoder
     val editor = readString(buffer, 64)
     val editorStart = readString(buffer, 32)
 
+    val keyStr = documentNumberFormat.format(key)
+
     NextChangeReply(
       changeNumber,
       DocumentInfo(
-        key,
+        keyStr,
         version,
         fileName,
         projectName,

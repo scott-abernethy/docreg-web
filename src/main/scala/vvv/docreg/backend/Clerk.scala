@@ -31,8 +31,8 @@ class Clerk(private val backend: ActorRef) extends Actor with Loggable {
     }
         case Prepare(document) => {
           // leave this code as is for 0.8.1, it works, too risky to change.
-          logger.debug("Preparing " + document.getKey())
-          val key = document.getKey()
+          logger.debug("Preparing " + document.number)
+          val key = document.number
 
           import context.dispatcher
           val futureRevisions = ask(fileDatabase, GetLog(key, document.access))(dbTimeout).map(_ match {
