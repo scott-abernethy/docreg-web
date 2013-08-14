@@ -290,9 +290,12 @@ class Backend(directory: Directory, daemonAgent: ActorRef, documentStream: Actor
   }
 
   def documentUpToDate(document: Document, d: DocumentInfo): Boolean = {
-    val weekAgo = T.daysAgo(7)
-    val recentEditor = d.editor != null && d.editorStart != null && d.editorStart.after(weekAgo)
-    val reconcileOutOfDate = document.reconciled == null || document.reconciled.before(weekAgo)
-    document.latest_?(d.version) && !recentEditor && document.access.equalsIgnoreCase(d.access) && !reconcileOutOfDate
+    if (net.liftweb.util.Props.devMode) false
+    else {
+      val weekAgo = T.daysAgo(7)
+      val recentEditor = d.editor != null && d.editorStart != null && d.editorStart.after(weekAgo)
+      val reconcileOutOfDate = document.reconciled == null || document.reconciled.before(weekAgo)
+      document.latest_?(d.version) && !recentEditor && document.access.equalsIgnoreCase(d.access) && !reconcileOutOfDate
+    }
   }
 }

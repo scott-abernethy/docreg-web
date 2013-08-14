@@ -90,6 +90,20 @@ trait FauxData {
         parseAgentDate(date), ip, host, actioner)
   }
 
+  def subscriberParser(json: JValue, key: String): List[SubscriberInfo] = {
+    for {
+      JObject(document) <- json \ "documents"
+      JField("number", JString(number)) <- document
+      if (number == key)
+      JField("subscriptions", JArray(subscriptions)) <- document
+      JObject(subscription) <- subscriptions
+      JField("username", JString(username)) <- subscription
+      JField("email", JString(email)) <- subscription
+      JField("options", JString(options)) <- subscription
+    }
+    yield SubscriberInfo(username, email, options)
+  }
+
   def usedNumbers(json: JValue): Set[String] = {
     (
       for {
@@ -197,11 +211,12 @@ trait FauxData {
 }
 
 class FauxFileDatabase extends Actor with FauxData {
-  
-  var db = loadData().openOr(JNothing)
-  
+
+  var db: JValue = JNothing
+
   def receive = {
     case GetRegister => {
+      db = loadData().openOr(JNothing)
       val register: List[DocumentInfo] = documentParser(db)
       sender ! ResponseRegister(register)
     }
@@ -209,7 +224,7 @@ class FauxFileDatabase extends Actor with FauxData {
       sender ! ResponseLog(key, revisionParser(db, key))
     }
     case GetMail(key) => {
-      sender ! ResponseMail(key, Nil)
+      sender ! ResponseMail(key, subscriberParser(db, key))
     }
     case GetApproval(key) => {
       sender ! ResponseApproval(key, approvalParser(db, key))
