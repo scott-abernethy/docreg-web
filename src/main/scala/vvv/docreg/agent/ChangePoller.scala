@@ -94,25 +94,28 @@ class ChangePoller(hostname: String, consumer: ActorRef, agent: ActorRef) extend
   def schedulePoll {
     context.system.scheduler.scheduleOnce(Duration(pollInterval, TimeUnit.MILLISECONDS), self, 'Poll)(context.dispatcher)
   }
+
 }
 
-object ChangePoller {
+object ChangePollerRig {
+
   def main(args: Array[String]) {
-//    import Actor._
-//    val foo = Actor.actor
-//    {
-//      loop
-//      {
-//        receive
-//        {
-//          case Changed(d) => println(">>>> " + d)
-//          case other => println(">>>? " + other)
-//        }
-//      }
-//    }
-//
-//    val agent = new DaemonAgentImpl().start
-//    val x = new ChangePoller("shelob", foo, agent).start
-//    x ! 'Reset
+    import akka.actor.ActorDSL._
+    import akka.actor._
+
+    implicit val system = ActorSystem("temp")
+
+    val foo = actor(new Act {
+      become {
+        case Changed(d) => println("Received... " + d)
+        case other => println("Unexpected...? " + other)
+      }
+    })
+
+    val agent = system.actorOf(Props[DaemonAgentImpl])
+    val x = system.actorOf(Props(new ChangePoller("shelob", foo, agent)))
+    println("Starting...")
+    x ! 'Reset
   }
+
 }

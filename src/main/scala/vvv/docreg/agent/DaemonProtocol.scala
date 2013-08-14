@@ -18,8 +18,8 @@ import java.text.DecimalFormat
 import actors.{TIMEOUT, Actor}
 import akka.actor.ActorRef
 
-trait DaemonProtocol extends Loggable
-{
+trait DaemonProtocol extends Loggable {
+
   val factory = new NioDatagramChannelFactory(Executors.newCachedThreadPool)
 
   val consumers: List[ActorRef]
@@ -56,8 +56,8 @@ trait DaemonProtocol extends Loggable
   }
 }
 
-class DaemonProtocolEncoder extends OneToOneEncoder with Loggable
-{
+class DaemonProtocolEncoder extends OneToOneEncoder with Loggable {
+
   def encode(ctx: ChannelHandlerContext, channel: Channel, msg: AnyRef) = {
     msg match {
       case DownstreamMessage(header, body) => {
@@ -117,8 +117,8 @@ class DaemonProtocolDecoder(decoders: Map[MessageType.Type, ReplyDecoder]) exten
   }
 }
 
-class DaemonProtocolHandler(consume: (Any) => Unit) extends SimpleChannelUpstreamHandler with Loggable
-{
+class DaemonProtocolHandler(consume: (Any) => Unit) extends SimpleChannelUpstreamHandler with Loggable {
+
   override def messageReceived(ctx: ChannelHandlerContext, e: MessageEvent) {
     consume(e.getMessage)
   }
@@ -134,37 +134,33 @@ object DaemonProtocol {
 
   val protocolVersion: Int = 4
 
-//  def main(args: Array[String])
-//  {
-//    println("disabled")
-//    //getNextChange(Actor.self, "shelob", -1)
-//
-////    val request = RegisterRequest(
-////      "New Document Test 3",
-////      "DocReg",
-////      "Testing document addition with docregbeta",
-////      "Everyone",
-////      "sabernethy",
-////      "sabernethy",
-////      "docregweb",
-////      "0.7.0"
-////    )
-////    val encoder = new RegisterRequestEncoder{}
-//
-//    val request = NextChangeRequest(-1)
-//    val encoder = new NextChangeRequestEncoder{}
-//
-//    val msg = new DownstreamMessage(
-//      Header(3, encoder.messageType, 1, 1),
-//      buffer => encoder.encode(request, buffer)
-//    )
-//
-//    val x = new DaemonProtocol{
-//      val consumers = List(self)
-//    }
-//    x.transmit("shelob", msg)
-//    Actor.receiveWithin(5000) {
-//      case in => println("XX " + in)
-//    }
-//  }
+}
+
+object DaemonProtocolRig {
+  
+  def main(args: Array[String]) {
+    val request = NextChangeRequest(-1)
+    val encoder = new NextChangeRequestEncoder{}
+    val version = 4
+
+    val msg = new DownstreamMessage(
+      Header(version, encoder.messageType, 1, 1),
+      buffer => encoder.encode(request, buffer)
+    )
+
+    import akka.actor.ActorDSL._
+    import akka.actor._
+    implicit val system = ActorSystem("temp")
+    val dummy = actor(new Act {
+      become {
+        case in => println("Received... " + in)
+      }
+    })
+
+    val x = new DaemonProtocol{
+      val consumers = List(dummy)
+    }
+    println("Transmitting...")
+    x.transmit("shelob", msg)
+  }
 }
