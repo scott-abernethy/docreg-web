@@ -33,7 +33,7 @@ libraryDependencies ++= {
     "mysql" % "mysql-connector-java" % "5.1.21",
     "org.mockito" % "mockito-all" % "1.9.5" % "test",
     "c3p0" % "c3p0" % "0.9.1.2",
-    "org.jboss.netty" % "netty" % "3.2.3.Final",
+    "io.netty" % "netty" % "3.6.6.Final",
     "com.typesafe.akka" %% "akka-actor" % "2.1.4",
     "com.typesafe.akka" %% "akka-slf4j" % "2.1.4",
     "com.typesafe.akka" %% "akka-testkit" % "2.1.4" % "test",

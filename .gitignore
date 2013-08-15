@@ -12,7 +12,7 @@ syntax: glob
 
 # logs
 derby.log*
-docreg-web.log*
+docreg-web*.log*
 
 # eclipse conf file
 .settings
@@ -64,3 +64,6 @@ runner
 /backup
 /ignored
 /tags
+
+# production configuration
+production.default.props
