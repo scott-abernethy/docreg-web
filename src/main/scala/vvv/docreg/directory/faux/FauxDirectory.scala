@@ -44,6 +44,7 @@ trait FauxDirectoryComponentImpl extends DirectoryComponent with FauxData {
   }
   
   def userParser(json: JValue): List[FauxUser] = {
+    import vvv.docreg.util.JValueWithFilter._
     for {
       JObject(user) <- json \ "users"
       JField("dn", JString(dn)) <- user

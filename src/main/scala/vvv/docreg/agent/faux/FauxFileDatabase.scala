@@ -28,6 +28,7 @@ trait FauxData {
   }
   
   def documentParser(json: JValue): List[DocumentInfo] = {
+    import vvv.docreg.util.JValueWithFilter._
     for {
       JObject(document) <- json \ "documents"
       JField("number", JString(number)) <- document
@@ -46,6 +47,7 @@ trait FauxData {
   }
   
   def revisionParser(json: JValue, key: String): List[RevisionInfo] = {
+    import vvv.docreg.util.JValueWithFilter._
     for {
       JObject(document) <- json \ "documents"
       JField("number", JString(number)) <- document
@@ -70,6 +72,7 @@ trait FauxData {
   }
   
   def approvalParser(json: JValue, key: String): List[ApprovalInfo] = {
+    import vvv.docreg.util.JValueWithFilter._
     for {
       JObject(document) <- json \ "documents"
       JField("number", JString(number)) <- document
@@ -91,6 +94,7 @@ trait FauxData {
   }
 
   def subscriberParser(json: JValue, key: String): List[SubscriberInfo] = {
+    import vvv.docreg.util.JValueWithFilter._
     for {
       JObject(document) <- json \ "documents"
       JField("number", JString(number)) <- document
@@ -105,6 +109,7 @@ trait FauxData {
   }
 
   def usedNumbers(json: JValue): Set[String] = {
+    import vvv.docreg.util.JValueWithFilter._
     (
       for {
         JString(number) <- json \ "documents" \ "number"
