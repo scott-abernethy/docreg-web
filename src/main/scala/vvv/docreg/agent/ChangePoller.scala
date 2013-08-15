@@ -112,7 +112,7 @@ object ChangePollerRig {
       }
     })
 
-    val agent = system.actorOf(Props[DaemonAgentImpl])
+    val agent = system.actorOf(Props[DaemonAgent])
     val x = system.actorOf(Props(new ChangePoller("shelob", foo, agent)))
     println("Starting...")
     x ! 'Reset

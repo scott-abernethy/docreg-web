@@ -26,7 +26,7 @@ class EnvironmentImpl extends Environment with BackendComponent with DirectoryCo
   val system = ActorSystem("DocRegWebSystem", akkaConfig.getConfig("docreg-web").withFallback(akkaConfig))
   import system._
   val fileDatabase = actorOf(Props[FileDatabase], "FileDatabase")
-  val daemonAgent = actorOf(Props[DaemonAgentImpl], "DaemonAgent")
+  val daemonAgent = actorOf(Props[DaemonAgent], "DaemonAgent")
   val documentStream = actorOf(Props[DocumentStream], "DocumentStream")
   val backend = actorOf(Props(new Backend(directory, daemonAgent, documentStream, fileDatabase)), "Backend")
   val poller = actorOf(Props(new ChangePoller(AgentVendor.server, backend, daemonAgent)))

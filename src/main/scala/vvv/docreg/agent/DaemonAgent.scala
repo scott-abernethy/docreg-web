@@ -9,12 +9,10 @@ import org.jboss.netty.buffer.ChannelBuffer
 import net.liftweb.common.Loggable
 import akka.actor.{PoisonPill, ActorRef, Actor}
 
-trait DaemonAgent extends Actor
-
 case class RequestPackage(replyTo: ActorRef, target: String, request: Request)
 case class ReplyPackage(header: Header, reply: Reply)
 
-class DaemonAgentImpl extends DaemonAgent with DaemonProtocol with Loggable
+class DaemonAgent extends Actor with DaemonProtocol with Loggable
 {
   var previousTransaction: Int = 0
   val consumers = List(self)
@@ -113,15 +111,9 @@ class DaemonAgentImpl extends DaemonAgent with DaemonProtocol with Loggable
         }
   }
 
-
 }
 
 trait DaemonAgentComponent
 {
   val daemonAgent: ActorRef
 }
-
-//trait DaemonAgentComponentImpl extends DaemonAgentComponent
-//{
-//  val daemonAgent = new DaemonAgentImpl()
-//}
