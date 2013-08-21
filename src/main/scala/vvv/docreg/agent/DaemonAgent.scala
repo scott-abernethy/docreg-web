@@ -39,42 +39,42 @@ class DaemonAgent extends Actor with DaemonProtocol with Loggable
             // todo yuck, these should be encode stacks in the protocol.
             case x: NextChangeRequest =>
             {
-              val e = new NextChangeRequestEncoder{}
+              val e = NextChangeRequestEncoder
               Some((e.messageType, (buffer: ChannelBuffer) => e.encode(x, buffer)))
             }
             case x: RegisterRequest =>
             {
-              val e = new RegisterRequestEncoder{}
+              val e = RegisterRequestEncoder
               Some((e.messageType, (buffer: ChannelBuffer) => e.encode(x, buffer)))
             }
             case x: SubmitRequest =>
             {
-              val e = new SubmitRequestEncoder{}
+              val e = SubmitRequestEncoder
               Some((e.messageType, (buffer: ChannelBuffer) => e.encode(x, buffer)))
             }
             case x: EditRequest =>
             {
-              val e = new EditRequestEncoder{}
+              val e = EditRequestEncoder
               Some((e.messageType, (buffer: ChannelBuffer) => e.encode(x, buffer)))
             }
             case x: UneditRequest =>
             {
-              val e = new UneditRequestEncoder{}
+              val e = UneditRequestEncoder
               Some((e.messageType, (buffer: ChannelBuffer) => e.encode(x, buffer)))
             }
             case x: SubscribeRequest =>
             {
-              val e = new SubscribeRequestEncoder{}
+              val e = SubscribeRequestEncoder
               Some((e.messageType, (buffer: ChannelBuffer) => e.encode(x, buffer)))
             }
             case x: UnsubscribeRequest =>
             {
-              val e = new UnsubscribeRequestEncoder{}
+              val e = UnsubscribeRequestEncoder
               Some((e.messageType, (buffer: ChannelBuffer) => e.encode(x, buffer)))
             }
             case x: ApprovalRequest =>
             {
-              val e = new ApprovalRequestEncoder{}
+              val e = ApprovalRequestEncoder
               Some((e.messageType, (buffer: ChannelBuffer) => e.encode(x, buffer)))
             }
             case _ =>

@@ -140,7 +140,7 @@ object DaemonProtocolRig {
   
   def main(args: Array[String]) {
     val request = NextChangeRequest(-1)
-    val encoder = new NextChangeRequestEncoder{}
+    val encoder = NextChangeRequestEncoder
     val version = 4
 
     val msg = new DownstreamMessage(

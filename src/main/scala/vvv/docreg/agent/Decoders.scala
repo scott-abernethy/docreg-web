@@ -27,6 +27,47 @@ trait ReplyDecoder {
   }
 }
 
+object NextChangeReplyDecoderV5 extends ReplyDecoder
+{
+  def decode(header: Header, buffer: ChannelBuffer) =
+  {
+    val changeNumber = buffer.readInt()
+    buffer.readInt() // Ignored in v5
+    buffer.readInt() // Ignored in v5
+    val fileName = readString(buffer, 128)
+    val projectName = readString(buffer, 64)
+    val title = readString(buffer, 64)
+    val description = readString(buffer, 512)
+    val access = readString(buffer, 128)
+    val author = readString(buffer, 64)
+    val date = readString(buffer, 32)
+    val server = readString(buffer, 32)
+    val client = readString(buffer, 32)
+    val editor = readString(buffer, 64)
+    val editorStart = readString(buffer, 32)
+    val key = readString(buffer, 16)
+    val version = readString(buffer, 16)
+
+    NextChangeReply(
+      changeNumber,
+      DocumentInfo(
+        key,
+        version.toInt,
+        fileName,
+        projectName,
+        title,
+        description,
+        access,
+        author,
+        parseAgentDate(date),
+        server,
+        client,
+        editor,
+        parseAgentDate(editorStart))
+    )
+  }
+}
+
 object NextChangeReplyDecoder extends ReplyDecoder
 {
   def decode(header: Header, buffer: ChannelBuffer) =

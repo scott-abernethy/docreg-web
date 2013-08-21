@@ -31,7 +31,7 @@ trait RequestEncoder[T <: Request] extends Loggable
   }
 }
 
-trait RegisterRequestEncoder extends RequestEncoder[RegisterRequest]
+object RegisterRequestEncoder extends RequestEncoder[RegisterRequest]
 {
   def messageType = MessageType.registerRequest
 
@@ -56,7 +56,7 @@ trait RegisterRequestEncoder extends RequestEncoder[RegisterRequest]
   }
 }
 
-trait SubmitRequestEncoder extends RequestEncoder[SubmitRequest]
+object SubmitRequestEncoder extends RequestEncoder[SubmitRequest]
 {
   def messageType = MessageType.submitRequest
 
@@ -69,7 +69,7 @@ trait SubmitRequestEncoder extends RequestEncoder[SubmitRequest]
   }
 }
 
-trait EditRequestEncoder extends RequestEncoder[EditRequest]
+object EditRequestEncoder extends RequestEncoder[EditRequest]
 {
   def messageType = MessageType.editRequest
 
@@ -82,7 +82,7 @@ trait EditRequestEncoder extends RequestEncoder[EditRequest]
   }
 }
 
-trait UneditRequestEncoder extends RequestEncoder[UneditRequest]
+object UneditRequestEncoder extends RequestEncoder[UneditRequest]
 {
   def messageType = MessageType.uneditRequest
 
@@ -95,7 +95,7 @@ trait UneditRequestEncoder extends RequestEncoder[UneditRequest]
   }
 }
 
-trait SubscribeRequestEncoder extends RequestEncoder[SubscribeRequest]
+object SubscribeRequestEncoder extends RequestEncoder[SubscribeRequest]
 {
   def messageType = MessageType.subscribeRequest
 
@@ -112,7 +112,7 @@ trait SubscribeRequestEncoder extends RequestEncoder[SubscribeRequest]
   }
 }
 
-trait UnsubscribeRequestEncoder extends RequestEncoder[UnsubscribeRequest]
+object UnsubscribeRequestEncoder extends RequestEncoder[UnsubscribeRequest]
 {
   def messageType = MessageType.unsubscribeRequest
 
@@ -127,7 +127,7 @@ trait UnsubscribeRequestEncoder extends RequestEncoder[UnsubscribeRequest]
   }
 }
 
-trait NextChangeRequestEncoder extends RequestEncoder[NextChangeRequest]
+object NextChangeRequestEncoder extends RequestEncoder[NextChangeRequest]
 {
   def messageType = MessageType.nextChangeRequest
 
@@ -137,7 +137,7 @@ trait NextChangeRequestEncoder extends RequestEncoder[NextChangeRequest]
   }
 }
 
-trait ApprovalRequestEncoder extends RequestEncoder[ApprovalRequest]
+object ApprovalRequestEncoder extends RequestEncoder[ApprovalRequest]
 {
   def messageType = MessageType.approvalRequest
 
