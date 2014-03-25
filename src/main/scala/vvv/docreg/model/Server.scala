@@ -28,7 +28,7 @@ object Server {
   }
 
   lazy val all: List[Server] = {
-    new Server("Santa Clara", "boromir", "10.15.168.22") ::
+    new Server("Santa Clara", "boromir", "10.15.32.243") ::
     new Server("NZ", "shelob", "10.16.9.179") ::
     new Server("RTP", "ugluk", "10.15.32.210") ::
     new Server("UK", "balrog", "10.11.65.21") ::
